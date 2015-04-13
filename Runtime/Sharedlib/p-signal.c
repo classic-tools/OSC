@@ -81,7 +81,7 @@ void InitSignalSystem()
   (void)signal( SIGFPE,   HandleSig );
   (void)signal( SIGBUS,   HandleSig );
   (void)signal( SIGPIPE,  HandleSig );
-#if !defined(HPUX) && !defined(HPUXPA) && !defined(CRAYT3D)
+#if !defined(HPUX) && !defined(CRAYT3D)
   (void)signal( SIGXCPU,  HandleSig );
   (void)signal( SIGXFSZ,  HandleSig );
 /*

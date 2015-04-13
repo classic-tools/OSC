@@ -383,7 +383,7 @@ m
 -m
 If set, terminate parsing since a slave has been started.
 {
-  return;
+  /* return */;
 }
 
 # ------------------------------------------------------------

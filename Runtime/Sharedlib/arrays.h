@@ -63,51 +63,61 @@
   ((ARRAYP)x)->Size++; \
 }
 
+#if defined(NON_COHERENT_CACHE)
 struct ArrayPhys {
+  int       RefCount;           /* CURRENT NUMBER OF REFERENCES       */
+  char      pad2[CACHE_LINE-sizeof(int)];
   int       Size;               /* ABSOLUTE SIZE OF PHYSICAL SPACE    */ 
   POINTER   Base;               /* FIRST CELL OF PHYSICAL SPACE       */
-  LOCK_TYPE Mutex;              /* LOCK FOR PHYSICAL BLOCK            */
   int       ExpHistory;         /* COUNT OF PREVIOUS EXPANSIONS       */
   int       Free;               /* UNOCCUPIED CELLS TO THE RIGHT      */
   POINTER   Dope;               /* UTILITY FIELD                      */
-#if defined(NON_COHERENT_CACHE)
+  LOCK_TYPE Mutex;              /* LOCK FOR PHYSICAL BLOCK            */
   char      pad1[CACHE_LINE-3*sizeof(int)-2*sizeof(POINTER)-sizeof(LOCK_TYPE)];
-#endif
-  int       RefCount;           /* CURRENT NUMBER OF REFERENCES       */
-#if defined(NON_COHERENT_CACHE)
-  char      pad2[CACHE_LINE - (1 * sizeof(int))];
-#endif
-  };
-#if defined(NON_COHERENT_CACHE)
+};
 #define APhysStruct(Size, Base, Mutex, ExpHistory, Free, Dope, RefCount) \
-  {Size, Base, Mutex, ExpHistory, Free, Dope, "pad1", RefCount, "pad2"}
+  {RefCount, "pad2", Size, Base, ExpHistory, Free, Dope}
 #else
+struct ArrayPhys {
+  int       RefCount;           /* CURRENT NUMBER OF REFERENCES       */
+  int       Size;               /* ABSOLUTE SIZE OF PHYSICAL SPACE    */ 
+  POINTER   Base;               /* FIRST CELL OF PHYSICAL SPACE       */
+  int       ExpHistory;         /* COUNT OF PREVIOUS EXPANSIONS       */
+  int       Free;               /* UNOCCUPIED CELLS TO THE RIGHT      */
+  POINTER   Dope;               /* UTILITY FIELD                      */
+  LOCK_TYPE Mutex;              /* LOCK FOR PHYSICAL BLOCK            */
+};
 #define APhysStruct(Size, Base, Mutex, ExpHistory, Free, Dope, RefCount) \
-  {Size, Base, Mutex, ExpHistory, Free, Dope, RefCount}
+  {RefCount, Size, Base, ExpHistory, Free, Dope}
 #endif
 
 
+#if defined(NON_COHERENT_CACHE)
 struct Array {
+  int       RefCount;           /* CURRENT NUMBER OF REFERENCES       */
+  char      pad2[CACHE_LINE-sizeof(int)];
   POINTER   Base;               /* RELATIVE BASE                      */
   int       LoBound;            /* LOWER BOUND                        */
   int       Size;               /* LOGICAL ARRAY SIZE                 */
   PHYSP     Phys;               /* POINTER TO PHYSICAL BLOCK          */
-  LOCK_TYPE Mutex;              /* LOCK FOR DOPE VECTOR               */
   int       Mutable;            /* INTERFACE MUTABILITY               */
-#if defined(NON_COHERENT_CACHE)
+  LOCK_TYPE Mutex;              /* LOCK FOR DOPE VECTOR               */
   char      pad1[CACHE_LINE-3*sizeof(int)-2*sizeof(POINTER)-sizeof(LOCK_TYPE)];
-#endif
-  int       RefCount;           /* CURRENT NUMBER OF REFERENCES       */
-#if defined(NON_COHERENT_CACHE)
-  char      pad2[CACHE_LINE - (1 * sizeof(int))];
-#endif
   };
-#if defined(NON_COHERENT_CACHE)
 #define AStruct(Base, LoBound, Size, Phys, Mutex, Mutable, RefCount) \
-  {Base, LoBound, Size, Phys, Mutex, Mutable, "pad1", RefCount, "pad2"}
+  {RefCount, "pad2", Base, LoBound, Size, Phys, Mutable}
 #else
+struct Array {
+  int       RefCount;           /* CURRENT NUMBER OF REFERENCES       */
+  POINTER   Base;               /* RELATIVE BASE                      */
+  int       LoBound;            /* LOWER BOUND                        */
+  int       Size;               /* LOGICAL ARRAY SIZE                 */
+  PHYSP     Phys;               /* POINTER TO PHYSICAL BLOCK          */
+  int       Mutable;            /* INTERFACE MUTABILITY               */
+  LOCK_TYPE Mutex;              /* LOCK FOR DOPE VECTOR               */
+  };
 #define AStruct(Base, LoBound, Size, Phys, Mutex, Mutable, RefCount) \
-  {Base, LoBound, Size, Phys, Mutex, Mutable, RefCount}
+  {RefCount, Base, LoBound, Size, Phys, Mutable}
 #endif
 
 

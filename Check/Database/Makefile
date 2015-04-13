@@ -16,12 +16,12 @@ run: touch driver
 touch:
 
 cdf.o: cdf.sis
-	$(OSC) $(SFLAGS) -module -noload -db database cdf.sis
+	$(OSC) $(SFLAGS) -module -noload -db database cdf.sis >>test.log 2>&1
 
 driver: driver.sis cdf.o
-	$(OSC) $(SFLAGS) driver.sis cdf.o -db database -o driver
+	$(OSC) $(SFLAGS) driver.sis cdf.o -db database -o driver >>test.log 2>&1
 
 clean:
 	@/bin/rm -f driver driver.o cdf.o database driver.test test.log s.info
-	@/bin/rm -f core *.if1 *.opt *.mono *.mem *.up *.part *.c *.o
+	@/bin/rm -f core *.if1 *.opt *.mono *.mem *.up *.part *.c *.o *.i
 #

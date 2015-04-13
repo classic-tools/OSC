@@ -46,18 +46,11 @@ static struct rusage StartUsage;
 static struct rusage StopUsage;
 #endif
 
-#ifdef HPUXPA
-clock_t clock();
-#endif
-
 void StartTimer()
 {
   struct WorkerInfo *InfoPtr;
 #ifdef USE_TIMES
   struct tms StartTime;
-#endif
-#ifdef HPUXPA
-  clock_t clocks;
 #endif
 
 #ifdef ALLIANT
@@ -69,12 +62,8 @@ void StartTimer()
   (void)gettimeofday( &(InfoPtr->WallTimeBuffer), (struct timezone *) NULL );
 
 #ifdef USE_TIMES
-#ifdef HPUXPA
-  InfoPtr->CpuTime = (double) clock ();
-#else
   (void)times(&StartTime);
   InfoPtr->CpuTime = (double) (StartTime.tms_utime + StartTime.tms_stime);
-#endif
 #else
   getrusage( RUSAGE_SELF, &StartUsage );
 #endif
@@ -97,15 +86,10 @@ void StopTimer()
 
 
 #ifdef USE_TIMES
-#ifdef HPUXPA
-  InfoPtr->CpuTime = (double)clock ();
-  InfoPtr->CpuTime /=  ((double)CLOCKS_PER_SEC);
-#else
   (void)times(&StopTime);
   InfoPtr->CpuTime  = ((double) (StopTime.tms_utime + StopTime.tms_stime)) -
                       InfoPtr->CpuTime;
   InfoPtr->CpuTime /= InfoPtr->ClkTck;
-#endif
 #else
   getrusage( RUSAGE_SELF, &StopUsage );
   InfoPtr->CpuTime = ElapsedTime( &StartUsage.ru_utime, &StopUsage.ru_utime ) +

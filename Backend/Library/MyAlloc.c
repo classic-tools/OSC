@@ -12,7 +12,7 @@ int size;
 {
   char *p;
 
-  if ( (p = malloc( size )) == NULL )
+  if ( (p = (char *)malloc( size )) == NULL )
     Error1( "MALLOC FAILED" );
 
   return( p );

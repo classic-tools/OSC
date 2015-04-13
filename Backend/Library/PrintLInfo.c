@@ -12,7 +12,7 @@ void PrintLInfo( lvl, plvl, c, loop )
   char	   fname[100];		/* Want to restructure the file name */
   char	   *dotp;		/* Pointer to .sis */
   char	   cbuf[100];		/* Holds the cost field */
-  char	   *source;		/* Source line from file.sis */
+  /* char	   *source;*/		/* Source line from file.sis */
   static int TrailingNL = FALSE; /* True iff we just double spaced */
 
   /* ------------------------------------------------------------ */

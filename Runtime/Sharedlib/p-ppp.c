@@ -1,3 +1,8 @@
+/************************************************************************\
+ * p-ppp.c - SISAL runtime system machine-specific parallel processing
+ *           primitives
+\************************************************************************/
+
 #include "world.h"
 
 #if !defined(NO_STATIC_SHARED)
@@ -7,12 +12,6 @@ static char *SharedMemory;
 static int   SharedSize;
 #else
 struct shared_s *SRp;
-#endif
-
-#ifndef RS6000
-#ifndef SGI
-extern char *malloc();
-#endif
 #endif
 
 void StartWorkers();
@@ -54,8 +53,13 @@ int NumBytes;
   return( (POINTER) ReturnPtr );
 }
 
+/************************************************************************\
+ * Encore
+\************************************************************************/
 
 #ifdef ENCORE
+#define PPPDEFINED
+
 int p_procnum = 0;
 char *share_malloc();
 
@@ -113,56 +117,13 @@ void AbortParallel()
 }
 #endif
 
-
-
-
-#if defined(SUNIX) || defined(SUN) || (defined(RS6000) && !defined(POWER4))
-int p_procnum = 0;
-
-void ReleaseSharedMemory()
-{
-  free( SharedBase );
-}
-
-void AcquireSharedMemory( NumBytes ) 
-int NumBytes;
-{
-  SharedSize = NumBytes + 100000;
-
-  SharedBase = SharedMemory = malloc( SharedSize-40 );
-
-  if ( SharedMemory == (char *) NULL )
-    SisalError( "AcquireSharedMemory", "malloc FAILED" );
-
-  SharedMemory = ALIGN(char*,SharedMemory);
-}
-
-void StartWorkers() 
-{
-#if defined(DIST_DSA)
-        if(p_procnum != 0)
-                InitDsa(DsaSize/(2*(NumWorkers - 1)), XftThreshold);
-#endif
-
-  EnterWorker( p_procnum );
-}
-
-void StopWorkers()
-{
-  *SisalShutDown = TRUE;
-  LeaveWorker();
-}
-
-void AbortParallel() 
-{ 
-  exit( 1 ); 
-}
-#endif
-
-
-
+/************************************************************************\
+ * Alliant
+\************************************************************************/
 
 #ifdef ALLIANT
+#define PPPDEFINED
+
 void ReleaseSharedMemory()
 {
   free( SharedBase );
@@ -198,10 +159,13 @@ void AbortParallel()
 }
 #endif
 
+/************************************************************************\
+ * Sequent
+\************************************************************************/
 
+#if defined(BALANCE) || defined(SYMMETRY)
+#define PPPDEFINED
 
-
-#if BALANCE || SYMMETRY
 extern char *shmalloc();
 
 void AcquireSharedMemory( NumBytes ) 
@@ -292,10 +256,13 @@ void AbortParallel()
 
 #endif
 
-
-
+/************************************************************************\
+ * Cray
+\************************************************************************/
 
 #ifdef CRAY
+#define PPPDEFINED
+
 int TaskInfo[MAX_PROCS][3];
 LOCK_TYPE TheFirstLock;
 
@@ -370,13 +337,44 @@ void AbortParallel()
 }
 #endif
 
+/************************************************************************\
+ * SGI
+\************************************************************************/
 
 #ifdef SGI
+#define PPPDEFINED
+
 static ulock_t  TheLock;
 static usptr_t *UsHandle;
 
 void ReleaseSharedMemory()
 {
+}
+
+static void SgiTransfer( ProcId )
+void* ProcId;
+{
+  GetProcId = (long)ProcId;
+
+  if ( NumWorkers > 1 ) {
+    if ( BindParallelWork )
+      if ( sysmp( MP_MUSTRUN, ProcId ) == -1 )
+        SisalError( "SgiTransfer", "sysmp MP_MUSTRUN FAILED" );
+    if ( schedctl( SCHEDMODE, SGS_GANG, 0 ) == -1 )
+      SisalError( "StartWorkers", "schedctl FAILED" );
+  }
+
+#if defined(DIST_DSA)
+	if(ProcId != 0)
+		InitDsa(DsaSize/(2*(NumWorkers - 1)), XftThreshold);
+#endif
+
+  EnterWorker( ProcId );
+
+  if ( ProcId != 0 ) {
+    LeaveWorker();
+    _exit( 0 );
+    }
 }
 
 void AcquireSharedMemory( NumBytes ) 
@@ -388,8 +386,8 @@ int NumBytes;
 
   SPRINTF( ArenaName, "/tmp/sis%d", getpid() );
 
-  /* if ( (usconfig( CONF_INITSIZE, 1000 )) == -1 )
-    SisalError( "AcquireSharedMemory", "USCONFIG CONF_INITSIZE FAILED" ); */
+  if ( (usconfig( CONF_INITUSERS, NumWorkers )) == -1 )
+    SisalError( "AcquireSharedMemory", "USCONFIG CONF_INITUSERS FAILED" );
 
   if ( (usconfig( CONF_ARENATYPE, US_SHAREDONLY )) == -1 )
     SisalError( "AcquireSharedMemory", "USCONFIG CONF_ARENATYPE FAILED" );
@@ -405,32 +403,8 @@ int NumBytes;
 
   if ( SharedMemory == (char *) NULL )
     SisalError( "AcquireSharedMemory", "malloc FAILED" );
-
-  SharedMemory = ALIGN(char*,SharedMemory);
 }
 
-static void SgiTransfer( ProcId )
-int ProcId;
-{
-  GetProcId = ProcId;
-
-  if ( NumWorkers > 1 )
-    if ( BindParallelWork )
-      if ( sysmp( MP_MUSTRUN, ProcId ) == -1 )
-        SisalError( "SgiTransfer", "sysmp MP_MUSTRUN FAILED" );
-
-#if defined(DIST_DSA)
-	if(ProcId != 0)
-		InitDsa(DsaSize/(2*(NumWorkers - 1)), XftThreshold);
-#endif
-
-  EnterWorker( ProcId );
-
-  if ( ProcId != 0 ) {
-    LeaveWorker();
-    _exit( 0 );
-    }
-}
 
 void StartWorkers()
 {
@@ -440,11 +414,7 @@ void StartWorkers()
     if ( sproc( SgiTransfer, PR_SADDR, NumProcs ) == -1 )
       SisalError( "StartWorkers", "sproc FAILED" );
 
-  if ( NumWorkers > 1 )
-    if ( schedctl( SCHEDMODE, SGS_GANG, 0 ) == -1 )
-      SisalError( "StartWorkers", "schedctl FAILED" );
-
-  SgiTransfer( NumProcs );
+  SgiTransfer( (void*)NumProcs );
 }
 
 void StopWorkers()
@@ -505,16 +475,16 @@ int limit;
 }
 #endif
 
+/************************************************************************\
+ * IBM Power4
+\************************************************************************/
 
-/*
- * All POWER4 Defs below here
- */
 #if defined(POWER4)
-
+#define PPPDEFINED
 
 /*
- * this is just the way that IBM does it and they, obviously, know
- * everything
+ * This is just the way that IBM does it and they, obviously, know
+ * everything.
  *
  * WARNING: The system's shared variables are located in the first
  * 1K of the shard memory segment.  If it is ever the case that there
@@ -619,3 +589,297 @@ void AbortParallel()
 }
 
 #endif
+
+/************************************************************************\
+ * Solaris threads
+\************************************************************************/
+
+#ifdef STHREADS
+#define PPPDEFINED
+
+int p_procnum = 0;
+static LOCK_TYPE  TheLock;
+
+void ReleaseSharedMemory()
+{
+  free( SharedBase );
+}
+
+static void* Transfer( ProcId )
+void* ProcId;
+{
+  GetProcId = (long)ProcId;
+
+#if defined(DIST_DSA)
+  if (ProcId != 0) {
+    InitDsa(DsaSize/(2*(NumWorkers - 1)), XftThreshold);
+  }
+#endif
+
+  EnterWorker( ProcId );
+
+  if ( ProcId != 0 ) {
+    LeaveWorker();
+    thr_exit( 0 );
+  }
+  return NULL;
+}
+
+void AcquireSharedMemory( NumBytes ) 
+int NumBytes;
+{
+  SharedSize = NumBytes + 100000;
+
+  SharedBase = SharedMemory = (char *) malloc( SharedSize-40 );
+
+  if ( SharedMemory == (char *) NULL )
+    SisalError( "AcquireSharedMemory", "malloc FAILED" );
+}
+
+void StartWorkers()
+{
+  int NumProcs = NumWorkers;
+  thread_t *thread = malloc(NumProcs*sizeof(*thread));
+
+  while( --NumProcs > 0 ) {
+    if (thr_create(NULL, 0, Transfer, (void*)NumProcs,
+      0, &thread[NumProcs])==-1)
+      SisalError( "StartWorkers", "create FAILED" );
+  }
+
+  Transfer( (void*)NumProcs );
+}
+
+void StopWorkers()
+{
+  *SisalShutDown = TRUE;
+  LeaveWorker();
+}
+
+void AbortParallel()
+{
+  (void)exit( 1 );
+}
+
+BARRIER_TYPE *MyInitBarrier(limit)
+  int limit;
+{
+  BARRIER_TYPE *bar;
+
+  if ( (bar = malloc(sizeof(BARRIER_TYPE))) == NULL ) {
+    SisalError( "MyInitBarrier", "barrier malloc FAILED" );
+    return NULL;
+  }
+  if ( MY_INIT_LOCK(&bar->lock) ) {
+    SisalError( "MyInitBarrier", "barrier lock FAILED" );
+    return NULL;
+  }
+  if ( cond_init(&bar->cond, USYNC_PROCESS, NULL) ) {
+    SisalError( "MyInitBarrier", "barrier condition FAILED" );
+    return NULL;
+  }
+  bar->count = limit;
+
+  return bar;
+}
+
+void MyBarrier( bar )			/* from tomig.esd.mun.ca */
+  BARRIER_TYPE *bar;
+{
+  /*
+   * Block for lock, then decrement waiting thread count.
+   */
+  if ( MY_LOCK(&bar->lock) ) {
+    SisalError( "MyBarrier", "barrier lock FAILED" );
+  }
+  bar->count--;
+
+  /*
+   * Last thread broadcasts done. Others loop, checking
+   * for done (relinquishing and taking the lock).
+   */
+  if (bar->count<1) {
+    if (cond_broadcast(&bar->cond)) {
+      SisalError( "MyBarrier", "barrier broadcast FAILED" );
+    }
+  } else {
+    while (bar->count>0) {
+      if (cond_wait(&bar->cond, &bar->lock)) {
+        SisalError( "MyBarrier", "barrier wait FAILED" );
+      }
+    }
+  }
+
+  /*
+   * Last thread is done (so all are done) and this thread has lock so unlock.
+   */
+  if (MY_UNLOCK(&bar->lock)) {
+    SisalError( "MyBarrier", "barrier unlock FAILED" );
+  }
+
+  return;
+}
+#endif
+
+/************************************************************************\
+ * POSIX threads
+\************************************************************************/
+
+#if defined(PTHREADS)
+#define PPPDEFINED
+
+int p_procnum = 0;
+static LOCK_TYPE  TheLock;
+
+void ReleaseSharedMemory()
+{
+  free( SharedBase );
+}
+
+static void* Transfer( ProcId )
+void* ProcId;
+{
+  GetProcId = (long)ProcId;
+
+#if defined(DIST_DSA)
+  if (ProcId != 0) {
+    InitDsa(DsaSize/(2*(NumWorkers - 1)), XftThreshold);
+  }
+#endif
+
+  EnterWorker( ProcId );
+
+  if ( ProcId != 0 ) {
+    LeaveWorker();
+    pthread_exit( 0 );
+  }
+  return NULL;
+}
+
+void AcquireSharedMemory( NumBytes ) 
+int NumBytes;
+{
+  SharedSize = NumBytes + 100000;
+
+  SharedBase = SharedMemory = (char *) malloc( SharedSize-40 );
+
+  if ( SharedMemory == (char *) NULL )
+    SisalError( "AcquireSharedMemory", "malloc FAILED" );
+}
+
+void StartWorkers()
+{
+  int NumProcs = NumWorkers;
+  pthread_t *thread = malloc(NumProcs*sizeof(*thread));
+
+  while( --NumProcs > 0 ) {
+    if ( pthread_create( &thread[NumProcs], (void*)NumProcs, Transfer,
+      (void*)NumProcs ) == -1 )
+      SisalError( "StartWorkers", "create FAILED" );
+  }
+
+  Transfer( (void*)NumProcs );
+}
+
+void StopWorkers()
+{
+  *SisalShutDown = TRUE;
+  LeaveWorker();
+}
+
+void AbortParallel()
+{
+  (void)exit( 1 );
+}
+
+BARRIER_TYPE *MyInitBarrier(limit)
+  int limit;
+{
+  BARRIER_TYPE *bar;
+
+  if ( (bar = malloc(sizeof(BARRIER_TYPE))) == NULL ) {
+    SisalError( "MyInitBarrier", "barrier malloc FAILED" );
+    return NULL;
+  }
+  if ( MY_INIT_LOCK(&bar->lock) ) {
+    SisalError( "MyInitBarrier", "barrier lock FAILED" );
+    return NULL;
+  }
+  bar->count = limit;
+
+  return bar;
+}
+
+void MyBarrier( bar )
+  BARRIER_TYPE *bar;
+{
+  /*
+   * Block for lock, then decrement waiting thread count.
+   */
+  if ( MY_LOCK(&bar->lock) ) {
+    SisalError( "MyBarrier", "barrier lock FAILED" );
+  }
+  bar->count--;
+  if (MY_UNLOCK(&bar->lock)) {
+    SisalError( "MyBarrier", "barrier unlock FAILED" );
+  }
+
+  /*
+   * Busy-wait loop, checking for done.
+   */
+  while (bar->count>0) {
+    pthread_yield();
+  }
+
+  return;
+}
+
+#endif /* PTHREADS */
+
+/************************************************************************\
+ * Sequential UNIX
+\************************************************************************/
+
+#ifndef PPPDEFINED
+#define PPPDEFINED
+
+int p_procnum = 0;
+
+void ReleaseSharedMemory()
+{
+  free( SharedBase );
+}
+
+void AcquireSharedMemory( NumBytes ) 
+int NumBytes;
+{
+  SharedSize = NumBytes + 100000;
+
+  SharedBase = SharedMemory = (char *)malloc( SharedSize-40 );
+
+  if ( SharedMemory == (char *) NULL )
+    SisalError( "AcquireSharedMemory", "malloc FAILED" );
+}
+
+void StartWorkers() 
+{
+#if defined(DIST_DSA)
+        if(p_procnum != 0)
+                InitDsa(DsaSize/(2*(NumWorkers - 1)), XftThreshold);
+#endif
+
+  EnterWorker( p_procnum );
+}
+
+void StopWorkers()
+{
+  *SisalShutDown = TRUE;
+  LeaveWorker();
+}
+
+void AbortParallel() 
+{ 
+  exit( 1 ); 
+}
+#endif
+

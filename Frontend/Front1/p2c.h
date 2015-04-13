@@ -7,15 +7,7 @@
  */
 
 
-#include <stdio.h>
-#include <ctype.h>
-#include <math.h>
-/* #include <setjmp.h> */
-/* #include <assert.h> */
-#ifndef NO_TIME
-# include <time.h>
-#endif
-
+#include "../../config.h"
 
 /* CANN 1/92 TO ALLOW FOR BIGGER LINE BUFFERS */
 #define short int
@@ -59,7 +51,7 @@
 
 
 # define Signed
-# define Void       int
+# define Void       void
 # ifndef Const
 #  define Const
 # endif
@@ -173,11 +165,6 @@ extern void	P_sun_argv  PP( (char *, int, int) );
 static char dummystring[1024];
 # define tmpfile()  (fopen(tmpnam(dummyfilename), "w+"))
 
-/* Memory allocation */
-#ifndef RS6000
-char *calloc();
-#endif
-
 extern Anyptr __MallocTemp__;
 # define Malloc(n)  ((__MallocTemp__ = calloc(n,1)) ? __MallocTemp__ : (Anyptr)_OutMem())
 
@@ -228,13 +215,13 @@ extern Anyptr __MallocTemp__;
 # define tolower(c)   my_tolower(c)
 #endif
 
-#ifndef _toupper
+#ifndef z_toupper
 # if 'A' == 65 && 'a' == 97
-#  define _toupper(c)  ((c)-'a'+'A')
-#  define _tolower(c)  ((c)-'A'+'a')
+#  define z_toupper(c)  ((c)-'a'+'A')
+#  define z_tolower(c)  ((c)-'A'+'a')
 # else
-#  define _toupper(c)  toupper(c)
-#  define _tolower(c)  tolower(c)
+#  define z_toupper(c)  toupper(c)
+#  define z_tolower(c)  tolower(c)
 # endif
 #endif
 

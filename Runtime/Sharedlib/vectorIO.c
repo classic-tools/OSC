@@ -112,8 +112,8 @@ POINTER val;
   register POINTER Base2;
   register int     HiBound;
   register int     Lo2;
-  register ARRAYP arr = (ARRAYP) val;
-  char		  c;
+  register ARRAYP  arr = (ARRAYP) val;
+  int		   c;
 
   PrintIndent;
   Lo2 = arr->LoBound;
@@ -122,8 +122,8 @@ POINTER val;
   if ( FibreStrings && Lo2 == 1 ) {
     fputc( '"', FibreOutFd );
     for (	; Lo2 <= HiBound; Lo2++ ) {
-      c = (((char*)Base2)[Lo2]);
-      if ( isprint(c) && isascii(c) ) {
+      c = *((char*)Base2+Lo2);
+      if ( isascii(c) && isprint(c) ) {
 	if ( c == '"' ) {
 	  fputs( "\\\"",FibreOutFd);
 	} else if ( c == '\\' ) {
@@ -150,7 +150,7 @@ POINTER val;
 
     Indent++;
     for (	; Lo2 <= HiBound; Lo2++ ) {
-      WriteChar( (((char*)Base2)[Lo2]) );
+      WriteChar( *((char*)Base2+Lo2) );
     }
 
     Indent--;

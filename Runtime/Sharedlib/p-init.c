@@ -36,11 +36,12 @@ static void SubmitNQS(argc,argv,nqs_idx)
      int	argc,nqs_idx;
      char	*argv[];
 {
+#if defined(CRAY) && !defined(CRAYT3D)
+  int		status = 1;
   int		i,avcnt;
   char		*p;
   char		scriptname[100];
   FILE		*script;
-  int		status;
   int		s;
   int		id;
 
@@ -100,6 +101,11 @@ static void SubmitNQS(argc,argv,nqs_idx)
     status = s;
     unlink(scriptname);
   }
+
+#else /* !CRAY */
+  int status = 1;
+  FPRINTF(stderr, "submit failed: NQS not implemented\n" );
+#endif /* CRAY */
 
   exit(status);
 }

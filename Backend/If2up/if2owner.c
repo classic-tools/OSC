@@ -12,7 +12,7 @@
 static int Sharing = FALSE;
 
 
-static int DoSharingAnalysis( g )
+static void DoSharingAnalysis( g )
 PNODE g;
 {
     register PNODE n;

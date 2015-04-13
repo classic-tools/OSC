@@ -2,7 +2,8 @@ SHELL=/bin/sh
 XMASK = 555
 MMASK = 444
 
-CC           = cc -g -DMAX_PROCS=1
+CC           = cc
+CFLAGS       = -g -DMAX_PROCS=1
 BIN_PATH     = ../../bin
 LIB_PATH     = ../../lib
 INC_PATH     = ../../include
@@ -40,19 +41,11 @@ newoptions:
 	mv osc.1 osc.1.bu
 	mv osc.1.new osc.1
 
-osc: osc.o
-	$(CC) -o osc osc.o
+osc: osc.c usage.h options.h ../Makefile ../config.h
+	$(CC) $(CFLAGS) -o osc osc.c -DBIN_PATH=${BP} -DLIB_PATH=${LP} -DINC_PATH=${IP}
 
-osc.o:  osc.c usage.h options.h ../Makefile ../config.h
-	$(CC) -c osc.c -DBIN_PATH=${BP} -DLIB_PATH=${LP} -DINC_PATH=${IP}
-	-@if [ $(MINIMAL) = 1 ]; then /bin/rm -f $*.c; else cat /dev/null; fi
-
-spp2: spp2.o ../config.h
-	$(CC) -o spp2 spp2.o
-
-spp2.o: spp2.c ../Makefile
-	$(CC) -c spp2.c
-	-@if [ $(MINIMAL) = 1 ]; then /bin/rm -f $*.c; else cat /dev/null; fi
+spp2: spp2.c ../Makefile ../config.h
+	$(CC) $(CFLAGS) -o spp2 spp2.c
 
 speedups: speedups.sh
 	cp speedups.sh speedups
@@ -94,7 +87,7 @@ install:
 # 183 == Previous declaration had prototype
 lint: $(SRCC)
 	@lint -u -v -woff 91,302,307,127,183 \
-		`echo -DLINT $(CFLAGS) -DBIN_PATH=${BP} $(CC) | tr ' ' '\012' | egrep ^-D | egrep -v "^-DUSE(CC|FF)="`\
+		`echo -DLINT $(CFLAGS) -DBIN_PATH=${BP} | tr ' ' '\012' | egrep ^-D | egrep -v "^-DUSE(CC|FF)="`\
 		$(SRC) -lm \
 		| tee lint.log \
 		| egrep -v '( )(bcopy|free|malloc|strlen|lseek|read|isalpha|strcmp|strncmp|strcpy|strncpy|strcat|isspace|isdigit)(.*)llib-lc'

@@ -367,10 +367,10 @@ returns
   array of dadd(hel,iel)
   array of dsub(hel,iel)
   array of dmul(hel,iel)
-  array of if ( iel = 0d ) then 0d else ddiv(hel,iel) end if
+  array of if ( iel = double_real(0) ) then double_real(0) else ddiv(hel,iel) end if
 
-  array of if hel < 0d | iel <= 0d then 0d else ddexp(hel,iel) end if
-  array of if jel = 0 | (hel <= 0d & jel <0) then 0d else diexp(hel,jel) end if
+  array of if hel < double_real(0) | iel <= double_real(0) then double_real(0) else ddexp(hel,iel) end if
+  array of if jel = 0 | (hel <= double_real(0) & jel <0) then double_real(0) else diexp(hel,jel) end if
   
   array of dneg(hel)
   array of dabs(hel)
@@ -422,15 +422,15 @@ end for,
 
 %%%%%%%%%% Section 5.9
 "Section 5.9",
-rcreate(11,1.0,2.0d0,array [1: 11, 22, 33]),
+rcreate(11,1.0,double_real(2.0),array [1: 11, 22, 33]),
 rsel(r),
 rrepl(r,9999),
-arcreate(11,1.0,2.0d0),
-arsel(2, arcreate(11,1.0,2.0d0)),
+arcreate(11,1.0,double_real(2.0)),
+arsel(2, arcreate(11,1.0,double_real(2.0))),
 
 %%%%%%%%%% Section 5.10
 "Section 5.10",
-ucreate(11,1.0,2.0d0,array [1: 11, 22, 33]),
+ucreate(11,1.0,double_real(2.0),array [1: 11, 22, 33]),
 utag(u0),
 utag(u1),
 utag(u2),

@@ -703,7 +703,7 @@ int	LoopSliceCount;
   struct ActRec *FirstAR;
   int            Count;
 
-  BuildSlices( LoopType, &FirstAR, &Count, ChildCode, ArgPointer, Low, High, MinSlice, LoopSliceCount );
+  BuildSlices( LoopType, &FirstAR, &Count, ChildCode, ArgPointer, Low, High, MinSlice, LoopSliceCount, 0, 0 );
 
   OptSpawnSlices( FirstAR, Count );
 

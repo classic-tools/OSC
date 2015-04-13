@@ -141,6 +141,9 @@ INSTALLATION PROCEDURE
    script will produce the Makefile after asking some questions.
    When Makefile is built, you should examine at least the first
    part of it to make sure that the right things will happen.
+   You may type "make check" to verify the compilation.
+   "make check_all" runs a more complete test suite and continues
+   through errors. "make check_par PROCS=3" checks three processors.
 
 3. Once you've built PATH/Makefile, you're ready to install.
    If you have the power to write into the directories you specified

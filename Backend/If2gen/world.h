@@ -184,6 +184,7 @@ extern void	PrintUTagTest();
 
 /* if2array.c */
 extern char	*GetSisalInfo();
+extern char	*GetSisalInfoOnEdge();
 extern void	PrintBoundsCheck();
 extern void	PrintRagged();
 extern void	PrintPSMemAllocDVI();
@@ -223,6 +224,7 @@ extern void	PrintFirstSum();
 extern void	PrintTri();
 extern void	PrintVMinMax();
 extern int	LCMSize();
+extern void	PrintReturnRapUp();
 
 /* if2aimp.c */
 extern void	NormalizeVectorLoop();
@@ -234,6 +236,8 @@ extern void	WriteIf2AImpInfo();
 extern void	PrepareGraph();
 extern void	If2Opt();
 extern void	WriteIf2OptInfo();
+extern void     WriteIf2AImpInfo2();
+extern void     WriteIf2OptInfo2();
 
 /* if2vector.c */
 extern void	WriteVectorInfo();
@@ -279,3 +283,8 @@ extern void	PrintSdbxFunctionList();
 extern void	BuildAndPrintSdbxScope();
 extern void	UpdateSdbxScopeNames();
 extern void	SaveSdbxState();
+
+/* if2ureduce.c */
+extern void     PrintUReduceRapUp();
+extern void     PrintUReduceUpd();
+extern void     PrintUReduceInit();

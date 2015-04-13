@@ -5,6 +5,7 @@ MMASK = 444
 .SUFFIXES: .c .o
 
 CC           = cc
+CFLAGS       = -g
 BIN_PATH     = ../../../bin
 LIB_PATH     = ../../../lib
 INC_PATH     = ../../../include
@@ -19,7 +20,7 @@ INCL   = p2c.h frontend.h
 MINIMAL=0
 
 .c.o:
-	${CC} -c $*.c
+	${CC} ${CFLAGS} -c $*.c
 	-@if [ $(MINIMAL) = 1 ]; then /bin/rm -f $*.c; else cat /dev/null; fi
 
 local: sisal
@@ -27,7 +28,7 @@ optional:
 all: local optional
 
 sisal:${PAR} ${OBJLD}
-	${CC} -o sisal ${OBJLD}
+	${CC} ${CFLAGS} -o sisal ${OBJLD}
 
 install:
 	/bin/rm -f ${BIN_PATH}/sisal

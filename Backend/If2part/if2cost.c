@@ -94,9 +94,9 @@ char *fn;
 
 static void WriteCostTables()
 {
-    register int i;
+ /*   register int i;
 
- /*   if ( RequestInfo(I_Info4,info)  ) {
+      if ( RequestInfo(I_Info4,info)  ) {
 
       FPRINTF( infoptr, "\n **** COST TABLES\n" );
 

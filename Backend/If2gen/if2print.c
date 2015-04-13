@@ -101,11 +101,10 @@ PEDGE e;
 	  return;
 	  } 
 
-        ERRORINFO( "e = 0x%x ", (unsigned)e );
+	UNEXPECTED( "missing temporary" );
 	ERRORINFO( "e->if1line = %d", e->if1line );
 	ERRORINFO( "e->dst->type = %d ", e->dst->type );
 	ERRORINFO( "e->eport = %d", e->eport );
-	UNEXPECTED( "Missing temporary" );
         return;
 	}
 

@@ -12,12 +12,6 @@
 #define BANNER "SUN SISAL 1.2"
 #endif
 
-#ifdef SUNIX
-#ifndef RS6000
-#define BANNER "SISAL 1.2"
-#endif
-#endif
-
 #ifdef CRAY
 #define BANNER "CRAY SISAL 1.2"
 #endif
@@ -40,6 +34,10 @@
 
 #ifdef SYMMETRY
 #define BANNER "SYMMETRY SISAL 1.2"
+#endif
+
+#ifndef BANNER
+#define BANNER "SISAL 1.2"
 #endif
 
 #define DEFAULT_NUM_WORKERS       1

@@ -233,7 +233,7 @@ if (argv[idx][0] == '-' ) {                                              /* M */
   /*    Indicate the master process on distributed processors.    */     /*   */
   /* ------------------------------------------------------------ */     /* G */
                                                                          /* e */
-      return;                                                            /* n */
+      /* return */;                                                      /* n */
                                                                          /* e */
       break;                                                             /* r */
     }                                                                    /* a */

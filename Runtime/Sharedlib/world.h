@@ -3,7 +3,6 @@
 
 #include "config.h"
 
-extern void bcopy();
 extern void ShutDownDsa();
 extern void ParseTracerCommand();
 extern void InitDsa();

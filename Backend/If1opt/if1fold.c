@@ -1365,7 +1365,7 @@ PNODE n;
 	case IFPlus:
 	    switch ( n->imp->info->type ) {
 		case IF_INTEGER:
-		    SPRINTF( a, "%d", iop1 + iop2 );
+		    SPRINTF( a, "%ld", iop1 + iop2 );
 		    break;
 
 		case IF_DOUBLE:
@@ -1383,7 +1383,7 @@ PNODE n;
 	case IFTimes:
 	    switch ( n->imp->info->type ) {
 		case IF_INTEGER:
-		    SPRINTF( a, "%d", iop1 * iop2 );
+		    SPRINTF( a, "%ld", iop1 * iop2 );
 		    break;
 
 		case IF_DOUBLE:
@@ -1400,7 +1400,7 @@ PNODE n;
 
 	case IFMinus:
 	    if ( IsInteger( n->imp->info ) )
-		SPRINTF( a, "%d", iop1 - iop2 );
+		SPRINTF( a, "%ld", iop1 - iop2 );
             else
 		SPRINTF( a, "%.16e", dop1 - dop2 );
 
@@ -1409,7 +1409,7 @@ PNODE n;
 	case IFDiv:
 	    if ( IsInteger( n->imp->info ) ) {
 		if ( iop2 == 0 ) return;
-		SPRINTF( a, "%d", iop1 / iop2 );
+		SPRINTF( a, "%ld", iop1 / iop2 );
             } else {
 		if ( dop2 == 0.0 ) return;
 		SPRINTF( a, "%.16e", dop1 / dop2 );
@@ -1422,7 +1422,7 @@ PNODE n;
 	        return;
 
 	    if ( iop2 == 0 ) return;
-            SPRINTF( a, "%d", iop1 % iop2 );
+            SPRINTF( a, "%ld", iop1 % iop2 );
             break;
 
 	case IFExp:
@@ -1438,7 +1438,7 @@ PNODE n;
 	case IFMax:
 	    switch ( n->imp->info->type )  {
                 case IF_INTEGER:
-		    SPRINTF( a, "%d", ( iop1 > iop2 )? iop1 : iop2 );
+		    SPRINTF( a, "%ld", ( iop1 > iop2 )? iop1 : iop2 );
 		    break;
 
 		case IF_REAL:
@@ -1455,7 +1455,7 @@ PNODE n;
 	case IFMin:
 	    switch ( n->imp->info->type )  {
                 case IF_INTEGER:
-		    SPRINTF( a, "%d", ( iop1 < iop2 )? iop1 : iop2 );
+		    SPRINTF( a, "%ld", ( iop1 < iop2 )? iop1 : iop2 );
 		    break;
 
 		case IF_REAL:
@@ -1479,7 +1479,7 @@ PNODE n;
 
 	case IFNeg:
 	    if ( IsInteger( n->imp->info ) )
-		SPRINTF( a, "%d", -iop1 );
+		SPRINTF( a, "%ld", -iop1 );
             else
 		SPRINTF( a, "%.16e", -dop1 );
 
@@ -1525,13 +1525,13 @@ PNODE n;
 
 	case IFChar:
             if ( (iop1 < ' ') || (iop1 > '~') )
-                SPRINTF( a, "\\0%o", iop1 );
+                SPRINTF( a, "\\0%lo", iop1 );
             else if ( iop1 == '\\' )
                 SPRINTF( a, "\\\\" );
             else if ( iop1 == '\'' )
                 SPRINTF( a, "\\'" );
             else
-                SPRINTF( a, "%c", iop1 );
+                SPRINTF( a, "%lc", iop1 );
 
             break;
 

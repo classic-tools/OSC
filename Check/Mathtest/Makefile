@@ -5,6 +5,7 @@ DIFF=diff
 OSC=osc
 SRFLAGS=
 SFLAGS=
+ANS=
 
 run: touch basic basic.in basic.ans
 	basic $(SRFLAGS) basic.in > basic.test \
@@ -13,8 +14,8 @@ run: touch basic basic.in basic.ans
 		-fformat "%.1f " \
 		-dformat "%.1lf " \
 		-iformat "%d "
-	@-$(DIFF) basic.test basic.ans >> test.log
-	$(DIFF) basic.test basic.ans
+	@-$(DIFF) basic.test basic$(ANS).ans >> test.log
+	$(DIFF) basic.test basic$(ANS).ans
 	@echo Compared OK
 
 touch:
@@ -24,5 +25,5 @@ basic: basic.sis
 
 clean:
 	@/bin/rm -f basic basic.o basic.test test.log s.info
-	@/bin/rm -f core *.if1 *.opt *.mono *.mem *.up *.part *.c *.o
+	@/bin/rm -f core *.if1 *.opt *.mono *.mem *.up *.part *.c *.o *.i
 #

@@ -93,7 +93,7 @@ int my_toupper(c)
 int c;
 {
     if (islower(c))
-	return _toupper(c);
+	return z_toupper(c);
     else
 	return c;
 }
@@ -103,7 +103,7 @@ int my_tolower(c)
 int c;
 {
     if (isupper(c))
-	return _tolower(c);
+	return z_tolower(c);
     else
 	return c;
 }
@@ -936,6 +936,7 @@ int code;
         CANN_exit(1);
     fprintf(stderr, "%s\n", _ShowEscape(buf, P_escapecode, P_ioresult, ""));
     CANN_exit(1);
+    return code;
 }
 
 int _EscIO(code)

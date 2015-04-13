@@ -21,7 +21,7 @@
 #define MyBCopy(x,y,z) \
 { \
   if ( z != 0 ) \
-    bcopy(x,y,z); \
+    memmove(y,x,z); \
 }
 
 

@@ -25,5 +25,5 @@ simple: simple2a.sis
 
 clean:
 	@/bin/rm -f simple simple.test test.log s.info simple.in
-	@/bin/rm -f core *.if1 *.opt *.mono *.mem *.up *.part *.c *.o
+	@/bin/rm -f core *.if1 *.opt *.mono *.mem *.up *.part *.c *.o *.i
 #

@@ -925,7 +925,7 @@ PNODE n;
 
 
 /**************************************************************************/
-/* LOCAL  **************     PrintReturnRapUp      ************************/
+/* GLOBAL **************     PrintReturnRapUp      ************************/
 /**************************************************************************/
 /* PURPOSE: PRINT RETURN SUBGRAPH r'S RAP-UP MACROS TO output.  THIS IS   */
 /*          DONE AFTER THE LOOP HAS COMPLETED TO FINALIZE THE RESULTS.    */

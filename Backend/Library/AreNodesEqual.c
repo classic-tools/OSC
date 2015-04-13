@@ -25,7 +25,7 @@ PNODE n2;
     return( FALSE );
 
   switch ( n1->type ) {
-   case IFABuild:
+   case IFABuild:case IFSBuild:/*cy--streams should have same semantics*/
     /* BUG FIX FOR EMPTY ARRAY BUILDS --- 7/14/89 CANN */
     if ( n1->imp->isucc == NULL ) return( FALSE );
     /* END BUG FIX */
@@ -33,6 +33,7 @@ PNODE n2;
    case IFAFill:
    case IFRBuild:
    case IFAGather:
+   case IFSGather:
     if ( n1->exp->info->type != n2->exp->info->type )
       return( FALSE );
 
@@ -87,6 +88,10 @@ PNODE n2;
 }
 
 /* $Log: AreNodesEqual.c,v $
+ * Revision 1.2  1994/08/29  08:01:33  chad
+ * New STREAM node numbers (333 to ...) have been added.
+ * Predicates for identifying STREAM nodes also added.
+ *
  * Revision 1.1  1993/01/21  23:27:46  miller
  * Initial version of the IFX library.  It replaces the if[12]build.c
  * read.c timer.c util.c and write.c and if[12].h files from the

@@ -21,6 +21,7 @@
 
 static void InsertNoOp( e, omark )
 PEDGE e;
+int omark;
 {
     register PNODE n;
     register PEDGE ee;

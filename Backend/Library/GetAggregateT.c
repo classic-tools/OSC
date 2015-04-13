@@ -13,7 +13,6 @@ GetAggregate(AggregateType,T,name)
      char       *name;
 {
   register PINFO i;
-  register int   t;
 
   /* ------------------------------------------------------------ */
   /* See if one already exists with the proper structure	  */

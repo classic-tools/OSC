@@ -10,7 +10,7 @@ extern Void getline PP((inputbuffer **buffer));
 
 extern Void peek PP((short *sym));
 
-extern Void deletetokens PP((int howmany));
+extern Void deletetokens PP((int pighowmany));
 
 extern Void inserttokens PP((stagerec fix));
 
@@ -163,14 +163,13 @@ Static Void skips()
      same as readS, but ignore the info
   ------------------------------------------------------------------*/
   short sym;
-  int savec, i, c, length;
+  int i, c, length;
   short FORLIM;
 
   FORLIM = numsymbols;
   for (sym = numterms + 1; sym <= FORLIM; sym++) {
     fread(&c, sizeof(int), 1, etableout);
     fread(&length, sizeof(int), 1, etableout);
-    savec = c;
     for (i = 1; i <= length; i++)
       fread(&c, sizeof(int), 1, etableout);
   }  /* for */
@@ -942,7 +941,6 @@ inputbuffer **buffer;
      print previous line, if appropriate
    ------------------------------------------------------------------*/
   inputbuffer *temp;
-  PBBLOCK b;
 
   if (!peeking && (listing || (*buffer)->modified))
     printline(*buffer);
@@ -1035,11 +1033,11 @@ inputbuffer *buffer;
 }  /* insertcharbuf */
 
 
-Static Void displaydeletions(howmany)
-int howmany;
+Static Void displaydeletions(pighowmany)
+int pighowmany;
 {
   /*----------------------------------------------------------------
-    show that howmany tokens have been deleted
+    show that pighowmany tokens have been deleted
     (calls scan)
     be careful to leave the pointer pointing to the right place
     which is the next character after the change.
@@ -1055,7 +1053,7 @@ int howmany;
   oldline->pointer++;
   savbuf = oldline;
   oldline->pointer = tokenstart;
-  for (i = 1; i <= howmany; i++) {  /* move past howmany tokens */
+  for (i = 1; i <= pighowmany; i++) {  /* move past pighowmany tokens */
     modify(oldline);
     scan(&sym, &tokenlineno, &oldline);
   }
@@ -1287,8 +1285,8 @@ struct LOC_scan *LINK;
     deletestring(&inputtoken, inputtoken.len, inputtoken.len);
     return Result;
   }
-  if ((LINK->ch < ' ' || LINK->ch > '~') | P_inset(LINK->ch, badcharset))
-    return 24;
+  /*  if ((LINK->ch < ' ' || LINK->ch > '~') | P_inset(LINK->ch, badcharset))
+      return 24;  Using the default in the switch below instead */
   switch (LINK->ch) {   /* case ch */
 
   case '+':
@@ -1371,6 +1369,7 @@ struct LOC_scan *LINK;
     Result = 30;
     break;
 
+  case '#':
   case '%':
     Result = 5;
     break;
@@ -1407,7 +1406,11 @@ struct LOC_scan *LINK;
   case '9':
     Result = 18;
     break;
+
+  default:
+    Result = 24;
   }
+
   return Result;
 }
 
@@ -2142,7 +2145,7 @@ int *tokenlineno;
              else pop one off of buffer
     positions the old line buffer same as current buffer
    -----------------------------------------------------------------*/
-  rabrec *ptr;
+  /* rabrec *ptr; */
   stryng tempstr, tempstr2;
   int i, FORLIM;
 
@@ -2160,9 +2163,9 @@ int *tokenlineno;
       string10(&inputtoken, "<NAME>    ");
       stripspaces(&inputtoken);
     }
-    ptr = readaheadbuf;
+    /* ptr = readaheadbuf; */
     readaheadbuf = readaheadbuf->next;
-    Free(ptr);
+    /* Free(ptr); */
   } else {
     scan(tok, tokenlineno, &linebuf);
     if (cortrace) {
@@ -2202,19 +2205,19 @@ int *tokenlineno;
 }  /* gettok */
 
 
-Static Void deletetokens(howmany)
-int howmany;
+Static Void deletetokens(pighowmany)
+int pighowmany;
 {
-  /* (howmany: integer);forward*/
+  /* (pighowmany: integer);forward*/
   /*----------------------------------------------------------
-    remove howmany tokens from buffer,
+    remove pighowmany tokens from buffer,
     and update display image to show tokens deleted
     ----------------------------------------------------------*/
   if (debug)
     printf("start deletokens\n");
   endfile = false;
   toconsume = 1;
-  displaydeletions(howmany);
+  displaydeletions(pighowmany);
   if (debug)
     printf("end deletetokens\n");
 }  /* deletetokens */
@@ -2449,7 +2452,7 @@ Static int tos()
 Static Void pop()
 {
   /*------------------------------------------------------------
-    pop howmany items from the stack.
+    pop pighowmany items from the stack.
    -------------------------------------------------------------*/
   if (debug)
     printf("start pop\n");
@@ -2612,7 +2615,6 @@ Static Void init()
     initialize anything and everything except scanner, need to read tables first
    --------------------------------------------------------------*/
   inputbuffer *WITH;
-  PBBLOCK b;
 
   if (debug)
     printf("start init\n");
@@ -3165,8 +3167,7 @@ FILE *outfile_;
   stryng pragmaparam, inclstring;
   boolean blankline;
   int pointer, len;
-  boolean endoffile, temperror;
-  PBBLOCK b;
+  boolean endoffile /*, temperror*/;
 
   txt = *txtp;
   fname_ = *fname_p;
@@ -3257,7 +3258,7 @@ FILE *outfile_;
 	  if (linebuf->length > 0)
 	    dumpline(linebuf, &V);
 	  pushinclstack(V.fname, linenum, &V);
-	  temperror = pass1(&pragmaparam,&pragmaparam, V.outfile);
+	  /* temperror = */ (Void)pass1(&pragmaparam,&pragmaparam, V.outfile);
 	  popinclstack(&V);
 	  fprintf(V.outfile, "%%$UNINCLUDE(");
 	  writestring(V.outfile, &V.fname);
@@ -3295,7 +3296,7 @@ node *n;
      - The ports of N are shifted left by 1
    */
   node *newn;
-  port *arraye, *indexe, *newe;
+  port *arraye, *indexe /*, *newe*/;
   stentry *etype, *edgebasetype;
   stryng ename;
 
@@ -3313,7 +3314,7 @@ node *n;
     edgebasetype = etype->UU.stbasetype;
   mymemcpy(ename.str, blankstring, sizeof(stryngar));
   ename.len = 0;
-  newe = insertedge(newn, 1, n, 1, edgebasetype, ename);
+  /* newe = */ (Void)insertedge(newn, 1, n, 1, edgebasetype, ename);
 }  /* SplitAElement */
 
 Local Void convertareplacen(n)
@@ -3327,7 +3328,7 @@ node *n;
      - Change the Remaining AReplaceN node to its equivalent AReplace node.
    */
   node *newaelem, *parent, *aelem, *arepl, *pn;
-  port *levele, *arraye, *newe, *indexe, *e, *tmpe;
+  port *levele, *arraye, /* *newe, */ *indexe, *e, *tmpe;
   stryng litvalue, levelstring, ename;
   int startpos, level, pp;
   stentry *arraytype, *indextype, *arraybasetype;
@@ -3351,22 +3352,22 @@ node *n;
     ename = arraye->ptname;
     if (arraye->ptsort == ptlit) {
       litvalue = arraye->UU.ptlitvalue;
-      newe = insertliteral(arepl, 1, arraytype, litvalue, ename);
+      /* newe = */ (Void)insertliteral(arepl, 1, arraytype, litvalue, ename);
     } else {
       pn = producernodeofedge(arraye);
       pp = producerportnumber(arraye);
-      newe = insertedge(pn, pp, arepl, 1, arraytype, ename);
+      /* newe = */ (Void)insertedge(pn, pp, arepl, 1, arraytype, ename);
     }
     indexe = getinputedge(n, 3);
     indextype = indexe->pttype;
     ename = indexe->ptname;
     if (indexe->ptsort == ptlit) {
       litvalue = indexe->UU.ptlitvalue;
-      newe = insertliteral(arepl, 2, indextype, litvalue, ename);
+      /* newe = */ (Void)insertliteral(arepl, 2, indextype, litvalue, ename);
     } else {
       pn = producernodeofedge(indexe);
       pp = producerportnumber(indexe);
-      newe = insertedge(pn, pp, arepl, 2, indextype, ename);
+      /* newe = */ (Void)insertedge(pn, pp, arepl, 2, indextype, ename);
     }
     /* Move Output Edges from node N to ARepl */
     e = n->ndolist;
@@ -3383,8 +3384,8 @@ node *n;
     arraybasetype = arraytype->UU.stbasetype;
     mymemcpy(ename.str, blankstring, sizeof(stryngar));
     ename.len = 0;
-    newe = insertedge(aelem, 1, n, 1, arraybasetype, ename);
-    newe = insertedge(n, 1, arepl, 3, arraybasetype, ename);
+    /* newe = */ (Void)insertedge(aelem, 1, n, 1, arraybasetype, ename);
+    /* newe = */ (Void)insertedge(n, 1, arepl, 3, arraybasetype, ename);
     level--;
   }
   /* convert to AReplace node */
@@ -3430,7 +3431,7 @@ Local node *createselectorgraph(n)
 node *n;
 {
   node *g;
-  port *e;
+  /* port *e;*/
   stryng ename;
 
   g = newnodealloc(ndgraph);
@@ -3440,7 +3441,7 @@ node *n;
   g->ndcode = ifngraph;
   mymemcpy(ename.str, blankstring, sizeof(stryngar));
   ename.len = 0;
-  e = insertedge(g, 1, g, 1, getbasictype(ifbinteger), ename);
+  /* e = */ (Void)insertedge(g, 1, g, 1, getbasictype(ifbinteger), ename);
   return g;
 }  /* CreateSelectorGraph */
 
@@ -3458,7 +3459,7 @@ node *n;
         - The False branch becomes Subgraph 1
         - The True branch becomes Subgraph 2
   */
-  port *pe, *e;
+  port *pe /*, *e*/;
   stentry *ity, *pt;
   node *pn, *intn;
   int pp;
@@ -3474,11 +3475,11 @@ node *n;
   pt = pe->pttype;
   if (pe->ptsort == ptlit) {
     litvalue = pe->UU.ptlitvalue;
-    e = insertliteral(intn, 1, pt, litvalue, pname);
+    /* e = */ (Void)insertliteral(intn, 1, pt, litvalue, pname);
   } else {
     pn = producernodeofedge(pe);
     pp = producerportnumber(pe);
-    e = insertedge(pn, pp, intn, 1, pt, pname);
+    /* e = */ (Void)insertedge(pn, pp, intn, 1, pt, pname);
   }
   /* Shift input edges RIGHT one port */
   shiftinputports(n, 1, 1);
@@ -3488,7 +3489,7 @@ node *n;
   ity = getbasictype(ifbinteger);
   mymemcpy(pname.str, blankstring, sizeof(stryngar));
   pname.len = 0;
-  e = insertedge(intn, 1, n, 1, ity, pname);
+  /* e = */ (Void)insertedge(intn, 1, n, 1, ity, pname);
   /* Change N to a SELECT node */
   n->ndcode = ifnselect;
   /* Swap True and False graphs */
@@ -3521,7 +3522,7 @@ node *n;
   int count, eport;
   stryng ename;
   stentry *etype;
-  port *e, *newe;
+  port *e /*, *newe*/;
   node *predicate, *intn, *seln;
   graph *gr, *gr1, *gr2, *pgr;
   int FORLIM;
@@ -3543,13 +3544,13 @@ node *n;
   changeedgedest(e, intn, 1);
   mymemcpy(ename.str, blankstring, sizeof(stryngar));
   ename.len = 0;
-  newe = insertedge(intn, 1, seln, 1, getbasictype(ifbinteger), ename);
+  /* newe = */ (Void)insertedge(intn, 1, seln, 1, getbasictype(ifbinteger), ename);
   e = n->ndilist;
   while (e != NULL) {
     etype = e->pttype;
     ename = e->ptname;
     eport = e->pttoport;
-    newe = insertedge(predicate, eport, seln, eport + 1, etype, ename);
+    /* newe = */ (Void)insertedge(predicate, eport, seln, eport + 1, etype, ename);
     e = e->pttonext;
   }
   FORLIM = largestoutputportnumber(n);
@@ -3558,7 +3559,7 @@ node *n;
     if (e != NULL) {
       etype = e->pttype;
       ename = e->ptname;
-      newe = insertedge(seln, eport, predicate, eport, etype, ename);
+      /* newe = */ (Void)insertedge(seln, eport, predicate, eport, etype, ename);
     }
   }
   /* Add subgraphs to Select Node */
@@ -4303,7 +4304,7 @@ struct LOC_fixreturnsgraph *LINK;
      a literal or from a K port.  If it is, a new L or T port is
      added and this edge is redirected to that new port.
    */
-  port *e, *newe;
+  port *e /*, *newe*/;
   stryng ename;
   stentry *etype;
   int pp;
@@ -4322,14 +4323,14 @@ struct LOC_fixreturnsgraph *LINK;
     if (LINK->isforall) {
       LINK->t++;
       changeedgedest(e, LINK->bodyg, LINK->t);
-      newe = insertedge(LINK->retg, LINK->t, n, p, etype, ename);
+      /* newe = */ (Void)insertedge(LINK->retg, LINK->t, n, p, etype, ename);
       return;
     }
     createnewlport(LINK);
     changeedgedest(e, LINK->initg, LINK->l);
-    newe = insertedge(LINK->bodyg, LINK->l, LINK->bodyg, LINK->l, etype,
+    /* newe = */ (Void)insertedge(LINK->bodyg, LINK->l, LINK->bodyg, LINK->l, etype,
 		      ename);
-    newe = insertedge(LINK->retg, LINK->l, n, p, etype, ename);
+    /* newe = */ (Void)insertedge(LINK->retg, LINK->l, n, p, etype, ename);
     return;
   }
   pn = producernodeofedge(e);
@@ -4338,13 +4339,13 @@ struct LOC_fixreturnsgraph *LINK;
     return;
   if (LINK->isforall) {  /* Should Come from a T port in the Body */
     LINK->t++;
-    newe = insertedge(LINK->bodyg, pp, LINK->bodyg, LINK->t, etype, ename);
+    /* newe = */ (Void)insertedge(LINK->bodyg, pp, LINK->bodyg, LINK->t, etype, ename);
     changeedgesrc(e, LINK->retg, LINK->t);
     return;
   }
   createnewlport(LINK);
-  newe = insertedge(LINK->initg, pp, LINK->initg, LINK->l, etype, ename);
-  newe = insertedge(LINK->bodyg, LINK->l, LINK->bodyg, LINK->l, etype, ename);
+  /* newe = */ (Void)insertedge(LINK->initg, pp, LINK->initg, LINK->l, etype, ename);
+  /* newe = */ (Void)insertedge(LINK->bodyg, LINK->l, LINK->bodyg, LINK->l, etype, ename);
   changeedgesrc(e, LINK->retg, LINK->l);
 
   /* E is an edge */
@@ -4360,7 +4361,7 @@ struct LOC_fixreturnsgraph *LINK;
        K ports.  A copy of the node is make outside and a new K port
        and edges are created for each wired output port of N
   */
-  port *le, *e, *newe, *tmpe;
+  port *le, *e, /* *newe,*/ *tmpe;
   node *newn, *pn;
   int pp, cp;
   stryng ename, litvalue;
@@ -4383,7 +4384,7 @@ struct LOC_fixreturnsgraph *LINK;
       etype = e->pttype;
       if (etype->stsort == iftmultiple)
 	etype = etype->UU.stbasetype;
-      newe = insertliteral(newn, cp, etype, litvalue, ename);
+      /* newe = */(Void)insertliteral(newn, cp, etype, litvalue, ename);
     } else {
       pp = producerportnumber(e);
       le = getinputedge(LINK->loop, pp);
@@ -4393,11 +4394,11 @@ struct LOC_fixreturnsgraph *LINK;
 	etype = etype->UU.stbasetype;
       if (le->ptsort == ptlit) {
 	litvalue = le->UU.ptlitvalue;
-	newe = insertliteral(newn, cp, etype, litvalue, ename);
+	/* newe = */(Void)insertliteral(newn, cp, etype, litvalue, ename);
       } else {
 	pn = producernodeofedge(le);
 	pp = producerportnumber(le);
-	newe = insertedge(pn, pp, newn, cp, etype, ename);
+	/* newe = */(Void)insertedge(pn, pp, newn, cp, etype, ename);
       }
     }
     e = e->pttonext;
@@ -4412,7 +4413,7 @@ struct LOC_fixreturnsgraph *LINK;
       if (etype->stsort == iftmultiple)
 	etype = etype->UU.stbasetype;
       ename = e->ptname;
-      newe = insertedge(newn, pp, LINK->loop, LINK->k, etype, ename);
+      /* newe = */(Void)insertedge(newn, pp, LINK->loop, LINK->k, etype, ename);
       do {
 	tmpe = e;
 	e = nextoutputedgesameport(e);
@@ -4437,7 +4438,7 @@ struct LOC_fixreturnsgraph *LINK;
    */
   node *prev, *newn, *pn;
   int pp, cp;
-  port *ge, *e, *newe;
+  port *ge, *e /*, *newe*/;
   stentry *etype;
   stryng ename, litvalue;
   int FORLIM;
@@ -4455,19 +4456,19 @@ struct LOC_fixreturnsgraph *LINK;
     ename = e->ptname;
     if (e->ptsort == ptlit) {
       litvalue = e->UU.ptlitvalue;
-      newe = insertliteral(newn, cp, etype, litvalue, ename);
+      /* newe = */ (Void)insertliteral(newn, cp, etype, litvalue, ename);
     } else {  /* E is an edge, trace it back to graph G */
       pp = producerportnumber(e);
       ge = getinputedge(g, pp);
       if (ge == NULL)   /* create one */
-	newe = insertedge(g, pp, newn, cp, etype, ename);
+	/* newe = */ (Void)insertedge(g, pp, newn, cp, etype, ename);
       else if (ge->ptsort == ptedge) {
 	pp = producerportnumber(ge);
 	pn = producernodeofedge(ge);
-	newe = insertedge(pn, pp, newn, cp, etype, ename);
+	/* newe = */ (Void)insertedge(pn, pp, newn, cp, etype, ename);
       } else {
 	litvalue = ge->UU.ptlitvalue;
-	newe = insertliteral(newn, cp, etype, litvalue, ename);
+	/* newe = */ (Void)insertliteral(newn, cp, etype, litvalue, ename);
       }
     }
     e = e->pttonext;
@@ -4481,7 +4482,7 @@ struct LOC_fixreturnsgraph *LINK;
       etype = e->pttype;
       if (etype->stsort == iftmultiple)
 	etype = etype->UU.stbasetype;
-      newe = insertedge(newn, LINK->port_, g, startport, etype, ename);
+      /* newe = */ (Void)insertedge(newn, LINK->port_, g, startport, etype, ename);
       startport++;
     }
   }
@@ -4514,7 +4515,7 @@ struct LOC_fixreturnsgraph *LINK;
       to where ever the output of FVNode used to go (this edge will come
       out of the loop node);*/
   node *newn, *newfv;
-  port *nextedgetomove, *nexte, *newe, *tempe;
+  port *nextedgetomove, *nexte, /* *newe,*/ *tempe;
   stentry *etype;
   stryng valuestr, namestr;
   int eoldinputport;
@@ -4538,18 +4539,18 @@ struct LOC_fixreturnsgraph *LINK;
       if (LINK->e->ptsort == ptlit) {
 	valuestr = LINK->e->UU.ptlitvalue;
 	namestr = LINK->e->ptname;
-	newe = insertliteral(newn, LINK->e->pttoport, etype, valuestr,
+	/* newe = */ (Void)insertliteral(newn, LINK->e->pttoport, etype, valuestr,
 			     namestr);
       } else {  /*else its coming from a K Port */
 	tempe = getinputedge(loop, producerportnumber(LINK->e));
 	namestr = tempe->ptname;
 	if (tempe->ptsort == ptlit) {
 	  valuestr = tempe->UU.ptlitvalue;
-	  newe = insertliteral(newn, LINK->e->pttoport, etype, valuestr,
+	  /* newe = */ (Void)insertliteral(newn, LINK->e->pttoport, etype, valuestr,
 			       namestr);
 	}  /*then*/
 	else
-	  newe = insertedge(producernodeofedge(tempe),
+	  /* newe = */ (Void)insertedge(producernodeofedge(tempe),
 			    producerportnumber(tempe), newn,
 			    LINK->e->pttoport, etype, namestr);
       }  /*else*/
@@ -4597,7 +4598,7 @@ node *n, *loop;
 struct LOC_fixreturnsgraph *LINK;
 {
   int pp, foroutport;
-  port *fvinedge, *fvoutedge, *foroutedge, *loopinedge, *newe, *tempe;
+  port *fvinedge, *fvoutedge, *foroutedge, *loopinedge, /* *newe,*/ *tempe;
   boolean literal;
   stryng ename, eval;
 
@@ -4614,11 +4615,11 @@ struct LOC_fixreturnsgraph *LINK;
       if (literal) {
 	ename = fvinedge->ptname;
 	eval = fvinedge->UU.ptlitvalue;
-	newe = insertliteral(foroutedge->pttonode, foroutedge->pttoport,
+	/* newe = */ (Void)insertliteral(foroutedge->pttonode, foroutedge->pttoport,
 			     fvinedge->pttype, eval, ename);
       } else {
 	ename = loopinedge->ptname;
-	newe = insertedge(producernodeofedge(loopinedge),
+	/* newe = */ (Void)insertedge(producernodeofedge(loopinedge),
 			  producerportnumber(loopinedge),
 			  foroutedge->pttonode, foroutedge->pttoport,
 			  loopinedge->pttype, ename);
@@ -4654,7 +4655,7 @@ node *loop_;
    */
   struct LOC_fixreturnsgraph V;
   node *n, *pn, *rn;
-  int oports, startport, cse;
+  int oports, startport /* , cse */;
   port *tmpe;
   stentry *etype;
   boolean ok;
@@ -4695,7 +4696,7 @@ node *loop_;
   V.t = largestinputportnumber(V.bodyg);
   if (V.t == 0)
     V.t = V.l;
-  cse = removegraphcse(V.retg, false);
+  /* cse = */ (Void)removegraphcse(V.retg, false);
   rn = V.retg->ndnext;
   while (rn != NULL) {
     n = rn;
@@ -4989,7 +4990,7 @@ node *n, *loop, *initg;
 struct LOC_findloopconstants *LINK;
 {
   int pp, foroutport;
-  port *fvoutedge, *foroutedge, *newe, *tempe, *retvale;
+  port *fvoutedge, *foroutedge, /* *newe,*/ *tempe, *retvale;
   boolean literal;
   stryng ename, eval;
 
@@ -5019,10 +5020,10 @@ struct LOC_findloopconstants *LINK;
     while (foroutedge != NULL) {
       if (literal) {
 	eval = retvale->UU.ptlitvalue;
-	newe = insertliteral(foroutedge->pttonode, foroutedge->pttoport,
+	/* newe = */ (Void)insertliteral(foroutedge->pttonode, foroutedge->pttoport,
 			     retvale->pttype, eval, ename);
       } else
-	newe = insertedge(producernodeofedge(retvale),
+	/* newe = */ (Void)insertedge(producernodeofedge(retvale),
 			  producerportnumber(retvale), foroutedge->pttonode,
 			  foroutedge->pttoport, retvale->pttype, ename);
       disconnectedgefromdest(foroutedge);

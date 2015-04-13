@@ -10,7 +10,9 @@
 #include <ctype.h>
 #include <string.h>
 #include <unistd.h>
-
+#if !defined(SUN)
+#include <stdlib.h>
+#endif
 #include <signal.h>
 #include <sys/wait.h>
 
@@ -22,22 +24,19 @@
 #include <sys/schedctl.h>
 #endif
 
+#ifdef PTHREADS
+#include <pthread.h>
+#endif
+
+#ifdef STHREADS
+#include <thread.h>
+#include <synch.h>
+#endif
+
 #if defined(DJGPP)
 #include <process.h>
 #else
 #include <sys/file.h>
-#endif
-
-extern double atof();
-extern int atoi();
-
-#if !defined(RS6000) && !defined(DJGPP) && !defined(SGI)
-extern char *malloc();
-extern int free();
-#endif
-
-#if !defined(DJGPP)
-extern void exit();
 #endif
 
 #ifdef USE_TIMES
@@ -49,11 +48,19 @@ extern void exit();
 #endif
 
 #ifdef SUN
+   extern void exit();
+   extern double atof();
+   extern int atoi();
 #  define CTIME_DEFINED
 #  include <sys/time.h>
 #  include <sys/resource.h>
 #  define CLK_TCK 60
 #  define const
+#  define time_t long
+#endif
+
+#ifdef SUNOS
+#  define memmove(dest, src, size) bcopy(src, dest, size)
 #endif
 
 #ifdef SGI
@@ -92,18 +99,22 @@ extern void exit();
 #define UNGETC		(void)ungetc
 #define SIZEOF(x)	((int)sizeof(x))
 
-#ifdef NO_ASSERTIONS
-#define ASSERT(w, x)	{}	/* w is assertion logical, x is text */
-#define UNEXPECTED(x)	{}	/* x is unexpected text */
-#define UNIMPLEMENTED(x) {}	/* x is unimplemented feature text */
-#define ERRORINFO(y, z)	{}	/* y is error info format, z is value */
-#else
-#ifdef ERROR_ASSERTIONS
-#define Warn1 Error1
-#endif
-#define ASSERT(w, x)	{if (!w) { char msg[1000]; SPRINTF(msg, \
+#define StreamError UNEXPECTED("stream node")
+
+#if !defined(NO_ASSERTIONS) && !defined(ERROR_ASSERTIONS)
+#define ASSERT(w, x)	{if (!(w)) { char msg[1000]; SPRINTF(msg, \
 			"assert <%s> failed in %s line %d", \
 			x, __FILE__, __LINE__); Warning1( msg ); }}
+#else
+#ifdef ERROR_ASSERTIONS
+#define ASSERT(w, x)	{if (!(w)) { char msg[1000]; SPRINTF(msg, \
+			"assert <%s> failed in %s line %d", \
+			x, __FILE__, __LINE__); Error1( msg ); }}
+#else
+#define ASSERT(w, x)	{}	/* w is assertion logical, x is text */
+#endif
+#endif
+
 #define UNEXPECTED(x)	{char msg[1000]; SPRINTF(msg, \
 			"unexpected <%s> in %s line %d", \
 			x, __FILE__, __LINE__); Warning1( msg );}
@@ -112,7 +123,6 @@ extern void exit();
 			x, __FILE__, __LINE__); Warning1( msg );}
 #define ERRORINFO(y, z)	{char msg[1000]; SPRINTF(msg, "  info "); \
 			SPRINTF(&msg[7], y, z); Warning1( msg );}
-#endif
 
 #if !defined(TRUE)
 #define TRUE             1

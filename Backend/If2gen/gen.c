@@ -587,7 +587,7 @@ char **argv;
   register FILE  *fd;
   register PNODE  f;
   register char  *s;
-  int i5 = I_Info5;
+/*  int i5 = I_Info5; */
 
   ParseCommandLine( argc, argv );
 

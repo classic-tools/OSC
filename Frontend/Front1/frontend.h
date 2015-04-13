@@ -1259,7 +1259,7 @@ typedef struct includestackrec {
 extern printable nodename[ifmaxnode + 1];
 extern printable errvname[ifmaxerror + 1];
 extern printable typename[ifmaxtype + 1];
-extern printable basename[ifmaxbasic + 1];
+/* extern printable basename[ifmaxbasic + 1]; */
 extern printable graphname[19];
 extern ndclasstype nodeclass[ifmaxnode + 1];   /* dlz - 8/87 */
 extern FILE *source, *diag;

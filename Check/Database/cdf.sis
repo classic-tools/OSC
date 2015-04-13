@@ -187,7 +187,7 @@ function cdfgetpar(cdf_record: cdf; pname: cdf_cline; returns real)
                cdf_record.params[val].pval
              else
 
-% if this error generated, then the named parameter doesn't exist
+% if this error generated, then the named parameter does not exist
                error[real]
              end if
   end for
@@ -213,7 +213,7 @@ function cdfgetdim(cdf_record: cdf; dname: cdf_cline; returns integer, cdf_dim)
                cdf_record.dims[val]
              else
 
-% if this error is generated, then the named dimension doesn't exist
+% if this error is generated, then the named dimension does not exist
                error[cdf_dim]
              end if
   end for
@@ -249,7 +249,7 @@ function cdfgetfld(cdf_record: cdf; fname: cdf_cline; returns cdf_field)
                cdf_record.fields[val]
              else
 
-% if this error is generated, then the named field doesn't exist
+% if this error is generated, then the named field does not exist
                error[cdf_field]
              end if
   end for

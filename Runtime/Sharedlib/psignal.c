@@ -35,10 +35,8 @@ char	*sys_siglist[NSIG] = {
 	"Stopped (tty input)",		/* SIGTTIN   */
 	"Stopped (tty output)",		/* SIGTTOU   */
 	"Urgent I/O condition",		/* SIGURG    */
-#ifdef HPUXPA
 	"Remote lock lost (NFS)" 	/* SIGLOST   */
-#else
-	"Remote lock lost (NFS)", 	/* SIGLOST   */
+#if !defined(HPUX) && !defined(CRAYT3D)
 	"Signal 31",			/* reserved  */
 	"DIL signal"			/* SIGDIL    */
 #endif

@@ -851,7 +851,7 @@ static void SubmitNQS(argc,argv,nqs_idx)
   /* ------------------------------------------------------------ */
   /* Open a temp file for the script				  */
   /* ------------------------------------------------------------ */
-  sprintf(scriptname,"#NQS%d",getpid());
+  sprintf(scriptname,"#NQS%d",(int)getpid());
   script = fopen(scriptname,"w");
 
   for(i=0;i<nqs_idx;i++) {
@@ -1190,8 +1190,6 @@ static int SubmitCommands()
   register char *tmp0, *tmp1, *tmp2, *tmp3, *tmp4;
   char  module[200];
   char		dashi[16];
-  char		dashI[16];
-  char		dashV[16];
   char		*temp_c;
   char		*temp_spp;
   int		pat;
@@ -1974,6 +1972,8 @@ static int SubmitCommands()
     avcnt = 0;
     AddAV(cc);
 
+    AddAV(USEOPT);
+
 #if GNU
     AddAV("-DGNU");
 #endif
@@ -2092,21 +2092,7 @@ static int SubmitCommands()
 	av[avcnt++] = "-Oig";
 
 #  else
-#    ifdef SGI
-#    if !GNU
-      av[avcnt++] = "-O3";
-      av[avcnt++] = "-Olimit";
-      av[avcnt++] = "999999";
-#    else
       av[avcnt++] = "-O";
-#    endif
-#    else
-#      ifdef HPUX
-      av[avcnt++] = "+O1";
-#      else
-      av[avcnt++] = "-O";
-#      endif
-#    endif
 #  endif
 #endif
 
@@ -2144,12 +2130,6 @@ static int SubmitCommands()
 #ifdef ENCORE
     av[avcnt++] = "-q";
     av[avcnt++] = "long_jump";
-#endif
-
-#ifdef SGI
-#if !GNU
-    av[avcnt++] = "-float";
-#endif
 #endif
 
     /* ------------------------------------------------------------ */
@@ -2193,12 +2173,6 @@ static int SubmitCommands()
 #ifndef SYMMETRY
 #ifndef BALANCE
       av[avcnt++] = libs;
-      /* HPUX cc needs a blank between '-L' and path */
-#	if defined(HPUX) || defined(HPUXPA)
-#	if !GNU
-      av[avcnt++] = BIN_PATH;
-#	endif
-#	endif
 #endif
 #endif
 #endif
@@ -2246,7 +2220,11 @@ static int SubmitCommands()
         av[avcnt++] = sh_ld;
 #endif
 
-      av[avcnt++] = "-lm";
+    AddAV(USELD);
+
+#if defined(SOLARIS)
+      av[avcnt++] = "-lucb";
+#endif
 
 #if !defined(CRAY) && !defined(SGI) && !defined(NeXT) && !defined(SUNIX)
       av[avcnt++] = "-lc";
@@ -2363,7 +2341,7 @@ static int SubmitCommands()
     av[avcnt++] = "-lpp";
 #endif
 
-    av[avcnt++] = "-lm";
+    AddAV(USELD);
 
 #ifndef CRAY
 #ifndef ENCORE
@@ -2430,7 +2408,7 @@ static int SubmitCommands()
 /*          AND CALL SubmitCommands TO REALIZE COMPILATION.               */
 /**************************************************************************/
 
-static char VERSION[] = "v13.0";
+static char VERSION[] = "v13.0.3";
 #ifndef VPREFIX
 # define VPREFIX ""
 #endif
@@ -2479,8 +2457,11 @@ char **argv;
     DefinedMachine = "-DLINUX";
 #endif
 
+#ifdef SUNOS
+    DefinedMachine = "-DSUNOS";
 #ifdef SUN
-    DefinedMachine = "-DSUN";
+    DefinedMachine = "-DSUN -DSUNOS";
+#endif
 #endif
 
 #ifdef SGI
@@ -2533,7 +2514,7 @@ char **argv;
   /* ------------------------------------------------------------ */
   OSC_OPTIONS = getenv("OSC_OPTIONS");
   if ( OSC_OPTIONS ) {
-    OSC_ENVIRONMENT = malloc(strlen(OSC_OPTIONS)+1);
+    OSC_ENVIRONMENT = (char *)malloc(strlen(OSC_OPTIONS)+1);
     strcpy(OSC_ENVIRONMENT,OSC_OPTIONS);
 
     /* Convert spaces to nulls and collect count and pointers */
@@ -2616,18 +2597,7 @@ char **argv;
 #if defined(ALLIANT) || defined(SYMMETRY) || defined(BALANCE)
     StrCat( libs,      LIB_PATH,      "/libsisal.a" );
 #else
-
-#  if defined(HPUX) || defined(HPUXPA)
-   /* HPUX cc needs blank between '-L' and path */
-#    if GNU
-       StrCat( libs,      "-L",          LIB_PATH );
-#    else
-       strcpy( libs,      "-L");
-#    endif
-#  else
-     StrCat( libs,      "-L",          LIB_PATH );
-#  endif
-
+    StrCat( libs,      "-L",          LIB_PATH );
 #endif
 
     StrCat( srt0,      LIB_PATH,  "/p-srt0.o"    );

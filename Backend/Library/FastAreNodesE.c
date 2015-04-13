@@ -27,7 +27,7 @@ PNODE n2;
       return( FALSE );
 
   switch ( n1->type ) {
-   case IFABuild:
+   case IFABuild:case IFSBuild: /*cy--same semantics*/
     /* BUG FIX FOR EMPTY ARRAY BUILDS --- 7/14/89 CANN */
     if ( n1->imp->isucc == NULL ) return( FALSE );
     /* END BUG FIX */
@@ -35,6 +35,7 @@ PNODE n2;
    case IFAFill:
    case IFRBuild:
    case IFAGather:
+   case IFSGather:
     if ( n1->exp->info->type != n2->exp->info->type )
       return( FALSE );
 
@@ -92,6 +93,10 @@ PNODE n2;
 }
 
 /* $Log: FastAreNodesE.c,v $
+ * Revision 1.2  1994/08/29  08:01:38  chad
+ * New STREAM node numbers (333 to ...) have been added.
+ * Predicates for identifying STREAM nodes also added.
+ *
  * Revision 1.1  1993/04/16  19:00:13  miller
  * Name shortening to keep the archiver from truncating names in Backend/Library
  * Since some names were changed, other files were affected.  All names in the

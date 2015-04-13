@@ -450,10 +450,13 @@ PNODE n;
 	  break;
 
        case REDUCE_USER:
+       case REDUCE_CATENATE:
           break;
-
-	default:
-	  UNEXPECTED("Unknown reduction");
+ 
+        default:
+          UNEXPECTED("Unknown reduction");
+          ERRORINFO("%s", n->imp->CoNsT);
+          ERRORINFO("%c", n->imp->CoNsT[0]);
 	}
 
       break;

@@ -596,9 +596,9 @@ PNODE g;
 
 void WriteIf2memPicture()
 {
-    PNODE f;
+   /* PNODE f;
 
-   /* FPRINTF( stderr, "\n   * ARRAY MEMORY MAP\n" );
+    FPRINTF( stderr, "\n   * ARRAY MEMORY MAP\n" );
 
     for ( f = glstop->gsucc ; f != NULL ; f = f->gsucc ) {
 	if ( IsIGraph( f ) )
@@ -610,7 +610,7 @@ void WriteIf2memPicture()
 	}
    */ 
     PrintATNodeInfo();
-	WriteAggregateInfo();
+    (void)WriteAggregateInfo();
 }
 
 

@@ -5,18 +5,20 @@ MMASK = 444
 .SUFFIXES: .c .f .o
 
 CC           = cc
-FF           = f77
-BIN_PATH     = ../../bin
-LIB_PATH     = ../../lib
-INC_PATH     = ../../include
-MAN_PATH     = ../../man
+FC           = f77
+BIN_PATH     = ../../../bin
+LIB_PATH     = ../../../lib
+INC_PATH     = ../../../include
+MAN_PATH     = ../../../man
+CONFIG_DIR   = ../..
 INSTALL      = cp
 RANLIB       = touch
 AR           = ar r
 PAR          =
-LIBM         = other
-
-CONFIG_DIR   = ..
+LIBM         = mlib.o
+CFLAGS       = -g
+CPPFLAGS     = -I. -I$(CONFIG_DIR)
+FFLAGS       =
 
 MINIMAL=0
 
@@ -26,17 +28,14 @@ SRCC  =	p-worker.c p-timer.c p-spawn.c              \
 	p-fibre.c p-util.c p-interface.c            \
 	p-init.c p-pointer.c p-sdbx.c		    \
 	p-tracer.c 				    \
-	bcopy.c psignal.c vectorIO.c
+	psignal.c vectorIO.c
 OBJC  =	p-worker.o p-timer.o p-spawn.o              \
 	p-wait.o p-ready.o p-ppp.o p-dsa.o          \
 	p-error.o p-signal.o p-globals.o            \
 	p-fibre.o p-util.o p-interface.o            \
 	p-init.o p-pointer.o p-sdbx.o		    \
 	p-tracer.o				    \
-	bcopy.o psignal.o vectorIO.o
-
-SRCF  =	mlib.f
-OBJF  =	m$(LIBM).o
+	psignal.o vectorIO.o
 
 SRC0  =	p-srt0.c
 OBJ0  =	p-srt0.o
@@ -48,47 +47,29 @@ INCC  =	$(CINC) $(SINC) $(OINC)
 INCF  =	sisalfli.inc
 
 #CFLAGS=-DDEBUG_DSA -DVERBOSE
-#CFLAGS=-DDEBUG_DSA
 
 .c.o:
-	${CC} -I$(CONFIG_DIR) $(CFLAGS) -c $*.c
+	${CC} $(CPPFLAGS) $(CFLAGS) -c $*.c
 	-@if [ $(MINIMAL) = 1 ]; then /bin/rm -f $*.c; else cat /dev/null; fi
-.f.o:
-	${FF} -c $*.f
 
 local: libsisal.a srt0
 optional:
 all: local optional
 
-libsisal.a: $(PAR) $(OBJC) $(OBJF)
+libsisal.a: $(PAR) $(OBJC) $(LIBM)
 	/bin/rm -f libsisal.a
-	$(AR) libsisal.a $(OBJC) $(OBJF)
+	$(AR) libsisal.a $(OBJC) $(LIBM)
 
 srt0: $(OBJ0)
 
 ${OBJC}: ${INCC}
 ${OBJ0}: ${INCC}
-${OBJF}: ${INCF}
 
-mcray.o:
-	${FF} -c -Zp -Wd"-dc" -Wf"-astack" mlib.f
-	mv mlib.o mcray.o
-malliant.o:
-	${FF} -Ogicv -AS -recursive -c -o malliant.o mlib.f
-msgi.o:
-	${FF} -c -O -o msgi.o mlib.f
-mlinux.o:
-	${FF} -c mlib.f
-	mv mlib.o mlinux.o
-mother.o:
-	${FF} -c -o mother.o mlib.f
-mnone.o:
-	echo "static int mnone;" > mnone.c
-	${CC} -c mnone.c
+mlib.o: mlib.f sisalfli.inc
+	${FC} $(CPPFLAGS) ${FFLAGS} -c mlib.f
 
 clean:
 	rm -f ${OBJC}
-	rm -f ${OBJF}
 	rm -f ${OBJ0}
 	rm -f libsisal.a
 	rm -f lint.log
@@ -144,13 +125,6 @@ newoptions:
 	mv s.out.1 s.out.1.bu
 	mv s.out.1.new s.out.1
 
-# 127 == main() returns random value to invocation environment
-# 183 == Previous declaration had prototype
 lint: $(SRCC) $(SRC0)
-	@lint -u -v -woff 91,302,307,127,183 \
-		`echo -DLINT $(CFLAGS) $(CC) | tr ' ' '\012' | egrep ^-D` \
-		$(SRCC) $(SRC0) -lm \
-		| tee lint.log \
-		| egrep -v '( )(bcopy|free|malloc|strlen|lseek|read|isalpha|strcmp|strncmp|isspace|isdigit)(.*)llib-lc'
-
+	lint -u -v $(CFLAGS) $(SRCC) $(SRC0) > lint.log
 #

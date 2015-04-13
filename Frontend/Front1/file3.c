@@ -33,7 +33,7 @@ PBBLOCK MyBBlockAlloc()
 Static printable nodename[ifmaxnode + 1];
 Static printable errvname[ifmaxerror + 1];
 Static printable typename[ifmaxtype + 1];
-Static printable basename[ifmaxbasic + 1];
+Static printable basname[ifmaxbasic + 1];
 Static printable graphname[19];
 Static ndclasstype nodeclass[ifmaxnode + 1];   /* dlz - 8/87 */
 Static FILE *source, *diag;
@@ -643,7 +643,7 @@ Static Char uppercase(c)
 Char c;
 {
   if (islower(c))
-    return _toupper(c);
+    return z_toupper(c);
   else
     return c;
 }
@@ -657,7 +657,7 @@ stryng *s;
   FORLIM = s->len;
   for (i = 0; i < FORLIM; i++) {
     if (islower(s->str[i]))
-      s->str[i] = _toupper(s->str[i]);
+      s->str[i] = z_toupper(s->str[i]);
   }
 }
 
@@ -666,7 +666,7 @@ Static Char lowercase(c)
 Char c;
 {
   if (isupper(c))
-    return _tolower(c);
+    return z_tolower(c);
   else
     return c;
 }
@@ -681,7 +681,7 @@ stryng *s;
   FORLIM = s->len;
   for (i = 0; i < FORLIM; i++) {
     if (isupper(s->str[i]))
-      s->str[i] = _tolower(s->str[i]);
+      s->str[i] = z_tolower(s->str[i]);
   }
 }
 
@@ -1066,13 +1066,13 @@ Static Void initnames()
   mymemcpy(typename[iftwild], "Wild            ", sizeof(printable));
   mymemcpy(typename[iftbuffer], "Buffer          ", sizeof(printable));
   /* Base Type Values */
-  mymemcpy(basename[ifbboolean], "Boolean         ", sizeof(printable));
-  mymemcpy(basename[ifbcharacter], "Character       ", sizeof(printable));
-  mymemcpy(basename[ifbinteger], "Integer         ", sizeof(printable));
-  mymemcpy(basename[ifbreal], "Real            ", sizeof(printable));
-  mymemcpy(basename[ifbdouble], "Double          ", sizeof(printable));
-  mymemcpy(basename[ifbnull], "Null            ", sizeof(printable));
-  mymemcpy(basename[ifbwild], "Wild            ", sizeof(printable));
+  mymemcpy(basname[ifbboolean], "Boolean         ", sizeof(printable));
+  mymemcpy(basname[ifbcharacter], "Character       ", sizeof(printable));
+  mymemcpy(basname[ifbinteger], "Integer         ", sizeof(printable));
+  mymemcpy(basname[ifbreal], "Real            ", sizeof(printable));
+  mymemcpy(basname[ifbdouble], "Double          ", sizeof(printable));
+  mymemcpy(basname[ifbnull], "Null            ", sizeof(printable));
+  mymemcpy(basname[ifbwild], "Wild            ", sizeof(printable));
   /* Node Classifications */
   for (i = 0; i <= ifmaxnode; i++)
     nodeclass[i] = unknown;
@@ -1182,12 +1182,9 @@ Static Void initnames()
 
 /* #include "../util/c.h" */
 /* copyright (C) 1986 by the Regents of the University of California */
-extern int creat PP((Char *name, int mode));
-
-extern int open PP((Char *name, int mode));
-
-extern int close PP((int fildes));
-
+/* extern int creat PP((Char *name, int mode)); */
+/* extern int open PP((Char *name, int mode)); */
+/* extern int close PP((int fildes)); */
 /* extern Void exit PP((int code)); */
 
 
@@ -1519,7 +1516,6 @@ parrec *param;
 stryng *paramvalue;
 {
   int pos;
-  long dum;
 
   /* SetParameter */
   if (((1L << ((long)param->partype)) &
@@ -1546,7 +1542,7 @@ stryng *paramvalue;
 
     case intpar:
       pos = 1;
-      dum = stringnumber(paramvalue, &pos, 10);
+      (Void)stringnumber(paramvalue, &pos, 10);
       if (pos == paramvalue->len + 1)
 	param->parvalue = *paramvalue;
       break;
@@ -2152,7 +2148,6 @@ Static Void initstamps()
 {
   Char c;
   stryng name;
-  long SET[9];
 
   mymemcpy(name.str, blankstring, sizeof(stryngar));
   name.len = 0;
@@ -2166,8 +2161,6 @@ Static Void initstamps()
 Static Void removestamp(ch)
 Char ch;
 {
-  long SET[9];
-
   P_remset(stampset, ch);
 }  /* RemoveStamp */
 
@@ -2176,8 +2169,6 @@ Static Void addstamp(ch, str)
 Char ch;
 stryng str;
 {
-  long SET[9];
-
   P_addset(stampset, ch);
   stamp[ch - 'A'] = str;
 }  /* AddStamp */
@@ -6269,7 +6260,7 @@ Static Void initmodule()
 {
   /* Initializes the global variables needed for loading the program */
   int i;
-  stentry *t;
+  /* stentry *t; */
   node *WITH;
 
   univnodecnt = 0;
@@ -6301,7 +6292,7 @@ Static Void initmodule()
   for (i = tthwm; i < entrymax; i++)
     typetable[i] = NULL;
   /* Add the Wild Card Type to the Type Table */
-  t = getwildtype();
+  /* t = */ (Void)getwildtype();
 }  /* InitModule */
 
 #undef nodemax
@@ -8334,14 +8325,14 @@ stryng *str;
 Static Void freesymptr(sym)
 symtblbucket *sym;
 {
-  Free(sym);
+  /* Free(sym); */
 }
 
 
 Static Void freetreestack(tree)
 treestackobj *tree;
 {
-  Free(tree);
+  /* Free(tree); */
 }
 
 
@@ -8648,7 +8639,7 @@ Static graph *newgraphptr()
 Static Void freegraphptr(gr)
 graph *gr;
 {
-  Free(gr);
+  /* Free(gr); */
 }
 
 

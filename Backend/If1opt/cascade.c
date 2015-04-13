@@ -5,7 +5,7 @@ TestCascade(G)
      PNODE	G;
 {
   PNODE		SubG,N,Test,TrueSide,FalseSide;
-  PEDGE		TestEdge,FalseGraphTestEdge,TrueGraphTestEdge,E,ENext;
+  PEDGE		TestEdge,E,ENext;
   int		TestPort;
 
   for(N=G->G_NODES; N; N = N->nsucc) {

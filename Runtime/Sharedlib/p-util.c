@@ -1,5 +1,8 @@
 #include "world.h"
 
+/************************************************************************\
+ * p-util.c - SISAL runtime system array memory utilities
+\************************************************************************/
 
 PHYSP DoPhysExpand( Array, CompSize )
 POINTER Array;
@@ -26,7 +29,7 @@ int     CompSize;
   Dest    = (char*) Phys->Base;
 
   if ( Phys->Size != 0 ) /* CRAY BUG WORK-AROUND!!! */
-    bcopy( Source, Dest, Phys->Size * CompSize );
+    memmove( Dest, Source, Phys->Size * CompSize );
 
   DeAlloc( (POINTER) APhys );
   ((ARRAYP)Array)->Base = Phys->Base - (((ARRAYP)Array)->LoBound * CompSize);

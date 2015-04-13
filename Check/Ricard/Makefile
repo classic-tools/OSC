@@ -25,5 +25,5 @@ ricard: ricard.sis
 
 clean:
 	@/bin/rm -f ricard ricard.test test.log s.info ricard.in
-	@/bin/rm -f core *.if1 *.opt *.mono *.mem *.up *.part *.c *.o
+	@/bin/rm -f core *.if1 *.opt *.mono *.mem *.up *.part *.c *.o *.i
 #

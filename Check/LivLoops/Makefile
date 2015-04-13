@@ -50,5 +50,5 @@ clean:
 		loop1 loop1.o loop1.test \
 		loop2 loop2.o loop2.test \
 		loop3 loop3.o loop3.test
-	@/bin/rm -f core *.if1 *.opt *.mono *.mem *.up *.part *.c *.o
+	@/bin/rm -f core *.if1 *.opt *.mono *.mem *.up *.part *.c *.o *.i
 #

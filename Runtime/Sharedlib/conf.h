@@ -7,7 +7,7 @@
 /* Numeric sizes						*/
 /* ------------------------------------------------------------ */
 
-#ifdef __STDC__
+#if defined(__STDC__) || defined(_ANSI_C_SOURCE)
 #ifndef INT_MAX
 #include <limits.h>
 #endif /* INT_MAX */
@@ -65,11 +65,7 @@
 #endif
 
 /* POINTER to CHARACTER CAST TO DO POINTER to CHARACTER MATHEMATICS */
-#if defined(CRAY) || defined(CRAYT3D)
 #define PCMCAST char*
-#else
-#define PCMCAST int
-#endif
 
 /* ------------------------------------------------------------ */
 /* Alignment size						*/
@@ -84,7 +80,7 @@
 #endif
 
 #ifdef SGI
-#define ALIGN_SIZE SIZEOF(int)
+#define ALIGN_SIZE SIZEOF(char*)
 #endif
 
 #ifdef HPUXPA

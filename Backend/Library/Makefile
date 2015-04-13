@@ -4,7 +4,8 @@ MMASK = 444
 
 .SUFFIXES: .c .o
 	
-CC           = cc -g
+CC           = cc
+CFLAGS       = -g
 BIN_PATH     = ../../../bin
 LIB_PATH     = ../../../lib
 INC_PATH     = ../../../include
@@ -433,7 +434,7 @@ INCL   = world.h IFX.h ../../config.h
 
 MINIMAL=0
 .c.o: $(INCL)
-	${CC} -c $*.c
+	${CC} ${CFLAGS} -c $*.c
 	-@if [ $(MINIMAL) = 1 ]; then /bin/rm -f $*.c; else cat /dev/null; fi
 
 local: libifx.a
@@ -442,15 +443,15 @@ all: local optional
 
 #------------------------------------------------------------
 makenames: makenames.c
-	${CC} -o makenames makenames.c
+	${CC} ${CFLAGS} -o ./makenames makenames.c
 nametabl.c: IFX.h makenames
 	makenames < IFX.h > nametabl.c
 
 #------------------------------------------------------------
 libifx.a: $(OTHER) $(A2LOBJ) $(M2ZOBJ)
 	/bin/rm -f ./libifx.a
-	$(AR) libifx.a $(OTHER) $(A2LOBJ)
-	$(AR) libifx.a $(M2ZOBJ)
+	$(AR) libifx.a $(OTHER) $(A2LOBJ) $(M2ZOBJ)
+#	$(AR) libifx.a $(M2ZOBJ)
 	$(RANLIB) libifx.a
 
 #------------------------------------------------------------
@@ -458,31 +459,17 @@ lint: llib-lifx.ln
 
 llib-lifx.ln: $(SRC) $(OTHERSRC) $(INCL)
 	lint -u -v -x -o ifx -woff 91,302,307 \
-		`echo -DLINT $(CFLAGS) $(CC) | tr ' ' '\012' | egrep "^-D"` \
+		`echo -DLINT $(CFLAGS) | tr ' ' '\012' | egrep "^-D"` \
 		$(SRC) $(OTHERSRC) \
 		| tee lint.log \
 		| egrep -v '( )(free|malloc|strlen|lseek|read|isspace|isdigit)(.*)llib-lc'
 
 #------------------------------------------------------------
 install:
-	cat formdoc.doc if.doc > tmpman.c
-	$(CC) -E -P -DMANPAGE tmpman.c > tmpman.i
-	cp tmpman.i tmpman.c
-	$(CC) -E -P -DMANPAGE tmpman.c > tmpman.i
-	/bin/rm -f ${MAN_PATH}/man5/if.5
-	${SINSTALL} tmpman.i ${MAN_PATH}/man5/if.5
-	chmod $(MMASK) ${MAN_PATH}/man5/if.5
-
-	cat formdoc.doc if.doc > tmpman.c
-	$(CC) -E -P -DHTML tmpman.c > tmpman.i
-	/bin/rm -f ${MAN_PATH}/if.html
-	${SINSTALL} tmpman.i ${MAN_PATH}/if.html
-	chmod $(MMASK) ${MAN_PATH}/if.html
 
 clean:
 	/bin/rm -f ${A2LOBJ} ${M2ZOBJ} ${OTHER} nametabl.c
 	/bin/rm -f libifx.a lint.log llib-lifx.ln makenames
-	/bin/rm -f tmpman.c tmpman.i
 
 ${A2LOBJ} ${M2ZOBJ}: ${INCL}
 

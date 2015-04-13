@@ -816,7 +816,7 @@ static void RewireReduction( r_graph, r_loop, r_port_count, r_ports,
 
   static char* call_name[MAX_CALLS] = {
       "_r_init_%d", "_r_body_%d", "_r_merge_%d"};
-  static counter = -1;
+  static int counter = -1;
 
   PNODE d_for = d_for_stack[d_depth];	/* reduction driver inner FOR */
   int d_for_port = 0;

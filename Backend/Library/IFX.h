@@ -1517,6 +1517,7 @@ extern PNODE	UnlinkNode();
 extern char	*UpperCase();
 extern int	UsageCount();
 extern void	Warning1();
+extern void     WriteAggregateInfo();
 extern void	WriteConst();
 extern void	WriteGlobals();
 extern void	WriteImports();
@@ -1566,6 +1567,7 @@ extern PNODE	CopyNode();
 extern PINFO    NewType();
 extern PINFO    GetAggregate();
 extern void     CheckEdge();
+extern int      UsingPatch();
 
 /* $Log: IFX.h,v $
  * Revision 1.47  1994/07/21  22:34:42  denton

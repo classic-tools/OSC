@@ -1,26 +1,26 @@
 #include "world.h"
 
-/*//////////////////////////////////////////////////////////////////////////
-//
-// NAME
-//    CheckEdge
-//
-// DESCRIPTION
-//    Checks to make sure that edge e is a valid edge (i.e: makes sure it
-//    has a valid source and destination pair).
-//
-// PARAMETERS
-//    e              The edge that is being checked.
-//
-// RETURNS
-//    Nothing.
-//
-/////////////////////////////////////////////////////////////////////////*/
+/**************************************************************************/
+/*                                                                        */
+/* NAME                                                                   */
+/*    CheckEdge                                                           */
+/*                                                                        */
+/* DESCRIPTION                                                            */
+/*    Checks to make sure that edge e is a valid edge (i.e: makes sure it */
+/*    has a valid source and destination pair).                           */
+/*                                                                        */
+/* PARAMETERS                                                             */
+/*    e              The edge that is being checked.                      */
+/*                                                                        */
+/* RETURNS                                                                */
+/*    Nothing.                                                            */
+/*                                                                        */
+/**************************************************************************/
 
 void CheckEdge(e)
 PEDGE e;
 {
-  PNODE g,n;
+  PNODE n;
   
   if (e->src == NULL) return;
 

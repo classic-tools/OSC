@@ -2170,7 +2170,7 @@ void WritePrebuildInfo()
   FPRINTF( infoptr2, " Combined And Hoisted MemAllocDVIs:    %d of %d\n\n", mchcnt, tmchcnt );
 
   FPRINTF( infoptr2, "\n **** POINTER SWAPS\n\n" );
-  FPRINTF( infoptr2, "%s", ptr );
+  FPRINTF( infoptr2, "%s", sptr );
   FPRINTF( infoptr2, " Pointer Swap Candidates:              %d\n", psccnt );
 
   FPRINTF( infoptr2, " Pointer Swap Successes:               %d\n\n", 

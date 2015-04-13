@@ -176,9 +176,9 @@ static void PrintGlobals()
         FPRINTF( output, "\nstatic shared %s %sData = {\n",
                  n->exp->info->sname, n->G_NAME          );
 
-        FPRINTF( output, "  0, %d,\n", n->exp->sr + 9 );
-
 	PrintConstants( n->imp, NULL_EDGE );
+        FPRINTF( output, "  , %d\n", n->exp->sr + 9 );
+
         FPRINTF( output, "  };\n" );
 
 	FPRINTF( output, "\nstatic shared %s %s = (%s) &%sData;\n",
@@ -349,9 +349,6 @@ static void PrintStructs()
     switch ( i->type ) {
       case IF_UNION:
         FPRINTF( output, "\n%s {\n  ", i->sname );
-        FPRINTF( output, "%-16s  %-16s  %-16s\n  ", 
-                 "LOCK_TYPE Mutex; ", "int  RefCount; ", "int  Tag;" );
-
         FPRINTF( output, "union {\n    " );
 
         for ( c = 0, ii = i->R_FIRST; ii != NULL; ii = ii->L_NEXT ) {
@@ -365,13 +362,14 @@ static void PrintStructs()
         if ( (c % 4) != 0 )
           FPRINTF( output, "\n    " );
 
-        FPRINTF( output, "} Data;\n  };\n" );
+        FPRINTF( output, "  } Data;\n" );
+        FPRINTF( output, "%-16s  %-16s  %-16s\n  ", 
+                 "int  RefCount; ", "int  Tag; ", "LOCK_TYPE Mutex; " );
+        FPRINTF( output, "  };\n" );
         break;
 
       case IF_RECORD:
         FPRINTF( output, "\n%s {\n  ", i->sname );
-        FPRINTF( output, "%-16s %-16s\n  ",
-		 "LOCK_TYPE Mutex; ", "int  RefCount;" );
 	
         for ( c = 0, ii = i->R_FIRST; ii != NULL; ii = ii->L_NEXT ) {
           SPRINTF( buf, "%-7s Fld%d; ", ii->L_SUB->tname, ++c );
@@ -384,6 +382,8 @@ static void PrintStructs()
         if ( (c % 4) != 0 )
           FPRINTF( output, "\n  " );
 
+        FPRINTF( output, "%-16s %-16s\n  ",
+		 "int  RefCount;", "LOCK_TYPE Mutex; " );
         FPRINTF( output, "};\n" );
         break;
 

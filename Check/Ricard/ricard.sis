@@ -29,24 +29,24 @@ let
           RKM1 := COF5*CML2I + COF6*CML2ISOI;
           RKN1 := -(RKK1 + RKL1 + RKM1);
 
-          U  := CLI + 0.5D0*RKP1;
-          W  := CML2I + 0.5D0*RKN1;
-          XX := CMLI + 0.5D0*RKL1;
+          U  := CLI + double_real(0.5e0)*RKP1;
+          W  := CML2I + double_real(0.5e0)*RKN1;
+          XX := CMLI + double_real(0.5e0)*RKL1;
 
-          RKK2 := COF1*(CMI + 0.5D0*RKK1)*U + COF2*XX;
+          RKK2 := COF1*(CMI + double_real(0.5e0)*RKK1)*U + COF2*XX;
           RKL2 := -(RKK2 + COF3*XX*U + COF4*W);
           RKP2 := RATIO*(RKK2 + RKK2 + RKL2);
-          RKM2 := COF5*W + COF6*(CML2ISOI + 0.5D0*RKM1);
+          RKM2 := COF5*W + COF6*(CML2ISOI + double_real(0.5e0)*RKM1);
           RKN2 := -(RKK2 + RKL2 + RKM2);
 
-          VV := CLI + 0.5D0*RKP2;
-          Y  := CMLI + 0.5D0*RKL2;
-          Z  := CML2I + 0.5D0*RKN2;
+          VV := CLI + double_real(0.5e0)*RKP2;
+          Y  := CMLI + double_real(0.5e0)*RKL2;
+          Z  := CML2I + double_real(0.5e0)*RKN2;
 
-          RKK3 := COF1*(CMI + 0.5D0*RKK2)*VV + COF2*Y;
+          RKK3 := COF1*(CMI + double_real(0.5e0)*RKK2)*VV + COF2*Y;
           RKL3 := -(RKK3 + COF3*Y*VV + COF4*Z);
           RKP3 := RATIO*(RKK3 + RKK3 + RKL3);
-          RKM3 := COF5*Z +COF6*(CML2ISOI + 0.5D0*RKM2);
+          RKM3 := COF5*Z +COF6*(CML2ISOI + double_real(0.5e0)*RKM2);
           RKN3 := -(RKK3 + RKL3 + RKM3);
 
           R := CLI + RKP3;
@@ -59,9 +59,9 @@ let
           RKM4 := COF5*T + COF6*(CML2ISOI + RKM3);
           RKN4 := -(RKK4 + RKL4 + RKM4);
 
-          DELK := (RKK1 + RKK2 + RKK2 + RKK3 + RKK3 + RKK4)/6.0D0;
-          DELL := (RKL1 + RKL2 + RKL2 + RKL3 + RKL3 + RKL4)/6.0D0;
-          DELM := (RKM1 + RKM2 + RKM2 + RKM3 + RKM3 + RKM4)/6.0D0;
+          DELK := (RKK1 + RKK2 + RKK2 + RKK3 + RKK3 + RKK4)/double_real(6.0e0);
+          DELL := (RKL1 + RKL2 + RKL2 + RKL3 + RKL3 + RKL4)/double_real(6.0e0);
+          DELM := (RKM1 + RKM2 + RKM2 + RKM3 + RKM3 + RKM4)/double_real(6.0e0);
 
           v1 := CLI + RATIO*(DELK + DELK + DELL);
           v2 := CMI + DELK;
@@ -75,11 +75,11 @@ let
               array of v5
       end for;
 
-  r1 := array_addl(rc1,0.0D0);
-  r2 := array_addl(rc2,0.0D0);
-  r3 := array_addl(rc3,0.0D0);
-  r4 := array_addl(rc4,0.0D0);
-  r5 := array_addl(rc5,0.0D0);
+  r1 := array_addl(rc1,double_real(0.0e0));
+  r2 := array_addl(rc2,double_real(0.0e0));
+  r3 := array_addl(rc3,double_real(0.0e0));
+  r4 := array_addl(rc4,double_real(0.0e0));
+  r5 := array_addl(rc5,double_real(0.0e0));
 in
   array [1:r1, r2, r3, r4, r5 ]
 end let
@@ -130,17 +130,17 @@ let
              end for; 
 
   TOT := TOTM + TOTML + TOTML2 + TOTML2I;
-  TOTMA := 1.554870369D-05 * 0.486D0;
+  TOTMA := double_real(1.554870369e-05) * double_real(0.486e0);
 
   PERML,
   JSTOR,
   STOR,
   PERCENT,
-  HL := if (TOT = 0.0D0) then
-	  0.0D0, 0, 0.0D0, 0.0D0, 0.0D0
+  HL := if (TOT = double_real(0.0e0)) then
+	  double_real(0.0e0), 0, double_real(0.0e0), double_real(0.0e0), double_real(0.0e0)
         else
 	  let
-            PERML := 100.0D0 * (TOTML + TOTML2 + TOTML2I) / TOT;
+            PERML := double_real(100.0e0) * (TOTML + TOTML2 + TOTML2I) / TOT;
 
 	    STOR,
 	    JSTOR := for initial
@@ -163,9 +163,9 @@ let
 
 	    TOT1 := for J in 1,KELUTE returns value of sum CTL[J] end for;
 	    TOT2 := for J in 1,JSTOR returns value of sum CTL[J] end for;
-            PERCENT := 100.0D0*TOT2/TOT1;
-            HL :=-LOG(2.0D0)*double_real(JSTOR)*
-		 0.016D0/(F*LOG(PERCENT/18.02233D0));
+            PERCENT := double_real(100.0e0)*TOT2/TOT1;
+            HL :=-LOG(double_real(2.0e0))*double_real(JSTOR)*
+		 double_real(0.016e0)/(F*LOG(PERCENT/double_real(18.02233e0)));
 	  in
             PERML, JSTOR, STOR, PERCENT, HL
 	  end let
@@ -181,15 +181,15 @@ function FILLUP( N:integer; DX:Double; KELUTE:integer; VSEG:Double;
 		 NSEG:integer; GZERO:Oned returns Oned, Twod, Twod, Oned )
 let
   X_c := for J in 2,N returns array of double_real(J-1)*DX end for;
-  X   := array_addl( X_c, 0.0D0 );
+  X   := array_addl( X_c, double_real(0.0e0) );
   V   := for J in 1,KELUTE returns array of double_real(J)*VSEG end for;
 
   C   := for M in 1,5
-	   Cr := array_fill(2,NSEG,GZERO[M]) || array_fill(NSEG+1,N,0.0D0);
-	 returns array of array_addl(Cr,0.0D0)
+	   Cr := array_fill(2,NSEG,GZERO[M]) || array_fill(NSEG+1,N,double_real(0.0e0));
+	 returns array of array_addl(Cr,double_real(0.0e0))
 	 end for;
 
-  CELUTE := for I in 1,5 cross J in 1,KELUTE returns array of 0.0D0 end for;
+  CELUTE := for I in 1,5 cross J in 1,KELUTE returns array of double_real(0.0e0) end for;
 in
   X, C, CELUTE, V
 end let
@@ -209,36 +209,36 @@ let
   NSEG  :=  46;
   KELUTE := 2000;
   IELUTE := 20;
-  DX := 0.02D0;
+  DX := double_real(0.02e0);
 
-  XI := array[1: 0.8D0, 0.54D0, 0.54D0, 0.54D0, 0.54D0 ];
+  XI := array[1: double_real(0.8e0), double_real(0.54e0), double_real(0.54e0), double_real(0.54e0), double_real(0.54e0) ];
 
   RATIO  :=  XI[2] / XI[1];
   DV := XI[1]*DX/double_real(IELUTE);
 
-  AXDIS_1 := array[1: 2.0D-02, 6.0D-02, 6.0D-02, 6.0D-02,6.0D-02 ];
+  AXDIS_1 := array[1: double_real(2.0e-02), double_real(6.0e-02), double_real(6.0e-02), double_real(6.0e-02), double_real(6.0e-02) ];
 
   VEL,
   LAMBDA := for M in 1,5
-              VEL_1  := (1.0D0/XI[M])-(1.0D0/XI[1]);
-              AXDIS  := AXDIS_1[M]-0.5D0*VEL_1*DX;
+              VEL_1  := (double_real(1.0e0)/XI[M])-(double_real(1.0e0)/XI[1]);
+              AXDIS  := AXDIS_1[M]-double_real(0.5e0)*VEL_1*DX;
               VEL    := DV*VEL_1/DX;
-              LAMBDA := DV*AXDIS/(exp(DX,2.0D0));
+              LAMBDA := DV*AXDIS/(exp(DX,double_real(2.0e0)));
 	    returns array of VEL
 		    array of LAMBDA
             end for;
 
 
   VSEG := XI[1]*DX;
-  F  :=  20.6D0 / 3600.0D0;
-  EK0  :=  1.1D05;
-  RDML  :=  0.5D0;
-  RAML  :=  2.0D0*EK0*RDML;
-  EKISOM  :=  20.0D0;
-  EKAPP  :=  0.5D0*EK0/(1.0D0 + EKISOM);
-  RDML2  :=  1.0D0;
+  F  :=  double_real(20.6e0) / double_real(3600.0e0);
+  EK0  :=  double_real(1.1e05);
+  RDML  :=  double_real(0.5e0);
+  RAML  :=  double_real(2.0e0)*EK0*RDML;
+  EKISOM  :=  double_real(20.0e0);
+  EKAPP  :=  double_real(0.5e0)*EK0/(double_real(1.0e0) + EKISOM);
+  RDML2  :=  double_real(1.0e0);
   RAML2  :=  EKAPP*RDML2;
-  RRISOM  :=  1.0D-03;
+  RRISOM  :=  double_real(1.0e-03);
   RFISOM  :=  EKISOM*RRISOM;
   COF1  :=  -RAML * DV / F;
   COF2  :=  RDML * DV / F;
@@ -247,13 +247,13 @@ let
   COF5  :=  RFISOM * DV / F;
   COF6  :=  -RRISOM * DV / F;
 
-  GZERO := array[1: 0.4038637706D-05, 0.7454342552D-05, 0.6623185565D-05,
-                    0.0070055980D-05, 0.1401119600D-05 ];
+  GZERO := array[1: double_real(0.4038637706e-05), double_real(0.7454342552e-05), double_real(0.6623185565e-05),
+                    double_real(0.0070055980e-05), double_real(0.1401119600e-05) ];
 
   VOL,
   CELUTE,
   LN := for initial
-          VOL := 0.0D0;
+          VOL := double_real(0.0e0);
 	  I := 1; S := 0;
           X, LN, CELUTE, V := FILLUP(N,DX,KELUTE,VSEG,NSEG,GZERO);
 	  
@@ -277,7 +277,7 @@ let
 			  (old LN[M,SpN-1]-old LN[M,SpN]);
 
 		  LNr  := array_addl(array_addh(LNrc,LNn),LNc2);
-		  returns array of array_addl(LNr,0.0D0)
+		  returns array of array_addl(LNr,double_real(0.0e0))
 		  end for;
 
           LN := RUNKUT(COF1,COF2,COF3,COF4,COF5,COF6,RATIO,LN1,N);

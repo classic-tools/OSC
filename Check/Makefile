@@ -22,6 +22,7 @@ SRFLAGS      =
 SFLAGS       = -info=1-4
 SFLAGS_ALL   = -Keep -v
 SRFLAGS_PAR  = -r -w$(PROCS)
+ANS          =
 
 MAKE_CHECK   = $(MAKE) OSC=$(OSC) SRFLAGS="$(SRFLAGS)" SFLAGS="$(SFLAGS)"
 MAKE_ALL     = $(MAKE) OSC=$(OSC) SRFLAGS="$(SRFLAGS)" SFLAGS="$(SFLAGS_ALL)"
@@ -45,47 +46,47 @@ clean:	   clean_mathtest clean_livloops clean_database \
 	   clean_simple   clean_ricard
 
 mathtest:
-	cd Mathtest; $(MAKE_CHECK) DIFF=$(DIFF)
+	cd Mathtest; $(MAKE_CHECK) DIFF=$(DIFF) ANS=$(ANS)
 mathtest_all:
-	-cd Mathtest; $(MAKE_ALL) DIFF=$(DIFF)
+	-cd Mathtest; $(MAKE_ALL) DIFF=$(DIFF) ANS=$(ANS)
 mathtest_par:
-	-cd Mathtest; $(MAKE_PAR) DIFF=$(DIFF)
+	-cd Mathtest; $(MAKE_PAR) DIFF=$(DIFF) ANS=$(ANS)
 clean_mathtest:
 	cd Mathtest; make clean
 
 livloops:
-	cd LivLoops; $(MAKE_CHECK) DIFF=$(DIFF)
+	cd LivLoops; $(MAKE_CHECK) DIFF=$(DIFF) ANS=$(ANS)
 livloops_all:
-	-cd LivLoops; $(MAKE_ALL) DIFF=$(DIFF)
+	-cd LivLoops; $(MAKE_ALL) DIFF=$(DIFF) ANS=$(ANS)
 livloops_par:
-	-cd LivLoops; $(MAKE_PAR) DIFF=$(DIFF)
+	-cd LivLoops; $(MAKE_PAR) DIFF=$(DIFF) ANS=$(ANS)
 clean_livloops:
 	cd LivLoops; make clean
 
 database:
-	cd Database; $(MAKE_CHECK) DIFF=$(DIFF)
+	cd Database; $(MAKE_CHECK) DIFF=$(DIFF) ANS=$(ANS)
 database_all:
-	-cd Database; $(MAKE_ALL) DIFF=$(DIFF)
+	-cd Database; $(MAKE_ALL) DIFF=$(DIFF) ANS=$(ANS)
 database_par:
-	-cd Database; $(MAKE_PAR) DIFF=$(DIFF)
+	-cd Database; $(MAKE_PAR) DIFF=$(DIFF) ANS=$(ANS)
 clean_database:
 	cd Database; make clean
 
 simple:
-	cd Simple; $(MAKE_CHECK) DIFF=$(DIFF)
+	cd Simple; $(MAKE_CHECK) DIFF=$(DIFF) ANS=$(ANS)
 simple_all:
-	-cd Simple; $(MAKE_ALL) DIFF=$(DIFF)
+	-cd Simple; $(MAKE_ALL) DIFF=$(DIFF) ANS=$(ANS)
 simple_par:
-	-cd Simple; $(MAKE_PAR) DIFF=$(DIFF)
+	-cd Simple; $(MAKE_PAR) DIFF=$(DIFF) ANS=$(ANS)
 clean_simple:
 	cd Simple; make clean
 
 ricard:
-	cd Ricard; $(MAKE_CHECK) DIFF=$(DIFF)
+	cd Ricard; $(MAKE_CHECK) DIFF=$(DIFF) ANS=$(ANS)
 ricard_all:
-	-cd Ricard; $(MAKE_ALL) DIFF=$(DIFF)
+	-cd Ricard; $(MAKE_ALL) DIFF=$(DIFF) ANS=$(ANS)
 ricard_par:
-	-cd Ricard; $(MAKE_PAR) DIFF=$(DIFF)
+	-cd Ricard; $(MAKE_PAR) DIFF=$(DIFF) ANS=$(ANS)
 clean_ricard:
 	cd Ricard; make clean
 #

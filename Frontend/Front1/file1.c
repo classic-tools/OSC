@@ -1,5 +1,8 @@
 #include "frontend.h"
 
+Static Void createlevel();
+Static Void outtype();
+
 Static node *buildcompound_(leveltype)
 lexleveltype leveltype;
 {
@@ -98,12 +101,12 @@ int     mpt;
     ch1 = str1->str[index1 - 1];
     if (mpt) {
       if (isupper(ch1))
-	ch1 = _tolower(ch1);
+	ch1 = z_tolower(ch1);
     }
     ch2 = str2->str[index2 - 1];
     if (mpt) {
       if (isupper(ch2))
-	ch2 = _tolower(ch2);
+	ch2 = z_tolower(ch2);
     }
     if (ch1 < ch2) {
       Result = compareless;
@@ -1211,7 +1214,7 @@ Local Void freesymlist(sym, LINK)
 symlistobj *sym;
 struct LOC_printtable *LINK;
 {
-  Free(sym);
+  /* Free(sym); */
 }  /* FreeSymList */
 
 Local Void addtofunctlist(sym, LINK)
@@ -1456,6 +1459,7 @@ treestackobj *level;
     }  /* else */
   }  /* if */
   printf(" tag not Forloop or SpecFA in AddToForKList\n");
+  return NULL;
 }  /* AddToForKList */
 
 
@@ -1485,6 +1489,7 @@ treestackobj *level;
     }  /* else */
   }  /* if */
   printf(" tag not InitLoop in AddToIKList\n");
+  return NULL;
 }  /* AddToIKList */
 
 
@@ -1925,11 +1930,11 @@ inforecord *from, *tonode;
   int line;
   symtblbucket *sym;
   stryng str, oldstr;
-  boolean oldflag;
+  /* boolean oldflag; */
 
   sym = NULL;
   line = -1;
-  oldflag = false;
+  /* oldflag = false; */
   if (from->name.len != 0) {
     if (tonode->node_->ndcode == ifncall && tonode->port_ == 1) {
       /*name is a function*/
@@ -1941,7 +1946,7 @@ inforecord *from, *tonode;
       if (equalstrings(&str, &oldstr)) {
 	str = from->name;
 	deletestring(&str, 1, 4);
-	oldflag = true;
+	/* oldflag = true; */
       } else
 	str = from->name;
       sym = incurrentlevel(str, tvariable);
@@ -4621,7 +4626,7 @@ Static Void checkarity()
                  - set the graph info of the symbol table entry to that of
                    expression
            make sure the lists are both the same length                       */
-  semanticrec *exps, *names, *syml;
+  semanticrec *exps, *names /* , *syml*/;
   explistnode *expl;
   namelistrec *namel;
   symtblbucket *sym;
@@ -4632,7 +4637,7 @@ Static Void checkarity()
     printf("In CheckArity\n");
   exps = popsemantic();
   names = popsemantic();
-  syml = popsemantic();
+  /* syml = */ (Void)popsemantic();
   expl = exps->UU.explist;
   namel = names->UU.namelist;
   while (namel != NULL && expl != NULL) {
@@ -6178,12 +6183,12 @@ Static Void startforinit()
   /*description
           Build the compound node for the ForInit loop.  Start a new
           lex level and create the init subgraph.*/
-  node *compnode, *subgr;
+  node *compnode /* , *subgr */;
 
   if (semtrace)
     printf("Begin StartForInit \n");
   compnode = buildcompound_(initloop);
-  subgr = buildsubgraph(compnode);
+  /* subgr = */ (Void)buildsubgraph(compnode);
 }
 
 
@@ -9001,7 +9006,7 @@ lexleveltype iftype;
   semanticrec *semexplist;
   inforecord *graphinfo, *compnodegi;
   semanticrec *semsubgraphnum;
-  node *subgraph;
+  /* node *subgraph; */
 
   if (semtrace)
     printf("begin StartIf\n");
@@ -9025,7 +9030,7 @@ lexleveltype iftype;
   } else
     addedge(semexplist->UU.explist->graphinfo, compnodegi);
   addtoassolist(compnodegi->node_, 1);
-  subgraph = buildsubgraph(currentlevel->UU.U8.ifnode);
+  /* subgraph = */ (Void)buildsubgraph(currentlevel->UU.U8.ifnode);
   freesemantic(&semexplist);
   newsemantic(&semsubgraphnum, tgsubgraphnum);
   semsubgraphnum->UU.subgraphnum = 1;
@@ -10431,16 +10436,17 @@ Static Void endtagcase()
   /*description
          Create the association list for the union in the explist.
          Make sure every tag was mentioned in the tagcase.*/
-  semanticrec *subgrn, *semtclist, *tsymptr;
+  /* semanticrec *subgrn, *semtclist, *tsymptr; */
+  semanticrec *semtclist;
   tcstacklistrec *struct_;
   node *tnode;
   errorrecord *errorrec;
 
   if (semtrace)
     printf(" In EndTagcase\n");
-  subgrn = popsemantic();
+  /* subgrn = */ (Void)popsemantic();
   semtclist = popsemantic();
-  tsymptr = popsemantic();
+  /* tsymptr = */ (Void)popsemantic();
   struct_ = semtclist->UU.tcstacklist;
   tnode = currentlevel->UU.U4.tagcasenode;
   while (struct_ != NULL) {
@@ -10550,7 +10556,7 @@ Local Void removebrkpts()
 {
   unchar rembrkpt;   /**************/
   int TEMP;
-  long SET[maxsemanticnumber / 32 + 2];
+  /* long SET[maxsemanticnumber / 32 + 2]; */
 
   showbrkpts();
   printf("Enter the breakpoints to be removed:\n");
@@ -10568,7 +10574,7 @@ Local Void addbrkpts()
 {
   unchar newbrkpt;   /************/
   int TEMP;
-  long SET[maxsemanticnumber / 32 + 2];
+  /* long SET[maxsemanticnumber / 32 + 2]; */
 
   showbrkpts();
   printf("Enter the breakpoints to be added:\n");
@@ -10778,7 +10784,7 @@ int action, token;
   boolean run;
   Char ch;
   treestackobj *temp;
-  node *node_;
+  /* node *node_; */
 
   if (token != -1) {
     printf("action number is : %12d", action);
@@ -11449,7 +11455,7 @@ int action, token;
       break;
 
     case 10:
-      node_ = graphwalk(module);
+      /* node_ = */ (Void)graphwalk(module);
       break;
 
     case 11:

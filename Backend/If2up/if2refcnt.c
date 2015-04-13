@@ -87,7 +87,7 @@ PNODE n;
 /*          AAdjust                                                       */
 /*          ABuildAT                                                      */
 /*          AFillAT                                                       */
-/*          AReplace
+/*          AReplace                                                      */
 /*          RReplace   ---->    cm=0  (1..N)NODE(1)     sr=FANOUT   ----> */
 /*                                                                        */
 /*          ACatAT     ---->    cm=0    P(1)NODE(1)     sr=FANOUT   ----> */

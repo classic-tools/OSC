@@ -9,8 +9,10 @@
 #include "world.h"
 
 static int efs   = 0;                        /* COUNT OF EXPLODED Foralls */
+static int Tefs   = 0;                        /* COUNT OF Foralls */
 static int rff   = 0;             /* COUNT OF RESULTING Forall FRAGEMENTS */
 static int maelm = 0;                 /* COUNT OF MODIFIED AElement NODES */
+DYNDECLARE(printinfo, printbuf, printlen, printcount, char, 2000);
 
 #define MAX_HASH  31                  /* HASH TABLES FOR FAST INFO LOOKUP */
 
@@ -23,8 +25,9 @@ static PINFO aihash[MAX_HASH];
 /* PURPOSE: RETURNS TRUE IF NODE n IS A CANDIDATE FOR EXPLOSION.          */
 /**************************************************************************/
 
-static int IsExplodeCandidate( n )
+static int IsExplodeCandidate( n , ReasonP)
 PNODE n;
+char **ReasonP;
 {
   register PEDGE i;
 
@@ -32,6 +35,7 @@ PNODE n;
     case IFAElementN:
     case IFAElementP:
     case IFAElementM:
+      *ReasonP = "loop is the wrong type";
       return( FALSE );
 
     default:
@@ -52,6 +56,7 @@ PNODE n;
 	break;
 
       default:
+      *ReasonP = "loop import is the wrong type";
 	return( FALSE );
       }
     }
@@ -264,6 +269,7 @@ int   explodeI;
   register PNODE f;
   register int   in1;
   register int   nin;
+  char *Reason;
 
 
   for ( in1 = FALSE, n = g->G_NODES; n != NULL; n = sn ) {
@@ -284,15 +290,16 @@ int   explodeI;
     if ( !IsForall( n ) )
       continue;
 
+    ++Tefs;
+
     in1 = TRUE;
 
     if ( explodeI && nin )
       continue;
 
     /* CHECK IF THE CONTROL IS SUITABLE FOR EXPLOSION: A SINGLE Range NODE */
-    if ( n->F_GEN->G_NODES->nsucc != NULL )
-      continue;
-    if ( n->F_GEN->imp->src->type != IFRangeGenerate )
+    if ( n->F_GEN->G_NODES->nsucc != NULL ||
+    	n->F_GEN->imp->src->type != IFRangeGenerate ) 
       continue;
 
     efs++;
@@ -301,8 +308,14 @@ int   explodeI;
     for ( nn = n->F_BODY->G_NODES; nn != NULL; nn = snn ) {
       snn = nn->nsucc;
 
-      if ( !IsExplodeCandidate( nn ) )
+      if ( !IsExplodeCandidate( nn , &Reason) ) 
 	continue;
+      if (RequestInfo(I_Info1,info)) {
+      DYNEXPAND(printinfo, printbuf, printlen, printcount, char, printlen+200);
+      printlen += (SPRINTF(printinfo + printlen,
+        " Exploding loop %d at line %d, funct %s, file %s\n\n",
+         nn->ID, nn->line, nn->funct, nn->file), strlen(printinfo + printlen));
+      }
 
       f = BuildFragement( n, nn ); /* THIS WILL REMOVE nn FROM n->F_BODY */
 
@@ -325,10 +338,11 @@ int   explodeI;
 
 void WriteExplodeInfo()
 {
-  FPRINTF( stderr, "\n   * FORALL EXPLOSION\n\n" );
-  FPRINTF( stderr, " Exploded Foralls:            %d\n", efs   );
-  FPRINTF( stderr, " Resulting Forall Fragements: %d\n", rff   );
-  FPRINTF( stderr, " Modified AElement Nodes:     %d\n", maelm );
+  FPRINTF( infoptr, "\n\n **** FORALL EXPLOSIONS\n\n%s\n", printinfo);
+  DYNFREE(printinfo, printbuf, printlen, printcount, char, NULL);
+  FPRINTF( infoptr, " Exploded Foralls:            %d of %d\n", efs,Tefs   );
+/*  FPRINTF( infoptr, " Resulting Forall Fragements: %d\n", rff   );
+  FPRINTF( infoptr, " Modified AElement Nodes:     %d\n", maelm ); */
 }
 
 

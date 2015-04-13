@@ -8,6 +8,8 @@
 
 #include "world.h"
 
+static void NormalizeNodes();
+static void EliminateFanout();
 
 static int latnm = 0;            /* COUNT OF LOOPA TEST NODES MOVED       */
 static int fgnm  = 0;            /* COUNT OF FORALL GEN NODES MOVED       */
@@ -414,7 +416,8 @@ void EliminateDeadFunctions()
 
   for ( f = glstop->gsucc; f != NULL; f = f->gsucc ) {
     if ( f->mark == 'e' || f->mark == 's' || 
-	 f->mark == 'c' || f->mark == 'f' )   /* ENTRY POINTS? */
+	 f->mark == 'c' || f->mark == 'f' ||
+         f->mark == 'd' )  /* ENTRY POINTS? */
       f->print = TRUE;
 
     MarkReferencedFunctions( f, f );
@@ -625,8 +628,6 @@ PNODE f;
     register PEDGE a;
     register PEDGE v;
     register PNODE sn;
-    static void NormalizeNodes();
-    static void EliminateFanout();
 
     NormalizeNodes( f->F_GEN  );                        /* WORK BOTTOM-UP */
 
@@ -1245,28 +1246,45 @@ PNODE l;
     sn = n->nsucc;
 
     switch ( n->type ) {
-      case IFAGather:
-      case IFReduce:
-      case IFRedLeft:
-      case IFRedTree:
-      case IFRedRight:
-      case IFRestValues:
-      case IFFirstValue:
-      case IFFinalValue:
-	continue;
+    case IFReduce:
+    case IFRedLeft:
+    case IFRedTree:
+    case IFRedRight:
+      switch ( n->imp->CoNsT[0] ) {
+      case REDUCE_CATENATE:
+      case REDUCE_GREATEST:
+      case REDUCE_LEAST:
+      case REDUCE_PRODUCT:
+      case REDUCE_SUM:
+      case REDUCE_USER:
+	break;
 
       default:
-        RemoveNode( n, l->L_RET );
-
-        CopyExports( n, nn = CopyNode( n ) );
-        CopyImports( n, nn, FALSE );
-
-        InsertNode( l->L_INIT, n );
-        InsertNode( l->L_BODY, nn );
-
-	break;
+	fprintf(stderr,"Warning: Bad reduction \"%s\" on IF1 line %d\n",
+		n->imp->CoNsT,n->imp->if1line);
       }
+      /* Fall through... */
+
+    case IFAGather:
+    case IFRestValues:
+    case IFFirstValue:
+    case IFFinalValue:
+    case IFUReduce:
+      continue;
+
+    default:
+      ASSERT(!IsReturn(n), "Missing return type");
+      RemoveNode( n, l->L_RET );
+
+      CopyExports( n, nn = CopyNode( n ) );
+      CopyImports( n, nn, FALSE );
+
+      InsertNode( l->L_INIT, n );
+      InsertNode( l->L_BODY, nn );
+
+      break;
     }
+  }
 }
 
 static void NormalizeForallRet( f )
@@ -1279,22 +1297,38 @@ PNODE f;
     sn = n->nsucc;
 
     switch ( n->type ) {
-      case IFAGather:
-      case IFReduce:
-      case IFRedLeft:
-      case IFRedTree:
-      case IFRedRight:
-      case IFRestValues:
-      case IFFirstValue:
-      case IFFinalValue:
-	continue;
+    case IFReduce:
+    case IFRedLeft:
+    case IFRedTree:
+    case IFRedRight:
+      switch ( n->imp->CoNsT[0] ) {
+      case REDUCE_CATENATE:
+      case REDUCE_GREATEST:
+      case REDUCE_LEAST:
+      case REDUCE_PRODUCT:
+      case REDUCE_SUM:
+      case REDUCE_USER:
+	break;
 
       default:
-	RemoveNode( n, f->F_RET );
-	InsertNode( f->F_BODY, n );
-	break;
+	fprintf(stderr,"Warning: Bad reduction \"%s\" on IF1 line %d\n",
+		n->imp->CoNsT,n->imp->if1line);
       }
+      /* Fall through... */
+    case IFAGather:
+    case IFRestValues:
+    case IFFirstValue:
+    case IFFinalValue:
+    case IFUReduce:
+      continue;
+
+    default:
+      ASSERT(!IsReturn(n), "Missing return type");
+      RemoveNode( n, f->F_RET );
+      InsertNode( f->F_BODY, n );
+      break;
     }
+  }
 }
 
 
@@ -1760,25 +1794,25 @@ PNODE g;
 
 static void WriteNormalizeInfo()
 {
-    FPRINTF( stderr, "\n Initial Subgraph Nodes Moved:      %d\n", linm   );
-    FPRINTF( stderr,   " LoopA Test Subgraph Nodes Moved:   %d\n", latnm  );
-    FPRINTF( stderr,   " LoopB Test Subgraph Nodes Moved:   %d\n", lbtnm  );
-    FPRINTF( stderr,   " Forall Gen Subgraph Nodes Moved:   %d\n", fgnm   );
-    FPRINTF( stderr,   " Removed Not Node Pairs:            %d\n", redn   );
-    FPRINTF( stderr,   " Removed Set Low Nodes:             %d\n", scnt   );
-    FPRINTF( stderr,   " Converted String Constants:        %d\n", conv   );
-    FPRINTF( stderr,   " Folded Neg Nodes:                  %d\n", foldcnt );
-    FPRINTF( stderr,   " Converted Reduce Catenate Nodes:   %d\n", redc   );
-    FPRINTF( stderr,   " Removed Stream Limit Low Nodes:    %d\n", sliml  );
-    FPRINTF( stderr,   " Eliminated Fanout Edges:           %d\n", fan    );
-    FPRINTF( stderr,   " Eliminated Forall Generate Edges:  %d\n", fges   );
-    FPRINTF( stderr,   " Converted AScatter Nodes:          %d\n", srcnt  );
-    FPRINTF( stderr,   " Removed Int Nodes:                 %d\n", intc   );
-    FPRINTF( stderr,   " Removed Dead Functions:            %d\n", rmf    );
-    FPRINTF( stderr,   " Converted AFill Nodes:             %d\n", fill   );
-    FPRINTF( stderr,   " Converted Error Constants:         %d\n", eccnt  );
-    FPRINTF( stderr,   " RangeGenerate Nodes Removed:       %d\n", rgcnt  );
-    FPRINTF( stderr,   " Normalized Logicals:               %d\n", nlog   );
+    FPRINTF( infoptr, "\n Initial Subgraph Nodes Moved:      %d\n", linm   );
+    FPRINTF( infoptr,   " LoopA Test Subgraph Nodes Moved:   %d\n", latnm  );
+    FPRINTF( infoptr,   " LoopB Test Subgraph Nodes Moved:   %d\n", lbtnm  );
+    FPRINTF( infoptr,   " Forall Gen Subgraph Nodes Moved:   %d\n", fgnm   );
+    FPRINTF( infoptr,   " Removed Not Node Pairs:            %d\n", redn   );
+    FPRINTF( infoptr,   " Removed Set Low Nodes:             %d\n", scnt   );
+    FPRINTF( infoptr,   " Converted String Constants:        %d\n", conv   );
+    FPRINTF( infoptr,   " Folded Neg Nodes:                  %d\n", foldcnt );
+    FPRINTF( infoptr,   " Converted Reduce Catenate Nodes:   %d\n", redc   );
+    FPRINTF( infoptr,   " Removed Stream Limit Low Nodes:    %d\n", sliml  );
+    FPRINTF( infoptr,   " Eliminated Fanout Edges:           %d\n", fan    );
+    FPRINTF( infoptr,   " Eliminated Forall Generate Edges:  %d\n", fges   );
+    FPRINTF( infoptr,   " Converted AScatter Nodes:          %d\n", srcnt  );
+    FPRINTF( infoptr,   " Removed Int Nodes:                 %d\n", intc   );
+    FPRINTF( infoptr,   " Removed Dead Functions:            %d\n", rmf    );
+    FPRINTF( infoptr,   " Converted AFill Nodes:             %d\n", fill   );
+    FPRINTF( infoptr,   " Converted Error Constants:         %d\n", eccnt  );
+    FPRINTF( infoptr,   " RangeGenerate Nodes Removed:       %d\n", rgcnt  );
+    FPRINTF( infoptr,   " Normalized Logicals:               %d\n", nlog   );
 }
 
 
@@ -1856,6 +1890,6 @@ void If1Normalize()
 
   EliminateDeadFunctions();
 
-  if ( RequestInfo(I_DeveloperInfo1,info) )
-    WriteNormalizeInfo();
+/*  if ( RequestInfo(I_Info1,info) )
+    WriteNormalizeInfo(); */
 }

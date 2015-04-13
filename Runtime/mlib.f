@@ -191,3 +191,45 @@ C INDEX OF FIRST ABS MAX: DOUBLE
        difamax = max24 + v1 - 1
        return
        end
+c
+c     SISAL Fortran foreign language interface help routines
+c
+      subroutine sarray1d(idescriptor, imutable, ilower1, ihigher1)
+      include 'sisalfli.inc'
+      integer idescriptor(SARRAY1), imutable, ilower1, ihigher1
+c
+      idescriptor(SMAJOR) = SCOLMAJOR
+      idescriptor(STRANSPOSE) = SPRESERVE
+      idescriptor(SMUTABLE) = imutable
+c
+      idescriptor(SPLO1) = ilower1
+      idescriptor(SPHI1) = ihigher1
+      idescriptor(SLLO1) = ilower1
+      idescriptor(SLHI1) = ihigher1
+      idescriptor(SSLO1) = ilower1
+      return
+      end
+c
+      subroutine sarray2d(idescriptor, imutable, ilower1, ihigher1,
+     & ilower2, ihigher2)
+      include 'sisalfli.inc'
+      integer idescriptor(SARRAY2), imutable, ilower1, ihigher1,
+     & ilower2, ihigher2
+c
+      idescriptor(SMAJOR) = SCOLMAJOR
+      idescriptor(STRANSPOSE) = SPRESERVE
+      idescriptor(SMUTABLE) = imutable
+c
+      idescriptor(SPLO1) = ilower1
+      idescriptor(SPHI1) = ihigher1
+      idescriptor(SLLO1) = ilower1
+      idescriptor(SLHI1) = ihigher1
+      idescriptor(SSLO1) = ilower1
+c
+      idescriptor(SPLO2) = ilower2
+      idescriptor(SPHI2) = ihigher2
+      idescriptor(SLLO2) = ilower2
+      idescriptor(SLHI2) = ihigher2
+      idescriptor(SSLO2) = ilower2
+      return
+      end

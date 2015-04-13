@@ -16,10 +16,12 @@ int maxunroll = 2;  /* MAX NUMBER OF ITERATIONS ALLOWED IN AN UNROLLED LOOP */
 #define MAX_UNROLL_SIZE 150.0                           /* UNROLL THRESHOLD */
 
 int ucnt = 0;                                    /* COUNT OF UNROLLED LOOPS */
+int Tucnt = 0;                                    /* COUNT OF LOOPS */
 
 double iter = 100.0;                        /* DEFAULT LOOP ITERATION VALUE */
 
 static int lo, hi, num;                /* GLOBAL LOOP INFORMATION VARIABLES */
+DYNDECLARE(rollinfo,rollbuf,rolllen,rollcount,char,2000);
 
 
 /**************************************************************************/
@@ -74,7 +76,8 @@ PNODE  g;
     if ( cnt > MAX_UNROLL_SIZE )
       return( cnt );
 
-    switch ( n->type ) {
+    if ( IsCompound( n ) ) {
+      switch ( n->type ) {
       case IFLoopA:
       case IFLoopB:
 	return( MAX_UNROLL_SIZE );
@@ -99,10 +102,12 @@ PNODE  g;
         break;
 
       default:
-	cnt++;
-	break;
+        UNEXPECTED("Unknown compound");
       }
+    } else {
+	cnt++;
     }
+  }
 
   return( cnt );
 }
@@ -147,13 +152,14 @@ PNODE n;
 
 void WriteUnrollInfo()
 {
-  FPRINTF( stderr, "\n   * LOOP UNROLLING\n\n" );
-  FPRINTF( stderr, " Unrolled Foralls: %d\n", ucnt );
+  FPRINTF( infoptr, "\n\n **** LOOP UNROLLING\n\n%s\n", rollinfo); 
+  FPRINTF( infoptr, " Unrolled Foralls: %d of %d\n", ucnt,Tucnt );
 }
 
 
-static int IsUnrollCandidate( f )
+static int IsUnrollCandidate( f, ReasonP )
 PNODE f;
+char **ReasonP;
 {
   register PNODE  r;
   register PNODE  n;
@@ -164,17 +170,25 @@ PNODE f;
   /* FOR UNROLLING */
   r = f->F_GEN->G_NODES;
 
-  if ( r->nsucc != NULL )
+  if ( r->nsucc != NULL ) {
+    *ReasonP = "successor not equal to null";
     return( FALSE );
+  }
 
-  if ( r->type != IFRangeGenerate )
+  if ( r->type != IFRangeGenerate ) {
+    *ReasonP = "type is not equal to RangeGenerate";
     return( FALSE );
+  }
 
-  if ( !IsConst( r->imp ) )
+  if ( !IsConst( r->imp ) ) {
+    *ReasonP = "generate is not a constant";
     return( FALSE );
+  }
 
-  if ( !IsConst( r->imp->isucc ) )
+  if ( !IsConst( r->imp->isucc ) ) {
+    *ReasonP = "successor generate is not a constant";
     return( FALSE );
+  }
 
   lo = atoi( r->imp->CoNsT );
   hi = atoi( r->imp->isucc->CoNsT );
@@ -188,28 +202,25 @@ PNODE f;
 
   if ( num > maxunroll ) {
     /* TO PREVENT c ARRAY OVERFLOW!!! */
-    if ( num >= MAX_UNROLL )
-      return( FALSE );
-
-    if ( ((double)num) * cnt > MAX_UNROLL_SIZE )
+    if ( num >= MAX_UNROLL || ((double)num) * cnt > MAX_UNROLL_SIZE ) {
+    *ReasonP = "unrolling would cause array overflow";
       return( FALSE );
     }
+   }
 
   /* ABORT IF CONSTANT PROPAGATION FAILED! */
   for ( i = f->imp; i != NULL; i = i->isucc )
-    if ( IsConst( i ) )
+    if ( IsConst( i ) ) {
+    *ReasonP = "constant propogation failed";
       return( FALSE );
+    }
 
   /* DOES THE BODY SUBGRAPH MEET THE REQUIREMENTS FOR UNROLLING */
   for ( i = f->F_BODY->imp; i != NULL; i = i->isucc ) {
-    if ( !IsExport( f->F_RET, i->iport ) )
+    if ( !IsExport( f->F_RET, i->iport ) || IsConst( i ) || IsSGraph( i->src)) {
+    *ReasonP = "the body subgraph does not satisfy requirements for unrolling";
       return( FALSE );
-
-    if ( IsConst( i ) )
-      return( FALSE );
-
-    if ( IsSGraph( i->src ) )
-      return( FALSE );
+    }
     }
 
   /* DOES THE RETURN SUBGRAPH MEET THE REQUIREMENTS FOR UNROLLING */
@@ -217,23 +228,15 @@ PNODE f;
     switch ( n->type ) {
       case IFAGather:
 	/* FILTER? */
-	if ( n->imp->isucc->isucc != NULL )
-	  return( FALSE );
-
 	/* LOWER BOUND A CONSTANT? */
-	if ( !IsConst( n->imp ) )
-	  return( FALSE );
-
 	/* VALUE IMPORTED FROM BODY? */
-	if ( IsConst( n->imp->isucc ) )
-	  return( FALSE );
-	if ( !IsImport( f->F_BODY, n->imp->isucc->eport ) )
-	  return( FALSE );
-
 	/* NO RETURN SUBGRAPH FANOUT FOR THE VALUE */
-	if ( UsageCount( f->F_RET, n->imp->isucc->eport ) != 1 )
+	if ( n->imp->isucc->isucc != NULL || !IsConst( n->imp ) ||
+	IsConst(n->imp->isucc) || !IsImport(f->F_BODY, n->imp->isucc->eport ) ||
+	UsageCount( f->F_RET, n->imp->isucc->eport ) != 1 ) {
+    *ReasonP = "the return subgraph does not satisfy requirements for unrolling";
 	  return( FALSE );
-
+        }
 	break;
 
       case IFReduce:
@@ -246,35 +249,35 @@ PNODE f;
 	  case REDUCE_PRODUCT:
 	  case REDUCE_SUM:
 	    /* TWO OR MORE ITERATIONS? */
-	    if ( num <= 1 )
-	      return( FALSE );
+	    if ( num <= 1 ) {
+    *ReasonP = "the return subgraph does not satisfy requirements for unrolling";
+	      return( FALSE ); }
 
 	    break;
 
 	  default:
+    *ReasonP = "the return subgraph does not satisfy requirements for unrolling";
 	    return( FALSE );
           }
 
 	/* FILTER? */
-	if ( n->imp->isucc->isucc->isucc != NULL )
-	  return( FALSE );
-
 	/* VALUE IMPORTED FROM BODY? */
-	if ( IsConst( n->imp->isucc->isucc ) )
-	  return( FALSE );
-	if ( !IsImport( f->F_BODY, n->imp->isucc->isucc->eport ) )
-	  return( FALSE );
-
 	/* NO RETURN SUBGRAPH FANOUT FOR THE VALUE */
-	if ( UsageCount( f->F_RET, n->imp->isucc->isucc->eport ) != 1 )
+	if ( n->imp->isucc->isucc->isucc != NULL || 
+	IsConst( n->imp->isucc->isucc ) ||
+	!IsImport( f->F_BODY, n->imp->isucc->isucc->eport )
+	|| UsageCount( f->F_RET, n->imp->isucc->isucc->eport ) != 1 ) {
+    *ReasonP = "the return subgraph does not satisfy requirements for unrolling";
 	  return( FALSE );
-
+        }
 	break;
 
       default:
+    *ReasonP = "the return subgraph does not satisfy requirements for unrolling";
 	return( FALSE );
       }
 
+    *ReasonP = "Succeeds";
   return( TRUE );
 }
 
@@ -298,6 +301,7 @@ PNODE g;
 	   PNODE c[MAX_UNROLL];
   register int   idx;
            char  s[100];
+           char *Reason;
 
   for ( n = g->G_NODES; n != NULL; n = snn ) {
     snn = n->nsucc;
@@ -312,10 +316,18 @@ PNODE g;
 
     if ( !IsForall( n ) )
       continue;
-    
-    if ( !IsUnrollCandidate( n ) )
-      continue;
 
+    ++Tucnt;
+    
+    if ( !IsUnrollCandidate(n, &Reason ) ) 
+      continue;
+     
+    if(RequestInfo(I_Info1,info)) {
+    DYNEXPAND(rollinfo,rollbuf,rolllen,rollcount,char,rolllen+200);
+    rolllen += (SPRINTF(rollinfo + rolllen, 
+      " Unrolling loop %d at line %d, funct %s, file %s\n\n",
+       n->ID, n->line, n->funct, n->file), strlen(rollinfo + rolllen));
+  }
     c[0] = n;
     for ( idx = 1; idx < num; idx++ )
       c[idx] = CopyNode( n );

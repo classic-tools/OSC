@@ -53,9 +53,9 @@ int sdbx;
     if ( cagg )
       If2ConstGenerators();
 
-    if ( RequestInfo(I_DeveloperInfo1,info) ) {
-      UpIf2Count( FALSE, "BEFORE ANALYSIS" );
-    }
+/*    if ( RequestInfo(I_Info3,info)  ) {
+      UpIf2Count( FALSE, " **** INITIAL ANALYSIS" );
+    } */
 
     if ( minopt )
       return;
@@ -76,9 +76,11 @@ int sdbx;
     if ( mig )
       If2Migrate();
 
-    if ( RequestInfo(I_DeveloperInfo1,info) ) {
-      UpIf2Count( TRUE, "AFTER ANALYSIS" );
-    }
+    if ( RequestInfo(I_Info2,info) ) 
+      FPRINTF (infoptr2, "\n **** ARRAY PREBUILDS\n\n");
+
+    if ( RequestInfo(I_Info2,info)  || RequestInfo(I_Info3,info)) 
+      UpIf2Count( TRUE, " **** COPY ANALYSIS" );
 
     if ( !sdbx )
       WriteIf2upWarnings();

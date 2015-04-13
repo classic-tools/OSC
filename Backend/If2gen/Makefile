@@ -1,14 +1,14 @@
-# **** FILE CREATION MASKS
 SHELL = /bin/sh
-DMASK = 700
-XMASK = 755
-MMASK = 744
+XMASK = 555
+MMASK = 444
 
 .SUFFIXES: .c .o
 
 CC           = cc -g
-BIN_PATH     = ../../bin
-MAN_PATH     = ../../Man
+BIN_PATH     = ../../../bin
+LIB_PATH     = ../../../lib
+INC_PATH     = ../../../include
+MAN_PATH     = ../../../man
 BINSTALL     = cp
 SINSTALL     = cp
 PAR          =
@@ -17,15 +17,15 @@ COMMON= ifxstuff.o
 OBJ = gen.o if2yank.o if2temp.o  if2names.o    \
       if2preamble.o if2smash.o if2print.o if2record.o if2array.o         \
       if2select.o if2loop.o if2aimp.o if2opt.o if2vector.o if2prebuild.o \
-      if2fibre.o if2free.o if2interface.o if2sdbx.o
+      if2fibre.o if2free.o if2interface.o if2sdbx.o if2ureduce.o
 
 COMMONSRC= ifxstuff.c
 SRC = gen.c if2yank.c if2temp.c  if2names.c    \
       if2preamble.c if2smash.c if2print.c if2record.c if2array.c         \
       if2select.c if2loop.c if2aimp.c if2opt.c if2vector.c if2prebuild.c \
-      if2fibre.c if2free.c if2interface.c if2sdbx.c
+      if2fibre.c if2free.c if2interface.c if2sdbx.c if2ureduce.c
 
-INCL = world.h ../Library/IFX.h
+INCL = world.h ../Library/IFX.h ../../config.h
 
 MINIMAL=0
 .c.o:
@@ -60,9 +60,9 @@ install:
 	/bin/rm -f  ${BIN_PATH}/if2gen
 	${BINSTALL} if2gen ${BIN_PATH}/if2gen
 	chmod $(XMASK) ${BIN_PATH}/if2gen
-	/bin/rm -f  ${BIN_PATH}/sisal.h
-	${SINSTALL} sisal.h ${BIN_PATH}/sisal.h
-	chmod $(MMASK) ${BIN_PATH}/sisal.h
+	/bin/rm -f  ${INC_PATH}/sisal.h
+	${SINSTALL} sisal.h ${INC_PATH}/sisal.h
+	chmod $(MMASK) ${INC_PATH}/sisal.h
 
 ${OBJ}:   ${INCL}
 ${COMMON}:   ${INCL}

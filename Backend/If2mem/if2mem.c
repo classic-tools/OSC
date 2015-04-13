@@ -14,6 +14,8 @@
 
 static PNODE atstack[AT_STACK_SIZE];           /* POTENTIAL AT-NODE STACK */
 static int   attop;                        /* POTENTIAL AT-NODE STACK TOP */
+static int tagg = 0;
+int agg = 0;
 
 
 /**************************************************************************/
@@ -239,6 +241,13 @@ PNODE g;
         for ( c = pr->label, n = pr; n != sn; n = n->nsucc ) 
 	    n->label = c++;
         }
+}
+
+void WriteAggregateInfo ()
+{
+	FPRINTF (infoptr, "\n **** AGGREGATE INFORMATION\n\n");
+	FPRINTF (infoptr, " Total Number of Aggregates:                    %d\n", tagg);
+	FPRINTF (infoptr, " Total Number of Preallocated Aggregates:       %d\n", agg);
 }
 
 

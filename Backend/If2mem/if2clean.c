@@ -1500,7 +1500,7 @@ PNODE g;
 /*          LOOP INVARIANT REMOVAL, COMMON SUBEXPRESSION ELIMINATION,     */
 /*          GLOBAL COMMON SUBEXPRESSION ELIMINATION, AND CONSTANT         */
 /*          FOLDING.  IF THE info FLAG IS TRUE, INFORMATION ABOUT THE     */
-/*          PERFORMED OPTIMIZATIONS IS PRINTED TO stderr. THE ALGORITHMS  */
+/*          PERFORMED OPTIMIZATIONS IS PRINTED TO infoptr. THE ALGORITHMS  */
 /*          ARE WRITTEN TO ATTACK THOSE NODES FOUND IN SIZE EXPRESSIONS   */
 /*          AND NOT THE ENTIRE GAMUT OF IF1 AND IF2 NODES: IFPlus,        */
 /*          IFMinus, IFDiv, IFTimes, AND IFMax (ALL FOR INTEGERS) IN      */
@@ -1515,10 +1515,10 @@ void If2Clean()
 
   for ( f = glstop->gsucc; f != NULL; f = f->gsucc )
     MemRemoveDeadNodesFromGraph( f );
-
-  if ( RequestInfo(I_DeveloperInfo1,info) ) {
+/*
+  if ( RequestInfo(I_Info2,info)  ) {
     CountNodesAndEdges( "AFTER ARRAY MEMORY OPTIMIZATION" );
-  }
+  } */
 
   for ( f = glstop->gsucc; f != NULL; f = f->gsucc ) {
     AssignLowerBounds( f );
@@ -1554,44 +1554,45 @@ void If2Clean()
       MemRemoveDeadNodesFromGraph( f );
     }
 
-  if ( RequestInfo(I_DeveloperInfo1,info) ) {
-    FPRINTF( stderr, "\n   * MISCELLANEOUS IF2MEM INFOMATION\n\n" );
-    FPRINTF( stderr, " AAddH Preferences: %d\n", paddh );
+  if ( RequestInfo(I_Info2,info)  ) {
+/*    FPRINTF( infoptr, "\n **** MISCELLANEOUS IF2MEM INFOMATION\n\n" );
+    FPRINTF( infoptr, " AAddH Preferences: %d\n", paddh ); */
 
-    if ( invar ) {
-      FPRINTF( stderr, "\n   * LOOP IMVARIANT NODE REMOVAL\n\n"     );
-      FPRINTF( stderr, " Loop Invariants Removed:                %d\n", vcnt  );
-      FPRINTF( stderr, " Select Invariant Movements:             %d\n", sccnt );
-      FPRINTF( stderr, " MemoryAlloc Select Invariant Movements: %d\n", sccnt );
+/*    if ( invar ) {
+      FPRINTF( infoptr, "\n **** LOOP IMVARIANT NODE REMOVAL\n\n"     );
+      FPRINTF( infoptr, " Loop Invariants Removed:                %d\n", vcnt  );
+      FPRINTF( infoptr, " Select Invariant Movements:             %d\n", sccnt );
+      FPRINTF( infoptr, " MemoryAlloc Select Invariant Movements: %d\n", sccnt );
       }
 
     if ( fold ) {
-      FPRINTF( stderr, "\n   * CONSTANT FOLDING\n\n" );
-      FPRINTF( stderr, " SIMPLE NODES FOLDED:          %d\n", norm_cnt  );
-      FPRINTF( stderr, " A * 0 OR 0 * A NODES FOLDED:  %d\n", zero_cnt  );
-      FPRINTF( stderr, " IDENTITY NODES FOLDED:        %d\n", ident_cnt );
-      FPRINTF( stderr, " +/- CHAINS FOLDED:            %d\n", chain_cnt );
-      FPRINTF( stderr, " NEGATIVE NODES FOLDED:        %d\n", neg_cnt   );
-      FPRINTF( stderr, " PROPAGATED CONSTANTS:         %d\n", pcnt      );
-      FPRINTF( stderr, " ADD-MAX-ADD CHAINS FOLDED:    %d\n", ama_cnt   );
-      FPRINTF( stderr, " ASize-MAX CHAINS FOLDED:      %d\n", asize_cnt );
-      FPRINTF( stderr, " DIV-TO-NEG CONVERSIONS        %d\n", dncnt     );
-      FPRINTF( stderr, " PROPAGATED NEGATIONS          %d\n", pncnt     );
+      FPRINTF( infoptr, "\n **** CONSTANT FOLDING\n\n" );
+      FPRINTF( infoptr, " SIMPLE NODES FOLDED:          %d\n", norm_cnt  );
+      FPRINTF( infoptr, " A * 0 OR 0 * A NODES FOLDED:  %d\n", zero_cnt  );
+      FPRINTF( infoptr, " IDENTITY NODES FOLDED:        %d\n", ident_cnt );
+      FPRINTF( infoptr, " +/- CHAINS FOLDED:            %d\n", chain_cnt );
+      FPRINTF( infoptr, " NEGATIVE NODES FOLDED:        %d\n", neg_cnt   );
+      FPRINTF( infoptr, " PROPAGATED CONSTANTS:         %d\n", pcnt      );
+      FPRINTF( infoptr, " ADD-MAX-ADD CHAINS FOLDED:    %d\n", ama_cnt   );
+      FPRINTF( infoptr, " ASize-MAX CHAINS FOLDED:      %d\n", asize_cnt );
+      FPRINTF( infoptr, " DIV-TO-NEG CONVERSIONS        %d\n", dncnt     );
+      FPRINTF( infoptr, " PROPAGATED NEGATIONS          %d\n", pncnt     );
       }
 
     if ( cse ) {
-      FPRINTF( stderr, "\n   * COMMON NODE ELIMINATION\n\n"         );
-      FPRINTF( stderr, " Combined Nodes:               %d\n", ccnt  );
-      FPRINTF( stderr, " Combined K Imports:           %d\n", ckcnt );
+      FPRINTF( infoptr, "\n **** COMMON NODE ELIMINATION\n\n"         );
+      FPRINTF( infoptr, " Combined Nodes:               %d\n", ccnt  );
+      FPRINTF( infoptr, " Combined K Imports:           %d\n", ckcnt );
       }
 
     if ( gcse ) {
-      FPRINTF( stderr, "\n   * GLOBAL COMMON NODE ELIMINATION\n\n"  );
-      FPRINTF( stderr, " Combined Nodes:               %d\n", gccnt );
-      FPRINTF( stderr, " Combined K Imports:           %d\n", gkcnt );
+      FPRINTF( infoptr, "\n **** GLOBAL COMMON NODE ELIMINATION\n\n"  );
+      FPRINTF( infoptr, " Combined Nodes:               %d\n", gccnt );
+      FPRINTF( infoptr, " Combined K Imports:           %d\n", gkcnt );
       }
+*/
 
-    if ( invar || cse || gcse || fold )
-      CountNodesAndEdges( "AFTER GRAPH CLEANUP" );
+  /*  if ( invar || cse || gcse || fold )
+      CountNodesAndEdges( "AFTER GRAPH CLEANUP" ); */
     }
 }

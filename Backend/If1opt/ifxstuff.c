@@ -12,6 +12,7 @@ int flt			= FALSE; /* Don't convert float  types */
 int DMarkProblem	= FALSE; /* Don't mess with with %mk=d nodes */
 int echange		= 0;
 int nchange		= 0;
+int CheckForBadEdges    = FALSE; /* Turn edge checking on/off */
 
 
 double mcosts[12]	= { 0.0,0.0,0.0,0.0,0.0,0.0, /* Don't care about */

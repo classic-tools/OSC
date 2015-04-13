@@ -7,6 +7,8 @@ extern char *DaveMalloc(); /* PROFILE */
 /* copyright (C) 1986 by the Regents of the University of California */
 
 #include "p2c.h"
+#define unchar UNCHAR
+typedef unsigned int unchar;
 
 /* cann 5/29/90 */
 #define fread(w,x,y,z) fscanf( z, "%d", w )
@@ -35,11 +37,9 @@ extern char *DaveMalloc(); /* PROFILE */
 /*  global constants here */
 /*#TITLE  STRUTL  CONSTANTS       Jan82   String Handling Routines.*/
 
-#define maxstringchars  80
-/* changed from 132 */
-/*mlw*/
+#define maxstringchars  127
 
-#define blankstring     "                                                                                "
+#define blankstring     "                                                                                                                                    "
 
 #define maxbigint       SHORT_MAX
 /* Constants from setutl.m4 */
@@ -1174,20 +1174,20 @@ typedef struct rabrec {
 /* !! type for error correction phase */
 
 typedef struct insertstringrec {
-  unsigned first : 11, last : 11, cost : 31;
+  int first : 11, last : 11, cost : 31;
 } insertstringrec;
 
 typedef struct prodrec {
   /* one production in the grammar */
   unsigned start : 12;   /* pointer into production space */
-  unsigned length : 12;   /* number of symbols in uction */
+  int length : 12;   /* number of symbols in uction */
 } prodrec;
 
 typedef struct stagerec {
   /* insertion in progress */
-  unsigned cost : 31;
+  int cost : 31;
   char string[maxcorrection + 1];
-  unsigned length : 5;
+  int length : 5;
 } stagerec;
 
 typedef struct ptabrec {

@@ -15,14 +15,21 @@ PNODE g;
   register PEDGE i;
   register int   p = 1;
 
-  for ( i = g->imp; i != NULL; i = i->isucc, p++ )
-    if ( i->iport != p ) {
-      ChangeExportPorts( g->G_DAD, i->iport, -p );
-      i->iport = -p;
+  if (g != NULL)
+    {
+      for ( i = g->imp; i != NULL; i = i->isucc, p++ )
+	if ( i->iport != p ) {
+	  ChangeExportPorts( g->G_DAD, i->iport, -p );
+	  i->iport = -p;
+	}
     }
 }
 
 /* $Log: AssignNewRpor.c,v $
+ * Revision 1.2  1994/03/03  17:14:01  solomon
+ * Added some tests to help prevent failing when dealing with invalid
+ * if1 code.
+ *
  * Revision 1.1  1993/04/16  18:59:51  miller
  * Name shortening to keep the archiver from truncating names in Backend/Library
  * Since some names were changed, other files were affected.  All names in the

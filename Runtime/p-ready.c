@@ -1,7 +1,9 @@
 #include "world.h"
 
 
+#if !defined(NO_STATIC_SHARED)
 static struct ActRecCache *ARList;
+#endif
 
 
 void InitReadyList()
@@ -31,7 +33,25 @@ void InitReadyList()
     arc->Head = ThisAR; \
     arc->Tail = LastAR; \
     } \
+  FLUSHLINE(&(LastAR->NextAR)); \
+  FLUSHLINE(&(arc->Tail->NextAR)); \
+  FLUSHLINE(&(arc->Head));\
+  FLUSHLINE(&(arc->Tail));\
+  CACHESYNC; \
   MY_UNLOCK( &(arc->Mutex) ); \
+  FLUSHLINE(&(arc->Mutex)); \
+}
+
+#define DoTheEnQFast( ThisAR, LastAR, Where ) \
+{ \
+  register struct ActRecCache *arc; \
+  arc = Where; \
+  LastAR->NextAR = (struct ActRec *) NULL; \
+  arc->Head = ThisAR; \
+  arc->Tail = LastAR; \
+  FLUSHLINE(&(LastAR->NextAR)); \
+  FLUSHLINE(&(arc->Head));\
+  CACHESYNC; \
 }
 
 
@@ -43,21 +63,37 @@ register struct ActRec *LastAR;
   register struct ActRec *CurrAR;
   register struct ActRec *EndAR;
 
+  FLUSH(FirstAR,LastAR+sizeof(*LastAR));
+
   if ( BindParallelWork ) {
     NextPid = 0;
     CurrAR  = FirstAR;
     EndAR   = LastAR + 1;
 
-    while (CurrAR != EndAR) {
-      DoTheEnQ( CurrAR, CurrAR, &(ARList[NextPid]) );
+    if(OneLevelParallel)
+    {
+	    while (CurrAR != EndAR) {
+	      DoTheEnQFast( CurrAR, CurrAR, &(ARList[NextPid]) );
 
-      CurrAR++;
-      NextPid++;
+	      CurrAR++;
+	      NextPid++;
 
-      if ( NextPid == NumWorkers )
-        NextPid = 0;
-      }
+	      if ( NextPid == NumWorkers )
+		NextPid = 0;
+	      }
+    }
+    else
+    {
+	    while (CurrAR != EndAR) {
+	      DoTheEnQ( CurrAR, CurrAR, &(ARList[NextPid]) );
 
+	      CurrAR++;
+	      NextPid++;
+
+	      if ( NextPid == NumWorkers )
+		NextPid = 0;
+	      }
+    }
     return;
     }
 
@@ -78,17 +114,41 @@ struct ActRec *RListDeQ()
   else
     arc = &(ARList[0]);
 
+  if(!OneLevelParallel)
+  {
+  	MY_LOCK( &(arc->Mutex) );
+  	FLUSHLINE(arc);
+  }
+  /*
+   * we need to take this lock so that we are locked
+   * when we read arc->Head.  Otherwise, when we flush back, we may
+   * overwrite arc->Tail which is being written elsewhere
+   */
   if ( arc->Head == (struct ActRec *) NULL )
+  {
+    FLUSHLINE(&(arc->Head));
+    if(!OneLevelParallel)
+    {
+    	MY_UNLOCK( &(arc->Mutex) );
+    	FLUSHLINE(&(arc->Mutex));
+    }
     return( (struct ActRec *) NULL );
+  }
 
-  MY_LOCK( &(arc->Mutex) );
 
   ThisAR = arc->Head;
 
   if( ThisAR != (struct ActRec *) NULL )
     arc->Head = ThisAR->NextAR;
 
-  MY_UNLOCK( &(arc->Mutex) );
+  FLUSHLINE(&(arc->Head));
+
+  CACHESYNC;
+  if(!OneLevelParallel)
+  {
+  	MY_UNLOCK( &(arc->Mutex) );
+  	FLUSHLINE(&(arc->Mutex));
+  }
 
   return( ThisAR );
 }

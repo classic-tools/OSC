@@ -13,6 +13,7 @@ int DMarkProblem	= FALSE; /* Don't mess with with %mk=d nodes */
 int FullyOrdered	= FALSE; /* Do use Artif. Dep. Edges */
 int echange		= 0;
 int nchange		= 0;
+int CheckForBadEdges    = FALSE; /* Turn edge checking on/off */
 
 double mcosts[12]	= { 0.0,0.0,0.0,0.0,0.0,0.0, /* Don't care about */
 			    0.0,0.0,0.0,0.0,0.0,0.0 }; /* costs yet */

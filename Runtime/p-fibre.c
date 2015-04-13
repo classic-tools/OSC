@@ -5,6 +5,7 @@
 #define BASE8         8
 
 #define TEXT_SIZE     251
+#undef MAX_CHAR
 #define MAX_CHAR      0x7f
 
 char	*ArgumentP = ArgumentString;
@@ -136,7 +137,7 @@ static int PackageNumber()
 
   switch ( Token ) {
     case INT_ :
-      FibreInt = (int) atol( Text );
+      FibreInt = atoi( Text );
       break;
 
     case DOUBLE_ :
@@ -151,14 +152,16 @@ static int PackageNumber()
 static char GetChar()
 {
   register char Value;
+  register long Escape;  
 
   if ( Buffer == '\\' ) {
     GET_NEXT_TOKEN;
 
     if ( ISDIGIT( Buffer ) ) {
-      Value = (char) GetLong( BASE8 );
+      Escape = GetLong( BASE8 );
+      Value = (char) Escape;
 
-      if ((Value < 0) || (Value > MAX_CHAR)) 
+      if ((Escape < 0) || (Escape > MAX_CHAR)) 
         FibreError( "PRECEEDING OCTAL ESCAPE OUT OF RANGE" );
       }
     else
@@ -384,7 +387,7 @@ TopOfWorld:
       FibreError( "ILLEGAL TOKEN START CHARACTER" );
     }
 
-  return NULL;
+  return 0;
 }
 
 

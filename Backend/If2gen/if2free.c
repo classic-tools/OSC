@@ -8,6 +8,7 @@
 
 #include "world.h"
 
+static void PrintFreeOp();
 
 /**************************************************************************/
 /* LOCAL  **************      IsReadOnlyOuter      ************************/
@@ -124,7 +125,6 @@ int    par; /* TRUE ASSUMED!!! */
   register PINFO i;
   register int   c;
 	   char  buf[100];
-  static void PrintFreeOp();
 
   PrintIndentation( indent );
   FPRINTF( output, "{\n" );
@@ -140,7 +140,19 @@ int    par; /* TRUE ASSUMED!!! */
   FPRINTF( output, "RefCount = --(un%d->RefCount);\n", indent );
 
   PrintIndentation( indent+2 );
+  FPRINTF( output, "FLUSHLINE(&(un%d->RefCount));\n", indent );
+
+  PrintIndentation( indent+2 );
+  FPRINTF( output, "CACHESYNC;\n");
+
+  PrintIndentation( indent+2 );
   FPRINTF( output, "MY_UNLOCK( &un%d->Mutex );\n", indent );
+
+  PrintIndentation( indent+2 );
+  FPRINTF( output, "FLUSHLINE( &un%d->Mutex );\n", indent );
+
+  PrintIndentation( indent+2 );
+  FPRINTF( output, "CACHESYNC;\n");
 
   PrintIndentation( indent+2 );
   FPRINTF( output, "if ( RefCount == 0 ) {\n" );
@@ -209,7 +221,6 @@ char  *src;
   register PINFO i;
   register int   c;
 	   char  buf[100];
-  static void PrintFreeOp();
 
   PrintIndentation( indent );
   FPRINTF( output, "{\n" );
@@ -228,7 +239,19 @@ char  *src;
 
   if ( par ) {
     PrintIndentation( indent+2 );
+    FPRINTF( output, "FLUSHLINE(&(rec%d->RefCount));\n", indent );
+
+    PrintIndentation( indent+2 );
+    FPRINTF( output, "CACHESYNC;\n");
+
+    PrintIndentation( indent+2 );
     FPRINTF( output, "MY_UNLOCK( &rec%d->Mutex );\n", indent );
+
+    PrintIndentation( indent+2 );
+    FPRINTF( output, "FLUSHLINE( &rec%d->Mutex );\n", indent );
+
+    PrintIndentation( indent+2 );
+    FPRINTF( output, "CACHESYNC;\n");
     }
 
   PrintIndentation( indent+2 );
@@ -273,7 +296,6 @@ int    par;
 char  *src;
 {
   char  buf[100];
-  static void PrintFreeOp();
 
   PrintIndentation( indent );
   FPRINTF( output, "{\n" );
@@ -302,7 +324,19 @@ char  *src;
 
   if ( par ) {
     PrintIndentation( indent+2 );
+    FPRINTF( output, "FLUSHLINE(&(arr->RefCount));\n" );
+
+    PrintIndentation( indent+2 );
+    FPRINTF( output, "CACHESYNC;\n");
+
+    PrintIndentation( indent+2 );
     FPRINTF( output, "MY_UNLOCK( &arr->Mutex );\n" );
+
+    PrintIndentation( indent+2 );
+    FPRINTF( output, "FLUSHLINE( &arr->Mutex );\n" );
+
+    PrintIndentation( indent+2 );
+    FPRINTF( output, "CACHESYNC;\n");
     }
 
   PrintIndentation( indent+2 );
@@ -321,7 +355,19 @@ char  *src;
 
     if ( par ) {
       PrintIndentation( indent+4 );
+      FPRINTF( output, "FLUSHLINE(&(phys->RefCount));\n" );
+
+      PrintIndentation( indent+4 );
+      FPRINTF( output, "CACHESYNC;\n");
+
+      PrintIndentation( indent+4 );
       FPRINTF( output, "MY_UNLOCK( &phys->Mutex );\n" );
+
+      PrintIndentation( indent+4 );
+      FPRINTF( output, "FLUSHLINE( &phys->Mutex );\n" );
+
+      PrintIndentation( indent+4 );
+      FPRINTF( output, "CACHESYNC;\n");
       }
 
     PrintIndentation( indent+4 );

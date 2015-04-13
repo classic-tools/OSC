@@ -13,9 +13,13 @@ static int noops;  /* COUNT OF NoOp NODES                                 */
 static int snoops; /* COUNT OF DEACTIVE (SYNC-ONLY) NoOp NODES            */
 static int rnoops; /* COUNT OF CONDITIONAL NoOp NODES                     */
 static int pms;    /* COUNT OF ACTIVE pm PRAGMAS                          */
+static int tpms;    /* COUNT OF ACTIVE pm PRAGMAS                          */
 static int pls;    /* COUNT OF ACTIVE pl PRAGMAS                          */
+static int tpls;    /* COUNT OF ACTIVE pl PRAGMAS                          */
 static int srs;    /* COUNT OF ACTIVE sr PRAGMAS                          */
+static int tsrs;    /* COUNT OF ACTIVE sr PRAGMAS                          */
 static int cms;    /* COUNT OF ACTIVE cm PRAGMAS                          */
+static int tcms;    /* COUNT OF ACTIVE cm PRAGMAS                          */
 static int bades;  /* COUNT OF BOUND ADES                                 */
 static int lades;  /* COUNT OF LOW PRIORITY ADES                          */
 static int hades;  /* COUNT OF HIGH PRIORITY ADES                         */
@@ -44,10 +48,12 @@ PNODE g;
     register PADE  a;
     register PEDGE ee;
 
+
     for ( n = g; n != NULL; n = n->nsucc ) {
 	for ( i = n->imp; i != NULL; i = i->isucc ) {
 	    if ( i->cm != 0 )
 		cms++;
+	    tcms++;
 
 	    if ( i->dmark )
 		ds++;
@@ -57,14 +63,24 @@ PNODE g;
             }
 
         for ( e = n->exp; e != NULL; e = e->esucc ) {
-	    if ( IsAggregate( e->info ) && (e->eport >= 0) ) {
-		if ( e->sr > 0 )
+	    if ( IsAggregate( e->info )) {
+		if ( e->sr == 0 )
+		    tsrs++;
+                else if ( e->pm == 0 )
+		    tpms++;
+		if ( e->pl == 0 )
+		    tpls++;
+     	    if (e->eport >= 0)  {
+		if ( e->sr > 0 ) {
 		    srs++;
-                else if ( e->pm > 0 )
+		    tsrs++; }
+                else if ( e->pm > 0 ) {
 		    pms++;
+		    tpms++; }
       
-		if ( e->pl > 0 )
+		if ( e->pl > 0 ) {
 		    pls++;
+		    tpls++; }
 
                 /* INVALIDATE OTHER REFERENCES SO ONLY COUNTED ONCE       */
 
@@ -75,6 +91,7 @@ PNODE g;
 
 	    e->eport = abs( e->eport );
 	    }
+            }
 
 	for ( a = n->aimp; a != NULL; a = a->isucc )
 	    switch ( a->priority ) {
@@ -86,11 +103,10 @@ PNODE g;
 		   hades++;
 		   break;
 
-               default:
-		   lades++;
-		   break;
-               }
-
+               default: 
+		lades++; 
+		break; 
+		} 
 	switch ( n->type ) {
 	    case IFDefArrayBuf:
 		if ( !(n->cmark) )
@@ -99,21 +115,23 @@ PNODE g;
                 if ( !last )
 		    break;
 		
-                FPRINTF( stderr, " Constant Aggregate Generator (%s):\n", 
+                /*FPRINTF( infoptr, " Constant Aggregate Generator (%s):\n", 
 				 cfunct->G_NAME                        );
 
-                FPRINTF( stderr, "     %s (%s,%s,%d)\n", GetNodeName( n ), 
+                FPRINTF( infoptr, "     %s (%s,%s,%d)\n", GetNodeName( n ), 
 				 n->file, n->funct, n->line             );
 
-                FPRINTF( stderr, "     %s (%s,%s,%d)\n", 
+                FPRINTF( infoptr, "     %s (%s,%s,%d)\n", 
 				 GetNodeName( n->exp->dst ), n->exp->dst->file,
-				 n->exp->dst->funct, n->exp->dst->line       );
+				 n->exp->dst->funct, n->exp->dst->line       );*/
 
-                FPRINTF( stderr, "     %s (%s,%s,%d)\n\n", 
+		if (RequestInfo(I_Info2, info)) {
+                FPRINTF( infoptr2, " %s (%s,%s,%d)\n", 
 				 GetNodeName( n->exp->dst->exp->dst ),
 				 n->exp->dst->exp->dst->file,
 				 n->exp->dst->exp->dst->funct,
-				 n->exp->dst->exp->dst->line        );
+				 n->exp->dst->exp->dst->line        ); }
+
 
 		cagnodes +=3;
 		break;
@@ -126,10 +144,10 @@ PNODE g;
 		    break;
 
 
-                FPRINTF( stderr, " Constant Aggregate Generator %s (%s): ", 
+/*                FPRINTF( infoptr, " Constant Aggregate Generator %s (%s): ", 
 				 GetNodeName( n ), cfunct->G_NAME         );
 
-                FPRINTF( stderr, " (%s,%s,%d)\n\n", n->file, n->funct, n->line);
+                FPRINTF( infoptr, " (%s,%s,%d)\n\n", n->file, n->funct, n->line); */
 
 		cagnodes++;
                 break;
@@ -137,88 +155,88 @@ PNODE g;
 	    case IFNoOp:
 		noops++;
 
-                FPRINTF( stderr, " NoOp Node (%s): ", cfunct->G_NAME );
+/*                FPRINTF( infoptr, " NoOp Node (%s): ", cfunct->G_NAME ); 
 
 		if ( IsLoop( n->exp->dst ) )
-		  FPRINTF( stderr, " (HOISTED FROM LOOP) " );
+		  FPRINTF( infoptr, " (HOISTED FROM LOOP) " ); 
 
 		switch ( n->exp->info->type ) {
 		    case IF_ARRAY:
-			FPRINTF( stderr, "(ARRAY) " );
+			FPRINTF( infoptr, "(ARRAY) " );
 			break;
 		    case IF_STREAM:
-			FPRINTF( stderr, "(STREAM) " );
+			FPRINTF( infoptr, "(STREAM) " );
 			break;
 		    case IF_RECORD:
-			FPRINTF( stderr, "(RECORD) " );
+			FPRINTF( infoptr, "(RECORD) " );
 			break;
 		    default: break;
-		    }
+		    } */
 
 		if ( n->imp->pmark ) {
 		    switch ( n->imp->rmark1 ) {
 			case RMARK:
-			    if ( n->imp->omark1 )
-                                FPRINTF( stderr, "mk=PRO, SYNC-ONLY" );
+			  /*  if ( n->imp->omark1 )
+                                FPRINTF( infoptr, "mk=PRO, SYNC-ONLY" );
                             else
-                                FPRINTF( stderr, "mk=PR,  SYNC-ONLY" );
+                                FPRINTF( infoptr, "mk=PR,  SYNC-ONLY" ); */
 
 			    snoops++;
 			    break;
 
 			case rMARK:
-			    if ( n->imp->omark1 )
-                                FPRINTF( stderr, "mk=PrO, POSSIBLE DOPE COPY ");
+			  /*  if ( n->imp->omark1 )
+                                FPRINTF( infoptr, "mk=PrO, POSSIBLE DOPE COPY ");
 			    else
-                                FPRINTF( stderr, "mk=Pr, POSSIBLE DOPE COPY " );
+                                FPRINTF( infoptr, "mk=Pr, POSSIBLE DOPE COPY " ); */
 
 			    rnoops++;
 			    break;
 
 			default:
-			    if ( n->imp->omark1 )
-			        FPRINTF( stderr, "mk=PO, DOPE COPY" );
+			  /*  if ( n->imp->omark1 )
+			        FPRINTF( infoptr, "mk=PO, DOPE COPY" );
                             else
-			        FPRINTF( stderr, "mk=P, DOPE COPY"  );
+			        FPRINTF( infoptr, "mk=P, DOPE COPY"  ); */
 
 			    break;
                         }
 
-                    FPRINTF( stderr, " (%s,%s,%d)\n\n", n->file, 
-							n->funct, n->line);
+                 /*   FPRINTF( infoptr, " (%s,%s,%d)\n\n", n->file, 
+							n->funct, n->line); */
 		    break;
 		    }
 
 		switch ( n->imp->rmark1 ) {
 		    case RMARK:
 			if ( n->imp->omark1 ) {
-                            FPRINTF( stderr, "mk=RO, SYNC-ONLY" );
+                          /*  FPRINTF( infoptr, "mk=RO, SYNC-ONLY" ); */
 			    snoops++;
 			    }
-                        else
-                            FPRINTF( stderr, "mk=R, POSSIBLE PHYS COPY" );
+                         /* else
+                            FPRINTF( infoptr, "mk=R, POSSIBLE PHYS COPY" ); */
 
 			break;
 
 		    case rMARK:
-			if ( n->imp->omark1 )
-                            FPRINTF( stderr, "mk=rO, POSSIBLE DOPE-PHYS COPY" );
+			/* if ( n->imp->omark1 )
+                            FPRINTF( infoptr, "mk=rO, POSSIBLE DOPE-PHYS COPY" );
                         else
-                            FPRINTF( stderr, "mk=r, POSSIBLE DOPE-PHYS COPY" );
+                            FPRINTF( infoptr, "mk=r, POSSIBLE DOPE-PHYS COPY" ); */
 
 			rnoops++;
 			break;
 
 		    default:
-			if ( n->imp->omark1 )
-                            FPRINTF( stderr, "mk=O, DOPE-PHYS COPY" );
+			/* if ( n->imp->omark1 )
+                            FPRINTF( infoptr, "mk=O, DOPE-PHYS COPY" );
                         else
-                            FPRINTF( stderr, "mk=, DOPE-PHYS COPY " );
+                            FPRINTF( infoptr, "mk=, DOPE-PHYS COPY " ); */
 
 			break;
                     }
 
-                FPRINTF( stderr, " (%s,%s,%d)\n\n", n->file, n->funct, n->line);
+                /* FPRINTF( infoptr, " (%s,%s,%d)\n\n", n->file, n->funct, n->line); */
 		break;
 
 	    case IFForall:
@@ -246,31 +264,31 @@ PNODE g;
 
 static void WriteUpCountInfo()
 {
-    FPRINTF( stderr,   " NoOp Nodes:                    %d\n", noops   );
-    FPRINTF( stderr,   " Sync-Only NoOp Nodes:          %d\n", snoops  );
-    FPRINTF( stderr,   " Conditional NoOp Nodes:        %d\n", rnoops  );
-    FPRINTF( stderr,   " Hoisted NoOp Nodes:            %d\n", hnoops  );
-    FPRINTF( stderr,   " Active sr Pragmas:             %d\n", srs     );
-    FPRINTF( stderr,   " Active pm Pragmas:             %d\n", pms     );
-    FPRINTF( stderr,   " Active pl Pragmas:             %d\n", pls     );
-    FPRINTF( stderr,   " Active cm Pragmas:             %d\n", cms     );
-    FPRINTF( stderr,   " Bound Ades:                    %d\n", bades   );
-    FPRINTF( stderr,   " Low Priority Ades:             %d\n", lades   );
-    FPRINTF( stderr,   " High Priority Ades:            %d\n", hades   );
-    FPRINTF( stderr,   " ADEs Not Inserted (Cycles):    %d\n", cycle   );
-    FPRINTF( stderr,   " Constant Aggregate Generators: %d\n", cagnodes);
-    FPRINTF( stderr,   " Active mk=D Pragmas:           %d\n", ds      );
-    FPRINTF( stderr,   " Scope Exit Recycle References: %d\n", dedges  );
-    FPRINTF( stderr,   " Migrated Nodes:                %d\n", cmig    );
-    FPRINTF( stderr,   " Universal Record Ownership:    TRUE\n"        );
+    FPRINTF( infoptr,   " Copy Nodes:                                    %d\n", noops);
+    FPRINTF( infoptr,   " Copy Ops:                                      %d\n", snoops);
+    FPRINTF( infoptr,   " Conditional Copy Nodes:                        %d\n", rnoops);
+    FPRINTF( infoptr,   " Hoisted Copy Nodes:                            %d\n", hnoops);
+    FPRINTF( infoptr,   " Eliminated Set Reference Count Pragmas:        %d of %d\n", tsrs - srs, tsrs);
+    FPRINTF( infoptr,   " Eliminated Increment Reference Count Pragmas:  %d of %d\n", tpms - pms, tpms);
+    FPRINTF( infoptr,   " Eliminated Modify Reference Count Pragmas:     %d of %d\n", tpls - pls, tpls);
+    FPRINTF( infoptr,   " Eliminated Decrement Reference Count Pragmas:  %d of %d\n", tcms - cms, tcms);
+/*    FPRINTF( infoptr,   " Bound Ades:                    %d\n", bades   );
+    FPRINTF( infoptr,   " Low Priority Ades:             %d\n", lades   );
+    FPRINTF( infoptr,   " High Priority Ades:            %d\n", hades   );
+    FPRINTF( infoptr,   " ADEs Not Inserted (Cycles):    %d\n", cycle   );
+    FPRINTF( infoptr,   " Constant Aggregate Generators: %d\n", cagnodes);
+    FPRINTF( infoptr,   " Active mk=D Pragmas:           %d\n", ds      );
+    FPRINTF( infoptr,   " Scope Exit Recycle References: %d\n", dedges  );
+    FPRINTF( infoptr,   " Migrated Nodes:                %d\n", cmig    );
+    FPRINTF( infoptr,   " Universal Record Ownership:    TRUE\n"        );
 
-    FPRINTF( stderr,   " Universal Stream Ownership:    %s\n", 
+    FPRINTF( infoptr,   " Universal Stream Ownership:    %s\n", 
 		       ( univso )? "TRUE" : "DON'T KNOW"    );
 
-    FPRINTF( stderr,   " Universal Array Ownership:     %s\n", 
+    FPRINTF( infoptr,   " Universal Array Ownership:     %s\n", 
 		       ( univao )? "TRUE" : "DON'T KNOW"    );
 
-    FPRINTF( stderr,   " Swap Optimizations:            %d\n", swcnt   );
+    FPRINTF( infoptr,   " Swap Optimizations:            %d\n", swcnt   );*/
 }
 
 
@@ -287,8 +305,6 @@ char *msg;
 {
     register PNODE f;
 
-    FPRINTF( stderr, "\n   * OCCURRENCE COUNTS %s\n\n", msg );
-
     bades = hades  = lades = srs = cagnodes = 0;
     noops = snoops = pms   = pls = cms    = 0;
     last  = lst;
@@ -296,7 +312,10 @@ char *msg;
     for ( f = fhead; f != NULL; f = f->gsucc )
 	GatherCounts( cfunct = f );
 
+    if (RequestInfo(I_Info3, info)) {
+    FPRINTF( infoptr, "\n%s\n\n", msg );
     WriteUpCountInfo();
+    }
 }
 
 

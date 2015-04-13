@@ -67,11 +67,25 @@ struct ArrayPhys {
   int       Size;               /* ABSOLUTE SIZE OF PHYSICAL SPACE    */ 
   POINTER   Base;               /* FIRST CELL OF PHYSICAL SPACE       */
   LOCK_TYPE Mutex;              /* LOCK FOR PHYSICAL BLOCK            */
-  int       RefCount;           /* CURRENT NUMBER OF REFERENCES       */
   int       ExpHistory;         /* COUNT OF PREVIOUS EXPANSIONS       */
   int       Free;               /* UNOCCUPIED CELLS TO THE RIGHT      */
   POINTER   Dope;               /* UTILITY FIELD                      */
+#if defined(NON_COHERENT_CACHE)
+  char      pad1[CACHE_LINE-3*sizeof(int)-2*sizeof(POINTER)-sizeof(LOCK_TYPE)];
+#endif
+  int       RefCount;           /* CURRENT NUMBER OF REFERENCES       */
+#if defined(NON_COHERENT_CACHE)
+  char      pad2[CACHE_LINE - (1 * sizeof(int))];
+#endif
   };
+#if defined(NON_COHERENT_CACHE)
+#define APhysStruct(Size, Base, Mutex, ExpHistory, Free, Dope, RefCount) \
+  {Size, Base, Mutex, ExpHistory, Free, Dope, "pad1", RefCount, "pad2"}
+#else
+#define APhysStruct(Size, Base, Mutex, ExpHistory, Free, Dope, RefCount) \
+  {Size, Base, Mutex, ExpHistory, Free, Dope, RefCount}
+#endif
+
 
 struct Array {
   POINTER   Base;               /* RELATIVE BASE                      */
@@ -79,13 +93,30 @@ struct Array {
   int       Size;               /* LOGICAL ARRAY SIZE                 */
   PHYSP     Phys;               /* POINTER TO PHYSICAL BLOCK          */
   LOCK_TYPE Mutex;              /* LOCK FOR DOPE VECTOR               */
-  int       RefCount;           /* CURRENT NUMBER OF REFERENCES       */
   int       Mutable;            /* INTERFACE MUTABILITY               */
+#if defined(NON_COHERENT_CACHE)
+  char      pad1[CACHE_LINE-3*sizeof(int)-2*sizeof(POINTER)-sizeof(LOCK_TYPE)];
+#endif
+  int       RefCount;           /* CURRENT NUMBER OF REFERENCES       */
+#if defined(NON_COHERENT_CACHE)
+  char      pad2[CACHE_LINE - (1 * sizeof(int))];
+#endif
   };
+#if defined(NON_COHERENT_CACHE)
+#define AStruct(Base, LoBound, Size, Phys, Mutex, Mutable, RefCount) \
+  {Base, LoBound, Size, Phys, Mutex, Mutable, "pad1", RefCount, "pad2"}
+#else
+#define AStruct(Base, LoBound, Size, Phys, Mutex, Mutable, RefCount) \
+  {Base, LoBound, Size, Phys, Mutex, Mutable, RefCount}
+#endif
+
 
 struct MemoryBuffer {
   PHYSP    Phys;
   POINTER  Base;
+#if defined(NON_COHERENT_CACHE)
+  char     pad[CACHE_LINE];
+#endif
   };
 
 struct PointerSwapBuffer {
@@ -94,6 +125,9 @@ struct PointerSwapBuffer {
   POINTER Temp;                /* POINTER SWAP TEMPORARY VARIABLE          */
   int     InfoTop;             /* Info TOP POINTER                         */
   int     Info[6];             /* Info ARRAY FOR REGION                    */
+#if defined(NON_COHERENT_CACHE)
+  char    pad[CACHE_LINE];
+#endif
   };
 
 extern POINTER  ArrayDuplicatePlus();

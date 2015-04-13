@@ -2,40 +2,10 @@
 #define WORLD_INCLUDED
 /* ------------------------------------------------------------ */
 
-#include "../Library/IFX.h"
+#include "../../config.h"
+#include "IFX.h"
 
-#ifdef USE_TIMES
-#  include <sys/types.h>
-#  include <sys/times.h>
-#  ifdef SGI
-#    include <sys/param.h>
-#  endif
-#endif
-
-#ifdef SUN
-#  define CTIME_DEFINED
-#  include <sys/time.h>
-#  include <sys/resource.h>
-#endif
-
-#ifdef SGI
-#  define CTIME_DEFINED
-#  include <sys/time.h>
-#  include <sys/resource.h>
-#endif
-
-#ifdef CRAY
-#  define CTIME_DEFINED
-#  include <time.h>
-#  include <sys/time.h>
-#endif
-
-#ifndef CTIME_DEFINED
-#  include <sys/time.h>
-#  include <sys/resource.h>
-#endif
-
-#define WHITE_CHARS      NULL
+#define WHITE_CHARS      '\0'
 
 #define MAX_HASH	(11)
 #define MAX_NHASH	(11)
@@ -71,7 +41,19 @@
 /* ------------------------------------------------------------ */
 #endif
 
+extern FILE *infoptr;	/* info output file */
+
 /* $Log: world.h,v $
+ * Revision 1.8  1994/06/16  21:32:08  mivory
+ * info format and option changes M. Y. I.
+ *
+ * Revision 1.7  1994/04/15  15:51:58  denton
+ * Added config.h to centralize machine specific header files.
+ * Fixed gcc warings.
+ *
+ * Revision 1.6  1994/04/01  00:02:58  denton
+ * NULL -> '\0' where appropriate
+ *
  * Revision 1.5  1993/06/14  20:44:05  miller
  * BuildItems/ReadItems/world  (reset for new IFx read operation)
  * IFX.h/ReadPragmas (new lazy pragma)
@@ -105,6 +87,16 @@
  *
  * Revision 1.2  1993/01/07  00:12:19  miller
  * Added $Log: world.h,v $
+ * Revision 1.8  1994/06/16  21:32:08  mivory
+ * info format and option changes M. Y. I.
+ *
+ * Revision 1.7  1994/04/15  15:51:58  denton
+ * Added config.h to centralize machine specific header files.
+ * Fixed gcc warings.
+ *
+ * Revision 1.6  1994/04/01  00:02:58  denton
+ * NULL -> '\0' where appropriate
+ *
  * Revision 1.5  1993/06/14  20:44:05  miller
  * BuildItems/ReadItems/world  (reset for new IFx read operation)
  * IFX.h/ReadPragmas (new lazy pragma)

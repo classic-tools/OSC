@@ -8,23 +8,8 @@
 
 #include "world.h"
 
-
-static char *rfun[] = {                                  /* READ ROUTINES */
-    "Compiler_Error", "Compiler_Error", "Compiler_Error", "Compiler_Error",
-    "Compiler_Error", "Compiler_Error", "Compiler_Error", "Compiler_Error",
-    "Compiler_Error", "Compiler_Error", "Unknown_Error",  "Compiler_Error",
-    "ReadBool",       "ReadChar",       "ReadDbl",        "ReadInt",
-    "ReadNil",        "ReadFlt",        "CompilerError",  "CompilerError"
-    };
-
-static char *wfun[] = {                                 /* WRITE ROUTINES */
-    "Compiler_Error", "Compiler_Error", "Compiler_Error", "Compiler_Error",
-    "Compiler_Error", "Compiler_Error", "Compiler_Error", "Compiler_Error",
-    "Compiler_Error", "Compiler_Error", "Compiler_Error", "Compiler_Error",
-    "WriteBool",      "WriteChar",      "WriteDbl",       "WriteInt",
-    "WriteNil",       "WriteFlt",       "Compiler_Error", "Compiler_Error"
-    };
-
+static void PrintReadOp();
+static void PrintWriteOp();
 
 /**************************************************************************/
 /* LOCAL  **************      PrintReadRoutine     ************************/
@@ -35,8 +20,6 @@ static char *wfun[] = {                                 /* WRITE ROUTINES */
 static void PrintReadRoutine( i )
 PINFO i;
 {
-  static void PrintReadOp();
-
   if ( i->LibNames ) {
     FPRINTF(output,"/* library %s %s */\n",i->tname, i->rname );
   } else {
@@ -66,8 +49,6 @@ PINFO i;
 static void PrintWriteRoutine( i )
 PINFO i;
 {
-  static void PrintWriteOp();
-
   if ( i->LibNames ) {
     FPRINTF(output,"/* library void %s */\n", i->wname );
   } else {
@@ -96,7 +77,6 @@ PINFO  u;
   register PINFO i;
   register int   c;
 	   char  buf[100];
-  static void PrintWriteOp();
 
   PrintIndentation( indent );
   FPRINTF( output, "{\n" );
@@ -149,7 +129,6 @@ char  *src;
 PINFO  i;
 {
   char buf[100];
-  static void PrintWriteOp();
 
   PrintIndentation( indent );
   FPRINTF( output, "{\n" );
@@ -238,7 +217,6 @@ PINFO  r;
   register PINFO i;
   register int   c;
 	   char  buf[100];
-  static void PrintWriteOp();
 
   PrintIndentation( indent );
   FPRINTF( output, "{\n" );
@@ -282,7 +260,6 @@ PINFO  u;
   register PINFO i;
   register int   c;
 	   char  buf[100];
-  static void PrintReadOp();
 
   PrintIndentation( indent );
   FPRINTF( output, "{\n" );
@@ -345,7 +322,6 @@ PINFO  r;
   register PINFO i;
   register int   c;
 	   char  buf[100];
-  static void PrintReadOp();
 
   PrintIndentation( indent );
   FPRINTF( output, "{\n" );
@@ -388,7 +364,6 @@ char  *del;
 PINFO  i;
 {
   char buf[100];
-  static void PrintReadOp();
 
   PrintIndentation( indent );
   FPRINTF( output, "{\n" );
@@ -561,7 +536,7 @@ PINFO  i;
 
     default:
       PrintIndentation( indent );
-      FPRINTF( output, "%s( %s );\n", wfun[i->type], src );
+      FPRINTF( output, "%s( %s );\n", GetWriteFunction( i->type ), src );
       break;
     }
 }
@@ -654,7 +629,7 @@ PINFO  i;
 
     default:
       PrintIndentation( indent );
-      FPRINTF( output, "%s( %s );\n", rfun[i->type], dst );
+      FPRINTF( output, "%s( %s );\n", GetReadFunction( i->type ), dst );
       break;
     }
 }
@@ -928,9 +903,8 @@ PNODE n;
     /* ------------------------------------------------------------ */
     /* If there's no reader/writer defined, try the default writer  */
     /* ------------------------------------------------------------ */
-    if ( i->info->rname == NULL ) {
-      printf("info=%d, wname=%s wfun[%d] = %s\n",i->info->label,i->info->wname,i->info->type,wfun[i->info->type]);
-      FPRINTF( output, "  %s( ", wfun[i->info->type] );
+    if ( i->info->wname == NULL ) {
+      FPRINTF( output, "  %s( ", GetWriteFunction( i->info->type ) );
       PrintTemp( i );
       FPRINTF( output, " );\n" );
       continue;

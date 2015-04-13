@@ -96,51 +96,53 @@ static void WriteCostTables()
 {
     register int i;
 
-    if ( RequestInfo(I_DeveloperInfo1,info) ) {
+ /*   if ( RequestInfo(I_Info4,info)  ) {
 
-      FPRINTF( stderr, "\n   * COST TABLES\n" );
+      FPRINTF( infoptr, "\n **** COST TABLES\n" );
 
       for ( i = 0; i < IF1SimpleNodes; i++ ) {
         if ( (i % 7) == 0 )
-	  FPRINTF( stderr, "\n" );
+	  FPRINTF( infoptr, "\n" );
 
-        FPRINTF( stderr, " %-5.5s %4d", SimpleName(i), (int) scosts[i] );
+        FPRINTF( infoptr, " %-5.5s %4d", SimpleName(i), (int) scosts[i] );
       }
 
-      FPRINTF( stderr, "\n" );
+      FPRINTF( infoptr, "\n" );
 
       for ( i = 0; i < IF2AtNodes; i++ ) {
         if ( (i % 7) == 0 )
-	  FPRINTF( stderr, "\n" );
+	  FPRINTF( infoptr, "\n" );
 
-        FPRINTF( stderr, " %-6.6s %3d", AtName(i), (int) atcosts[i] );
+        FPRINTF( infoptr, " %-6.6s %3d", AtName(i), (int) atcosts[i] );
       }
-      FPRINTF( stderr, "\n\n" );
+      FPRINTF( infoptr, "\n\n" );
     }
+*/
 
-    FPRINTF( stderr, "Slice Threshold:         %g\n", SliceThreshold);
-    FPRINTF( stderr, "Loop Iterations:         %d\n", (int) Iterations);
+    if ( RequestInfo(I_Info4,info)  ) {
+      FPRINTF( infoptr, "\n **** COST TABLES\n\n" );
+    FPRINTF( infoptr, " Slice Threshold:         %g\n", SliceThreshold);
+    FPRINTF( infoptr, " Loop Iterations:         %d\n", (int) Iterations);
 
-    if ( RequestInfo(I_DeveloperInfo1,info) ) {
-      FPRINTF( stderr, "Default Function Cost:   %d\n",
+      FPRINTF( infoptr, " Default Function Cost:   %d\n",
 	      (int) DefaultFunctionCost);
-      FPRINTF( stderr, "RefCnt Increment Cost:   %d\n",
+      FPRINTF( infoptr, " RefCnt Increment Cost:   %d\n",
 	      (int) RefCntIncrementCost);
-      FPRINTF( stderr, "RefCnt Decrement Cost:   %d\n",
+      FPRINTF( infoptr, " RefCnt Decrement Cost:   %d\n",
 	      (int)RefCntDecrementCost);
-      FPRINTF( stderr, "Dope Vector Copy Cost:   %d\n",
+      FPRINTF( infoptr, " Dope Vector Copy Cost:   %d\n",
 	      (int) DopeVectorCopyCost);
-      FPRINTF( stderr, "Record Copy Cost:        %d\n",
+      FPRINTF( infoptr, " Record Copy Cost:        %d\n",
 	      (int) RecordCopyCost);
-      FPRINTF( stderr, "Array Copy Cost:         %d\n",
+      FPRINTF( infoptr, " Array Copy Cost:         %d\n",
 	      (int) ArrayCopyCost);
-      FPRINTF( stderr, "Deallocation Cost:       %d\n",
+      FPRINTF( infoptr, " Deallocation Cost:       %d\n",
 	      (int) DeallocCost);
-      FPRINTF( stderr, "Integer Arithmetic Cost: %d\n",
+      FPRINTF( infoptr, " Integer Arithmetic Cost: %d\n",
 	      (int) IntegerCost);
-      FPRINTF( stderr, "Real Arithmetic Cost:    %d\n",
+      FPRINTF( infoptr, " Real Arithmetic Cost:    %d\n",
 	      (int) RealCost);
-      FPRINTF( stderr, "Double Arithmetic Cost:  %d\n",
+      FPRINTF( infoptr, " Double Arithmetic Cost:  %d\n",
 	      (int) DoubleCost);
     }
 }
@@ -289,12 +291,12 @@ PNODE g;
 	    n->F_BODY->ccost /= vadjust;
 	  } else {
 	    n->reason1 = Reason;
-	    if ( RequestInfo(I_VectorConcurrent,info) ) {
+	    if ( RequestInfo(I_Info4,info)  ) {
 	      if ( IsInnerLoop( n->F_BODY ) ) {
-		FPRINTF( stderr, "INNER LOOP VECTORIZATION FAILURE ");
-		FPRINTF( stderr, "%d=(%s,%s,%d)\n", 
+		FPRINTF( infoptr, "INNER LOOP VECTORIZATION FAILURE ");
+		FPRINTF( infoptr, "%d=(%s,%s,%d)\n", 
 			n->ID, n->file, n->funct, n->line );
-		if ( Reason ) FPRINTF( stderr, "%s\n",Reason);
+		if ( Reason ) FPRINTF( infoptr, "%s\n",Reason);
 	      }
 	    }
 	  }
@@ -452,7 +454,7 @@ void If2Cost()
 {
     register PNODE f;
 
-    if ( RequestInfo(I_MoreInfo,info) ) {
+    if ( RequestInfo(I_Info4,info)  ) {
       WriteCostTables();
     }
 

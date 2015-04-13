@@ -21,9 +21,10 @@ PNODE  dad;
   for ( n = glstop->gsucc; n !=NULL; n = n->gsucc )
     n->G_DAD = dad;
 
-  for ( tag = 0; lst != NULL; lst = lst->next, tag++ ) {
-    n = FindGraph( lst->datum ); 
 
+  for ( tag = 0; lst != NULL; lst = lst->next, tag++ ) {
+    if ((n = FindGraph( lst->datum )) == NULL) break; 
+    
     if ( n->G_TAGS == NULL )
       n->G_TAGS = AssocListAlloc( tag );
     else
@@ -32,6 +33,10 @@ PNODE  dad;
 }
 
 /* $Log: AssignTags.c,v $
+ * Revision 1.2  1994/03/03  20:05:12  solomon
+ * Added some tests to help prevent failing when dealing with invalid
+ * if1 code.
+ *
  * Revision 1.1  1993/01/21  23:27:57  miller
  * Initial version of the IFX library.  It replaces the if[12]build.c
  * read.c timer.c util.c and write.c and if[12].h files from the

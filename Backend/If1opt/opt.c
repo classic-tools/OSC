@@ -10,11 +10,14 @@
 
 FILE *input  = stdin;               /* IF1 INPUT  FILE POINTER            */
 FILE *output = stdout;              /* IF1 OUTPUT FILE POINTER            */
+FILE *infoptr;              /* IF1 INFO OUTPUT FILE POINTER        */
+char infofile[200];
 
 char *program = "if1opt";           /* PROGRAM NAME                       */
 
 static int norm    = TRUE;          /* PERFORM GRAPH NORMALIZATION?       */
 static int fission = TRUE;          /* PERFORM RECORD AND ARRAY FISSION?  */
+static int cascade = TRUE;	    /* Look for loop test cascades	  */
 static int invar   = TRUE;          /* PERFORM LOOP INVARIANT REMOVAL?    */
        int Oinvar  = TRUE;
 static int cse     = TRUE;          /* PERFORM CSE?                       */
@@ -41,7 +44,6 @@ static int strip   = TRUE;          /* DO RETURN NODE STRIPPING?          */
        int sfuse   = TRUE;          /* PERFORM SELECT FUSION?             */
        int dfuse   = TRUE;          /* PERFORM FORALL DEPENDENT FUSION?   */
        int info	   = FALSE;	    /* DUMP OPTIMIZATION INFORMATION?     */
-       int vinfo   = FALSE;         /* DUMP LOOP FUSION INFORMATION?      */
        int sgnok   = TRUE;          /* ALLOW SIGNED ARITHMETIC CONSTANTS? */
        int slfis   = TRUE;          /* PERFORM STREAM LOOP FISSION?       */
        int native  = FALSE;         /* FLAG NODES NOT SUPPORTED IN NATIVE */
@@ -364,14 +366,13 @@ char **argv;
 	  iter = (double) atoi( (c+1) );
 	  break;
 
-	case 'I':
-	  vinfo = TRUE;
-	  if ( isdigit((int)(c[1])) ) vinfo=atoi(c+1);
-	  break;
-
 	case 'i':
 	  info = TRUE;
 	  if ( isdigit((int)(c[1])) ) info=atoi(c+1);
+	  break;
+
+        case 'F' :
+          strcpy (infofile, c+1);
 	  break;
 
 	case '+':
@@ -435,6 +436,10 @@ char **argv;
     maxunroll = 0;
     }
 
+  if (RequestInfo(I_Info1, info)) 
+	if ((infoptr = fopen (infofile, "a")) == NULL)
+		infoptr = stderr;
+
   StartProfiler();
   If1Read();
   (void)fclose( input );       /* AS IT MIGHT BE THE SOON TO BE WRITTEN FILE */
@@ -450,18 +455,28 @@ char **argv;
   /* START BY CLEANING EVERYTHING UP! */
   StartProfiler();
   if ( dead ) If1Clean();
-  if ( norm ) If1Normalize();
-  StopProfiler( "If1Clean AND If1Normalize" );
+  StopProfiler( "If1Clean" );
 
-  if ( RequestInfo(I_DeveloperInfo1,info) ) {
-    FPRINTF( stderr, "\n****GRAPH NORMALIZATION AND EXPANSION\n" );
+  StartProfiler();
+  If1Reduce();
+  StopProfiler( "If1Reduce" );
+
+  StartProfiler();
+  if ( norm ) If1Normalize();
+  StopProfiler( "If1Normalize" );
+
+/*  if ( RequestInfo(I_Info1,info) ) {
+    FPRINTF( infoptr, "\n****GRAPH NORMALIZATION AND EXPANSION\n" );
     If1Count( "BEFORE EXPANSION AFTER NORMALIZATION" );
-    }
+    } */
 
   /* DO IT NOW SO LOOP FUSION DOES NOT UNDO STREAM LOOP FISSION */
 
   if ( norm && dead && native && sgnok ) 
     AddStamp( NORMALIZED, "  CSU -> NORMALIZED: native, dead" );
+
+  if ( RequestInfo(I_Info1,info) ) 
+    FPRINTF( infoptr, "**** SIMPLE OPTIMIZATIONS\n\n" );
 
   StartProfiler();
   if ( InLineExpansion ) If1Inline();
@@ -472,17 +487,14 @@ char **argv;
   /* Give ID numbers to all compound nodes for later reference */
   AssignCompoundIDs();
 
-  if ( RequestInfo(I_DeveloperInfo1,info) ) {
-    If1Count( "AFTER GRAPH NORMALIZATION AND EXPANSION" );
-    FPRINTF( stderr, "\n**** IF1 MACHINE INDEPENDENT OPTIMIZATIONS\n" );
+  if ( RequestInfo(I_Info1,info) ) {
+    /*If1Count( "AFTER GRAPH NORMALIZATION AND EXPANSION" );*/
   }
 
-  if ( RequestInfo(I_GeneralInfo,info)
-      || RequestInfo(I_GeneralInfo,vinfo)
-      ) {
+/*  if ( RequestInfo(I_Info1,info)) {
     WriteLoopMap( "BEFORE FUSION OPTIMIZATIONS" );
-    (void)fputc('\n',stderr);
-  }
+    (void)fputc('\n',infoptr);
+  } */
 
   /* INITIALIZE DEAD NODE COUNTERS SO NOT TO REFLECT ACTION TAKEN DURING */
   /* NORMALIZATION AND GRAPH EXPANSION                                   */
@@ -493,6 +505,7 @@ char **argv;
   if ( dead )
     If1Clean();
   StopProfiler( "If1Clean" );
+
 
   /* DO EVERYTHING 6 TIMES */
   for ( i = 0; i <= 5; i++ ) {
@@ -561,38 +574,38 @@ char **argv;
     if ( explode && i == 3 ) If1Explode( explodeI );
     StopProfiler( "If1Explode" );
 
+    /* Test cascadence */
+    StartProfiler();
+    if ( cascade ) If1TestCascade();
+    StopProfiler( "If1TestCascade" );
+
     StartProfiler();
     if ( dead ) If1Clean();
     StopProfiler( "If1Clean" );
     }
 
-  if ( RequestInfo(I_GeneralInfo,info) ) {
-    WriteLoopMap( "AFTER FUSION OPTIMIZATIONS" );
-    WriteFusionInfo();
-  }
-
-  if ( RequestInfo(I_MoreInfo,info) ) {
-    WriteFissionInfo();
+  if ( RequestInfo(I_Info1,info) ) {
+    /*WriteLoopMap( "AFTER FUSION OPTIMIZATIONS" );*/
+    WriteFusionInfo(); 
+    WriteReduceInfo(); 
+    WriteFissionInfo(); 
     WriteUnrollInfo();
     WriteSplitInfo();
-  }
-
-  if ( RequestInfo(I_DeveloperInfo1,info) ) {
-    WriteFoldInfo();
+   /* WriteFoldInfo();
     WriteInvarInfo();
     WriteCseInfo();
-    WriteGCseInfo();
+    WriteGCseInfo();*/
     WriteConcurInfo();
     WriteInvertInfo();
     WriteDopeInfo();
     WriteExplodeInfo();
-    WriteCleanInfo();
+    WriteCleanInfo();  
 
-    If1Count( "AFTER MACHINE INDEPENDENT OPTIMIZATIONS" );
+    /*If1Count( "AFTER MACHINE INDEPENDENT OPTIMIZATIONS" );*/
     }
 
-  if ( (!info) && RequestInfo(I_GeneralInfo,vinfo) )
-    WriteLoopMap( "AFTER FUSION OPTIMIZATIONS" );
+  /*if ( RequestInfo(I_Info1,info) )
+    WriteLoopMap( "AFTER FUSION OPTIMIZATIONS" );*/
 
   SPRINTF( istmp, "  CSU -> IF1 OPTS:%s%s%s%s%s%s%s%s%s%s",
            ( InLineExpansion)?" inline"  : "", ( invar )? " invar" : "",
@@ -602,6 +615,8 @@ char **argv;
            ( sgnok )?         " sgnok"   : "", ( slfis )? " sfiss" : ""  );
 
   AddStamp( IF1OPTIMIZED,  istmp );
+  if (RequestInfo(I_Info1, info) && infoptr!=stderr)
+    fclose (infoptr);
 
   /* OPEN THE OUTPUT FILE AND WRITE THE OPTIMIZED PROGRAM               */
 

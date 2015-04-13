@@ -42,7 +42,7 @@
 
 /*
 ** Spawn( x = loop type, y = child address, z = task frame, w = lower bound,
-**        u = upper bound )
+**        u = upper bound, size, norm )
 ** OptSpawn( tt = task frame structure type ...)
 ** BSlices( x,			SIMPLE or COMPLEX spawn
 	    tt,			Frame type for casting
@@ -51,15 +51,20 @@
 	    w,			Low value
 	    u,			High value
 	    Min Slice Size,	Minimum acceptable slice
-	    LoopSlices		Number of slices to make
+	    LoopSlices,		Number of slices to make
+            size,               LCM of loop output sizes
+            norm                normalization distance
 	  )
 */
-#define Spawn(x,y,z,w,u)    SpawnSlices(x,y,(POINTER)z,w,u)
+#define Spawn(x,y,z,w,u,Size, Norm)  SpawnSlices(x,y,(POINTER)z,w,u, Size, Norm)
 
-#define OptSpawn(tt,x,y,z,w,u) \
+#define OptSpawn(tt,x,y,z,w,u, Size, Norm) \
     OptSpawnSlices(((tt*)z)->FirstAR,((tt*)z)->Count)
 
-#define BSlices(x,tt,y,z,w,u,MinSlice, LoopSlice) \
+#define OptSpawnFast(tt,x,y,z,w,u, Size, Norm) \
+    OptSpawnSlicesFast(((tt*)z)->FirstAR,((tt*)z)->Count)
+
+#define BSlices(x,tt,y,z,w,u,MinSlice, LoopSlice, Size, Norm) \
     BuildSlices(x,		       /* Type of Spawn */ \
 		&(((tt*)z)->FirstAR),  /* To return location of first slice */\
 		&(((tt*)z)->Count),    /* To return number of slices made */ \
@@ -68,11 +73,13 @@
 		w,		       /* Low value */ \
 		u,		       /* High value */ \
 		MinSlice,	       /* Min. accepatable slice */ \
-		LoopSlices)	       /* How many slices to attempt */
+		LoopSlices,	       /* How many slices to attempt */ \
+		Size, \
+		Norm)
 
 /* ------------------------------------------------------------ */
 #define BlockSpawn(x,y,z,w,u)    SpawnBlockSlices(y,(POINTER)z,w,u)
-#define BlockBSlices(x,tt,y,z,w,u,MinSlice,LoopSlice) \
+#define BlockBSlices(x,tt,y,z,w,u,MinSlice,LoopSlice, Size, Norm) \
     BuildBlockSlices(		/* Don't need loop type */ \
 		     &(((tt*)z)->FirstAR), \
 		     &(((tt*)z)->Count), \
@@ -83,9 +90,26 @@
 		     MinSlice, \
 		     LoopSlice)
 
+/* for POWER4 */
+/* ------------------------------------------------------------ */
+#define CachedSpawn(x,y,z,w,u,s,Size,Norm) \
+		SpawnCachedSlices(y,(POINTER)z,w,u,s,Size,Norm)
+#define CachedBSlices(x,tt,y,z,w,u,MinSlice,LoopSlice,Size, Norm) \
+    BuildCachedSlices(		/* Don't need loop type */ \
+		     &(((tt*)z)->FirstAR), \
+		     &(((tt*)z)->Count), \
+		     y, \
+		     (POINTER)z, \
+		     w, \
+		     u, \
+		     MinSlice, \
+		     LoopSlice, \
+		     Size, \
+		     Norm)
+
 /* ------------------------------------------------------------ */
 #define StridedSpawn(x,y,z,w,u)    SpawnStridedSlices(y,(POINTER)z,w,u)
-#define StridedBSlices(x,tt,y,z,w,u,MinSlice,LoopSlice) \
+#define StridedBSlices(x,tt,y,z,w,u,MinSlice,LoopSlice, Size, Norm) \
     BuildStridedSlices(		/* Don't need loop type */ \
 		     &(((tt*)z)->FirstAR), \
 		     &(((tt*)z)->Count), \
@@ -98,7 +122,7 @@
 
 /* ------------------------------------------------------------ */
 #define GSSSpawn(x,y,z,w,u)    SpawnGssSlices(y,(POINTER)z,w,u)
-#define GSSBSlices(x,tt,y,z,w,u,MinSlice,LoopSlice) \
+#define GSSBSlices(x,tt,y,z,w,u,MinSlice,LoopSlice, Size, Norm) \
     BuildGssSlices(		/* Don't need loop type */ \
 		     &(((tt*)z)->FirstAR), \
 		     &(((tt*)z)->Count), \
@@ -120,7 +144,10 @@
 { \
   MY_LOCK( &((y*)x)->Mutex ); \
   ((y*)x)->RefCount += z; \
+  FLUSHLINE(&(((y*)x)->RefCount)); \
+  CACHESYNC;\
   MY_UNLOCK( &((y*)x)->Mutex );\
+  FLUSHLINE( &((y*)x)->Mutex );\
 }
 
 #define SetRefCount(x,y,z)  ((y*)x)->RefCount = z
@@ -151,6 +178,14 @@ char    *Name;
 
   fprintf( stderr, "TOKEN: (%s,lo=%d,size=%d)\n",
 	   Name, Array->LoBound, Array->Size   );
+  fprintf( stderr, "Array: 0x%x (%d), sizeof: %d\n",Array,Array,sizeof(*Array));
+  fprintf( stderr, "  LoBound: %d (0x%x)\n",Array->LoBound,Array->LoBound);
+  fprintf( stderr, "  Size: %d (0x%x)\n",Array->Size,Array->Size);
+  fprintf( stderr, "  Phys: 0x%x (%d)\n",Array->Phys,Array->Phys);
+  fprintf( stderr, "  Mutex: %d\n",Array->Mutex);
+  fprintf( stderr, "  RefCount: %d\n",Array->RefCount);
+  fprintf( stderr, "  Mutable: %d\n",Array->Mutable);
+  fflush(stderr);
 }
 
 
@@ -301,6 +336,7 @@ static int DivByZero() { return( 0 ); }
 #define Great(x,y,z)       x = (y > z)
 #define GreatEqual(x,y,z)  x = (y >= z)
 
+#define IPow(x,y,z)        x = rint(pow( (double) y, (double) z ))
 #define Pow(x,y,z)         x = pow( (double) y, (double) z )
 
 /* x = target; y = operand */
@@ -467,7 +503,10 @@ static int DivByZero() { return( 0 ); }
   MY_INIT_LOCK( &((ARRAYP)x)->Mutex ); \
   MY_LOCK( &((ARRAYP)x)->Phys->Mutex ); \
   ((ARRAYP)x)->Phys->RefCount++; \
+  FLUSHLINE(&(((ARRAYP)x)->Phys->RefCount)); \
+  CACHESYNC;\
   MY_UNLOCK( &((ARRAYP)x)->Phys->Mutex ); \
+  FLUSHLINE( &((ARRAYP)x)->Phys->Mutex ); \
   z( y ); \
 }
 
@@ -480,7 +519,10 @@ static int DivByZero() { return( 0 ); }
     MY_INIT_LOCK( &((ARRAYP)x)->Mutex ); \
     MY_LOCK( &((ARRAYP)x)->Phys->Mutex ); \
     ((ARRAYP)x)->Phys->RefCount++; \
+    FLUSHLINE(&(((ARRAYP)x)->Phys->RefCount)); \
+    CACHESYNC;\
     MY_UNLOCK( &((ARRAYP)x)->Phys->Mutex ); \
+    FLUSHLINE( &((ARRAYP)x)->Phys->Mutex ); \
     z( y ); \
     } \
   else \
@@ -700,7 +742,7 @@ static int DivByZero() { return( 0 ); }
 }
 
 /*
-** AAddH( x = target array, y = source array , z = value, q = copy function, 
+** AAddH( x = target array, y = source array, z = value, q = copy function, 
 **        v = component type, u = array dealloc function ) XX
 ** AAddHX( ..., u = array dealloc function, w = component dealloc function ) XX
 **        
@@ -976,6 +1018,66 @@ static int DivByZero() { return( 0 ); }
 #define OptARepl(z,w,q,v,ab) ((z*)ab)[q] = v
 
 
+/*
+ * For power 4 to allocate shared variables (which cannot be declared 
+ * statically.
+ */
+#define VarMalloc(x) (SharedMalloc(sizeof(*(x))))
+
+/* SKI */
+/*
+** SkiMAlloc( vvv = norm, x = target buffer, y = size, z = component type )
+**
+** SkiMAllocDV( ... )
+** SkiMAllocDVI( lb = lower bound, rc = reference count )
+*/
+
+#define SkiMAlloc(vvv,x,y,z) \
+{ \
+  register PHYSP Phys; \
+  x->Phys = Phys = (PHYSP) Alloc(SIZE_OF(PHYS)+(sizeof(z)*(y+vvv))); \
+  MY_INIT_LOCK( &Phys->Mutex ); \
+  Phys->Size = y; \
+  Phys->RefCount = 0; \
+  Phys->Free = 0; \
+  x->Base = (POINTER) ALIGNED_INC(PHYS,Phys); \
+  Phys->Base = x->Base = (POINTER) (((z*)x->Base) + vvv); \
+}
+
+#define SkiMAllocDVI(vvv,x,y,z,lb,rc) \
+{ \
+  register PHYSP Phys; \
+  register POINTER Dv; \
+  Dv = (POINTER) Alloc(sizeof(ARRAY)); \
+  MY_INIT_LOCK( &(((ARRAYP)Dv)->Mutex) ); \
+  ((ARRAYP)Dv)->RefCount = rc; \
+  x->Phys = Phys = (PHYSP) Alloc(SIZE_OF(PHYS)+(sizeof(z)*(y+vvv))); \
+  MY_INIT_LOCK( &Phys->Mutex ); \
+  Phys->Size = y; \
+  Phys->RefCount = 1; \
+  Phys->Free = 0; \
+  x->Base = (POINTER) ALIGNED_INC(PHYS,Phys); \
+  Phys->Base = x->Base = (POINTER) (((z*)x->Base) + vvv); \
+  Phys->Dope = Dv; \
+  InitDV(Dv,y,lb,x,z); \
+}
+
+#define SkiMAllocDV(vvv,x,y,z) \
+{ \
+  register PHYSP Phys; \
+  register POINTER Dv; \
+  Dv = (POINTER) Alloc(sizeof(ARRAY)); \
+  MY_INIT_LOCK( &(((ARRAYP)Dv)->Mutex) ); \
+  x->Phys = Phys = (PHYSP) Alloc(SIZE_OF(PHYS)+(sizeof(z)*(y+vvv))); \
+  MY_INIT_LOCK( &Phys->Mutex ); \
+  Phys->Size = y; \
+  Phys->RefCount = 1; \
+  Phys->Free = 0; \
+  x->Base = (POINTER) ALIGNED_INC(PHYS,Phys); \
+  Phys->Base = x->Base = (POINTER) (((z*)x->Base) + vvv); \
+  Phys->Dope = Dv; \
+}
+/* SKI */
 
 
 /*
@@ -1161,7 +1263,7 @@ static int DivByZero() { return( 0 ); }
 #define VecGathATUpd(w,x,y,z) ((x*)y)[w] = z
 
 /*
-** GathUpd( x = component type, y = target array , z = value )  XX
+** GathUpd( x = component type, y = target array, z = value )  XX
 ** BGathUpd( ..., w = boolean )  XX
 ** BGathUpdX( ..., w = boolean, u = deallocation function )
 */
@@ -1279,7 +1381,10 @@ static int DivByZero() { return( 0 ); }
 { \
   MY_LOCK( &y->Phys->Mutex ); \
   y->Phys->RefCount++; \
+  FLUSHLINE(&(y->Phys->RefCount)); \
+  CACHESYNC;\
   MY_UNLOCK( &y->Phys->Mutex ); \
+  FLUSHLINE( &(y->Phys->Mutex) ); \
 }
 
 /*
@@ -1289,7 +1394,10 @@ static int DivByZero() { return( 0 ); }
 { \
   MY_LOCK( &x->Phys->Mutex ); \
   x->Phys->RefCount--; \
+  FLUSHLINE(&(x->Phys->RefCount)); \
+  CACHESYNC;\
   MY_UNLOCK( &x->Phys->Mutex ); \
+  FLUSHLINE( &x->Phys->Mutex ); \
 }
 
 
@@ -1518,6 +1626,7 @@ static int DivByZero() { return( 0 ); }
 #define _Sasin(x,y)     x = asin((double)y)
 #define _Sacos(x,y)     x = acos((double)y)
 #define _Satan(x,y)     x = atan((double)y)
+#define _Satan2(x,y,z)  x = atan2((double)y,(double)z)
 #define _Ssqrt(x,y)     x = sqrt((double)y)
 #define _Slog(x,y)      x = log((double)y)
 #define _Slog10(x,y)    x = log10((double)y)
@@ -1530,6 +1639,7 @@ static int DivByZero() { return( 0 ); }
 #define _Sfasin(x,y)     x = fasin((float)y)
 #define _Sfacos(x,y)     x = facos((float)y)
 #define _Sfatan(x,y)     x = fatan((float)y)
+#define _Sfatan2(x,y,z)  x = fatan2((float)y,(double)z)
 #define _Sfsqrt(x,y)     x = fsqrt((float)y)
 #define _Sflog(x,y)      x = flog((float)y)
 #define _Sflog10(x,y)    x = flog10((float)y)
@@ -1541,6 +1651,7 @@ static int DivByZero() { return( 0 ); }
 #define _Sfasin(x,y)     x = asin((double)y)
 #define _Sfacos(x,y)     x = acos((double)y)
 #define _Sfatan(x,y)     x = atan((double)y)
+#define _Sfatan2(x,y,z)  x = atan2((double)y,(double)z)
 #define _Sfsqrt(x,y)     x = sqrt((double)y)
 #define _Sflog(x,y)      x = log((double)y)
 #define _Sflog10(x,y)    x = log10((double)y)
@@ -1737,6 +1848,109 @@ static int DivByZero() { return( 0 ); }
     x.InfoTop = u; \
     x.Temp = NULL; \
     x.Current = AllocPointerSwapStorage( &(x), sizeof( y ) ); \
+    x.Next = NULL; \
+    w = (POINTER) &(x); \
+    } \
+}
+
+
+/* SKI */
+/*
+** SkiPSMAllocOne( vvv = norm, x=ps buffer, y=component type, 
+**                 w=target,v1-v2 info,u=info top) X
+** SkiPSMAllocTwo( ... )
+** SkiPSMAllocSpare1( ... )
+** SkiPSMAllocSpare2( ... )
+** SkiPSMAllocCond( ... )
+*/
+#define SkiPSMAllocOne(vvv,x,y,w,v0,v1,v2,v3,v4,v5,u) \
+{ \
+  x.Info[0] = v0; \
+  x.Info[1] = v1; \
+  x.Info[2] = v2; \
+  x.Info[3] = v3; \
+  x.Info[4] = v4; \
+  x.Info[5] = v5; \
+  x.InfoTop = u; \
+  x.Temp = NULL; \
+  x.Current = SkiAllocPointerSwapStorage( vvv, &(x), sizeof( y ) ); \
+  x.Next = NULL; \
+  w = (POINTER) &(x); \
+}
+
+#define SkiPSMAllocTwo(vvv,x,y,w,v0,v1,v2,v3,v4,v5,u) \
+{ \
+  x.Info[0] = v0; \
+  x.Info[1] = v1; \
+  x.Info[2] = v2; \
+  x.Info[3] = v3; \
+  x.Info[4] = v4; \
+  x.Info[5] = v5; \
+  x.InfoTop = u; \
+  x.Temp = NULL; \
+  x.Current = SkiAllocPointerSwapStorage( vvv, &(x), sizeof( y ) ); \
+  x.Next = SkiAllocPointerSwapStorage( vvv, &(x), sizeof( y ) ); \
+  w = (POINTER) &(x); \
+}
+
+#define SkiPSMAllocSpare1(vvv,x,y,w,v0,v1,v2,v3,v4,v5,u) \
+{ \
+  x.Info[0] = v0; \
+  x.Info[1] = v1; \
+  x.Info[2] = v2; \
+  x.Info[3] = v3; \
+  x.Info[4] = v4; \
+  x.Info[5] = v5; \
+  x.InfoTop = u; \
+  x.Temp = NULL; \
+  x.Current = SkiAllocPointerSwapStorage( vvv, &(x), sizeof( y ) ); \
+  x.Next = NULL; \
+  w = (POINTER) &(x); \
+}
+
+#define SkiPSMAllocSpare2(vvv,x,y,w,v0,v1,v2,v3,v4,v5,u) \
+{ \
+  x.Info[0] = v0; \
+  x.Info[1] = v1; \
+  x.Info[2] = v2; \
+  x.Info[3] = v3; \
+  x.Info[4] = v4; \
+  x.Info[5] = v5; \
+  x.InfoTop = u; \
+  x.Temp = NULL; \
+  x.Current = SkiAllocPointerSwapStorage( vvv, &(x), sizeof( y ) ); \
+  x.Next = SkiAllocPointerSwapStorage( vvv, &(x), sizeof( y ) ); \
+  w = (POINTER) &(x); \
+}
+
+#define SkiPSMAllocCond(vvv,x,y,w,v0,v1,v2,v3,v4,v5,u) \
+{ \
+  if ( x.Temp == NULL ) { \
+    x.Info[0] = v0; \
+    x.Info[1] = v1; \
+    x.Info[2] = v2; \
+    x.Info[3] = v3; \
+    x.Info[4] = v4; \
+    x.Info[5] = v5; \
+    x.InfoTop = u; \
+    x.Temp = NULL; \
+    x.Current = SkiAllocPointerSwapStorage( vvv, &(x), sizeof( y ) ); \
+    x.Next = NULL; \
+    w = (POINTER) &(x); \
+  } else if ( x.Info[0] == v0 && x.Info[1] == v1 && x.Info[2] == v2 && \
+            x.Info[3] == v3 && x.Info[4] == v4 && x.Info[5] == v5  )  {\
+    w = (POINTER) &(x); \
+  } else { \
+    FreePointerSwapStorage( &(x), x.Current ); \
+    x.Info[0] = v0; \
+    x.Info[1] = v1; \
+    x.Info[2] = v2; \
+    x.Info[3] = v3; \
+    x.Info[4] = v4; \
+    x.Info[5] = v5; \
+    x.InfoTop = u; \
+    x.Temp = NULL; \
+    x.Current = SkiAllocPointerSwapStorage( vvv,  &(x), sizeof( y ) ); \
     x.Next = NULL; \
     w = (POINTER) &(x); \
     } \

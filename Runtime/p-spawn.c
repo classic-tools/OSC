@@ -19,8 +19,10 @@ struct ActRec *ARs;
 
 
 /* ------------------------------------------------------------ */
+#if !defined(NO_STATIC_SHARED)
 LOCK_TYPE *UtilityLock;
 LOCK_TYPE *SUtilityLock;
+#endif
 
 void InitSpawn()
 {
@@ -42,6 +44,7 @@ void InitSpawn()
 \
   /* ------------------------------------------------------------ */\
   /* Adjust so that minimum width is satisfied			  */\
+  /* Will always be DeAlloc'ed                                    */\
   /* ------------------------------------------------------------ */\
   if ( SliceWidth >= MinSlice ) {\
     Long          = Thickness % LoopSliceCount;\
@@ -50,7 +53,7 @@ void InitSpawn()
   } else if ( Thickness <= 0 ) {\
     Long	  = 0;\
     Total	  = 0;\
-    ARList	  = NULL;\
+    ARList	  = (struct ActRec *) Alloc( SIZEOF(struct ActRec) );\
   } else if ( Thickness < MinSlice ) {\
     SliceWidth	  = Thickness;\
     Long	  = 0;\
@@ -144,6 +147,7 @@ POINTER         ArgPointer;
 register int    Low;
 register int    High;
 int		MinSlice;
+int		LoopSliceCount;
 {
   register struct ActRec *NewAR;
   register int            Thickness;
@@ -162,6 +166,9 @@ int		MinSlice;
   /* There are zero or more bodies with extra iterations	  */
   /* ------------------------------------------------------------ */
   for(; Long; Long--) {
+#if defined(NON_COHERENT_CACHE)
+    NewAR->Flush = TRUE;
+#endif
     Body(1,Low+SliceWidth,Low+SliceWidth+1);
   }
 
@@ -169,9 +176,170 @@ int		MinSlice;
   /* There's probably one or more bodies without extras		  */
   /* ------------------------------------------------------------ */
   for(; Short; Short--) {
+#if defined(NON_COHERENT_CACHE)
+    NewAR->Flush = TRUE;
+#endif
     Body(1,Low+SliceWidth-1,Low+SliceWidth);
   }
 }
+
+/**************************************************************************/
+/* GLOBAL **************     BuildCachedSlices     ************************/
+/**************************************************************************/
+/* PURPOSE:  Build cache lines size loop slices				  */
+/**************************************************************************/
+void BuildCachedSlices(Head, Count, ChildCode, ArgPointer, Low, High, MinSlice,
+		      LoopSliceCount,Size,Norm)
+struct ActRec **Head;
+int            *Count;
+void            (*ChildCode)();
+POINTER         ArgPointer;
+register int    Low;
+register int    High;
+int		MinSlice;
+int		LoopSliceCount;
+int		Size;
+int		Norm;
+{
+  register struct ActRec *NewAR;
+  register int           *SliceBounds;
+
+  register int el;	/* elements per cache line */
+  register int cl;	/* cache lines per worker */
+  register int rem;	/* remainder */
+  register int sl;	/* slices per worker */
+  register int cnt;
+  register int rest;
+  register int big;
+  register int range;
+  register int bigcnt;
+  register int smallcnt;
+  register int i;
+  int tlo = Low;
+  struct ActRec *ttt;
+
+#if defined(NON_COHERENT_CACHE)
+  el = CACHE_LINE / Size;
+#else
+  el = 1;
+  SisalError("USING INAPPRORIATE RUNTIME OPTION","-cached");
+#endif
+
+  Low = Low - (Norm % el);
+
+
+  range = High - Low + 1;
+
+  
+  /*
+   * number of elements per cache line
+   */
+
+  /*
+   * number of full cache lines in the range
+   */
+  cl = range / el;
+  /*
+   * number of evenly distributable cache lines
+   */
+  sl = cl / LoopSliceCount;
+  big = sl * el;
+
+  if(big != 0)
+  	bigcnt = range / big;
+  else
+	bigcnt = 0;
+
+  if(bigcnt > LoopSlices)
+	bigcnt = LoopSlices;
+
+  /*
+   * the range that doesn't evenly distribute across all procs
+   */
+  rest = range - (big * bigcnt);
+  /*
+   * the count of the number of act records that will contain extra
+   * Note that they will be extra by at most el iterations
+   */
+  smallcnt = rest / el;
+
+  if(smallcnt > LoopSlices)
+	smallcnt = LoopSlices;
+
+  rem = rest - (smallcnt * el);
+
+
+  if(bigcnt > smallcnt)
+	cnt = bigcnt;
+  else
+	cnt = smallcnt;
+
+  if((rem != 0) && (cnt < LoopSliceCount))
+	cnt = cnt + 1;
+
+   ttt = NewAR         = (struct ActRec *) Alloc(SIZEOF(struct ActRec)*cnt );
+  *Count	= cnt;
+  *Head		= NewAR;
+
+  for(i=0; i < cnt; i++)
+  {
+	NewAR->Flush = FALSE;
+	if(bigcnt && smallcnt)
+	{
+		Body(1,Low+big+el-1,Low+big+el);
+		bigcnt--;
+		smallcnt--;
+	}
+	else if(bigcnt && !smallcnt)
+	{
+		/*
+		 * if there is only one big one left, and there is no small
+		 * one, and there is a remainder, add it in
+		 */
+		if((bigcnt == 1) && rem)
+		{
+			Body(1,Low+big+rem-1,Low+big+rem);
+			rem = 0;
+		}
+		else
+		{
+			Body(1,Low+big-1,Low+big);
+		}
+		bigcnt--;
+	}
+	else if(!bigcnt && smallcnt)
+	{
+		Body(1,Low+el-1,Low+el);
+		smallcnt--;
+	}
+	else if(!bigcnt && !smallcnt && rem)
+	{
+		Body(1,Low+rem-1,Low+rem);
+		rem = 0;
+	}
+  }
+
+  /*
+   * we do this because the memory is aligned to alwas have arrays start
+   * with index 1.  Chances are, an ARepl will fill in the boarder if the
+   * loop doesn't run from 1.  That doesn't work so hot for cache alignment,
+   * so we need to slice the loops from 1 and then fill in the actual low 
+   * bound.
+   */
+  (*Head)->SliceBounds[1] = tlo;
+#ifdef GROT
+fprintf(stderr,"Norm: %d, Norm %% el: %d, Low: %d, High: %d -- ",Norm, (Norm % el), tlo,High);
+for(ttt = *Head; ttt != NULL; ttt = ttt->NextAR)
+{
+	fprintf(stderr,"%d,%d ",ttt->SliceBounds[1],ttt->SliceBounds[2]);
+}
+fprintf(stderr,"\n");
+fflush(stderr);
+#endif
+
+
+}
+
 /**************************************************************************/
 /* GLOBAL **************   BuildTriangleSlices   ************************/
 /**************************************************************************/
@@ -186,6 +354,7 @@ POINTER         ArgPointer;
 register int    Low;
 register int    TrueHigh;
 int		MinSlice;
+int		LoopSliceCount;
 {
   register struct ActRec *NewAR;
   register int            Thickness;
@@ -201,6 +370,7 @@ int		MinSlice;
 
   if ( FullThick % 2 == 1 ) {
     SisalError("Odd thick in triangle","no good for now");
+    return;
   } else {
     High    = Low + ( FullThick / 2 ) -1;
 
@@ -239,6 +409,8 @@ void	      (*ChildCode)();
 POINTER	      ArgPointer;
 int	      Low;
 int	      High;
+int           MinSlice;
+int           LoopSliceCount;
 {
   register struct ActRec *NewAR;
   register int            ThisHi;
@@ -280,7 +452,7 @@ int	      High;
 /*	     macro.							  */
 /**************************************************************************/
 void BuildSlices( LoopType, Head, Count, ChildCode, ArgPointer, Low, High,
-		 MinSlice, LoopSliceCount )
+		 MinSlice, LoopSliceCount ,Size, Norm )
 int             LoopType;
 struct ActRec **Head;
 int            *Count;
@@ -290,6 +462,8 @@ int             Low;
 int             High;
 int		MinSlice;
 int		LoopSliceCount;
+int		Size;
+int		Norm;
 {
   switch ( DefaultLoopStyle ) {
    case 'G': /* GSS */
@@ -309,6 +483,20 @@ int		LoopSliceCount;
     BuildStridedSlices( Head, Count, ChildCode, ArgPointer, Low, High,
 		       MinSlice, LoopSliceCount );
     break;
+   case 'C': /* CACHED */
+    /*
+     * Size will be zero if sliced loop does not return an array.  In
+     * that case, there is no cache problem and we default to Blocked.
+     *
+     * Don't ask.
+     */
+    if(Size != 0)
+    	BuildCachedSlices( Head, Count, ChildCode, ArgPointer, Low, High,
+		     MinSlice, LoopSliceCount, Size, Norm );
+    else
+        BuildBlockSlices( Head, Count, ChildCode, ArgPointer, Low, High,
+                     MinSlice, LoopSliceCount );
+    break;
 
    default:
     SisalError("BuildSlices","Invalid default loop style");
@@ -318,11 +506,16 @@ int		LoopSliceCount;
 /* ------------------------------------------------------------ */
 /* ------------------------------------------------------------ */
 /* ------------------------------------------------------------ */
-void OptSpawnSlices( FirstAR, Count )
+void OptSpawnSlicesFast( FirstAR, Count )
 struct  ActRec *FirstAR;
 int     Count;
 {
   register struct ActRec *LastAR;
+
+  if((Count <= NumWorkers) && BindParallelWork)
+  	OneLevelParallel = TRUE;
+  else
+  	OneLevelParallel = FALSE;
 
   if ( Count > 0 ) {
 
@@ -347,6 +540,60 @@ int     Count;
       }
     goto TheExit;
 #endif
+
+   /*
+    * forces any cached data out before the ARs are actually spawned
+    */
+    FLUSHALL;
+
+    LastAR = FirstAR +(Count-1);
+
+    RListEnQ( FirstAR, LastAR );
+    Sync( FirstAR, LastAR+1 );
+    }
+
+#ifdef ALLIANT
+TheExit:
+#endif
+  return;
+}
+
+void OptSpawnSlices( FirstAR, Count )
+struct  ActRec *FirstAR;
+int     Count;
+{
+  register struct ActRec *LastAR;
+
+  OneLevelParallel = FALSE;
+
+  if ( Count > 0 ) {
+
+    if ( Count == 1 ) {
+      (*(FirstAR->ChildCode))( FirstAR->ArgPointer, 
+			       FirstAR->SliceBounds[1], 
+			       FirstAR->SliceBounds[2],
+			       FirstAR->SliceBounds[0]
+			      );
+      return;
+      }
+
+#ifdef ALLIANT
+    if ( InParallel ) {
+      register int Id;
+      for ( Id = 0; Id < Count; Id++ )
+	Transfer( Id, FirstAR );
+    } else {
+      InParallel = TRUE;
+      concurrent_call( 0, Transfer, Count, FirstAR );
+      InParallel = FALSE;
+      }
+    goto TheExit;
+#endif
+
+   /*
+    * forces any cached data out before the ARs are actually spawned
+    */
+    FLUSHALL;
 
     LastAR = FirstAR +(Count-1);
 
@@ -394,6 +641,27 @@ int	LoopSliceCount;
   int            Count;
 
   BuildBlockSlices(&FirstAR,&Count,ChildCode,ArgPointer,Low,High,1,LoopSliceCount);
+
+  OptSpawnSlices(FirstAR,Count);
+
+  DeAlloc((POINTER)FirstAR);
+}
+
+void SpawnCachedSlices( ChildCode, ArgPointer, Low, High, LoopSliceCount ,Size,
+				Norm)
+void    (*ChildCode)();
+POINTER ArgPointer;
+int     Low;
+int     High;
+int	LoopSliceCount;
+int	Size;
+int	Norm;
+{
+  struct ActRec *FirstAR;
+  int            Count;
+
+  BuildCachedSlices(&FirstAR,&Count,ChildCode,ArgPointer,Low,High,1,
+	LoopSliceCount,Size, Norm);
 
   OptSpawnSlices(FirstAR,Count);
 

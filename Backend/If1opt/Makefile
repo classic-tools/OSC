@@ -1,38 +1,38 @@
-# **** FILE CREATION MASKS
 SHELL = /bin/sh
-DMASK = 700
-XMASK = 755
-MMASK = 744
+XMASK = 555
+MMASK = 444
 
 .SUFFIXES: .c .o
 	
 CC           = cc -g
-BIN_PATH     = ../../bin
-MAN_PATH     = ../../Man
+BIN_PATH     = ../../../bin
+LIB_PATH     = ../../../lib
+INC_PATH     = ../../../include
+MAN_PATH     = ../../../man
 BINSTALL     = cp
 PAR          =
 
 COMMON = ifxstuff.o util.o
 OBJ    = opt.o if1normal.o if1inline.o if1cse.o if1gcse.o                \
-	 if1fission.o if1count.o if1fusion.o if1invar.o            \
+	 if1fission.o if1count.o if1fusion.o if1invar.o if1reduce.o      \
 	 if1split.o if1dope.o if1invert.o if1parallel.o if1unroll.o      \
-	 if1fold.o if1copy.o if1move.o if1dead.o if1explode.o AssignIDs.o \
-	 callreorder.o
+	 if1fold.o if1move.o if1dead.o if1explode.o AssignIDs.o \
+	 callreorder.o cascade.o
 OBJK   = check.o if1check.o
 OBJPP  = pprint.o if1pprint.o
 OBJO   = count.o if1count.o
 
 COMMONSRC = ifxstuff.c util.c
 SRC    = opt.c if1normal.c if1inline.c if1cse.c if1gcse.c                \
-	 if1fission.c if1count.c if1fusion.c if1invar.c            \
+	 if1fission.c if1count.c if1fusion.c if1invar.c if1reduce.c      \
 	 if1split.c if1dope.c if1invert.c if1parallel.c if1unroll.c      \
-	 if1fold.c if1copy.c if1move.c if1dead.c if1explode.c AssignIDs.c \
-	 callreorder.o
+	 if1fold.c if1move.c if1dead.c if1explode.c AssignIDs.c \
+	 callreorder.c cascade.c
 SRCK   = check.c if1check.c
 SRCPP  = pprint.c if1pprint.c
 SRCO   = count.c if1count.c
 
-INCL   = world.h ../Library/IFX.h
+INCL   = world.h ../../config.h ../Library/IFX.h
 
 MINIMAL=0
 .c.o:

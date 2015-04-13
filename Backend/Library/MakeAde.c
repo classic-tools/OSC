@@ -23,7 +23,7 @@ int dnode;
     dst = FindNode( dnode, IFUndefined );
     src = FindNode( snode, IFUndefined );
 
-    a          = AdeAlloc( src, dst, LOW );
+    a          = AdeAlloc( src, dst, LOW_PRI );
     a->if1line = line;
 
     LinkAdeImport( dst, a );
@@ -32,6 +32,9 @@ int dnode;
 }
 
 /* $Log: MakeAde.c,v $
+ * Revision 1.2  1994/07/13  18:08:37  denton
+ * Removed BAD from IFX.h and fix MakeAde to use LOW_PRI (it incorrectly used LOW)
+ *
  * Revision 1.1  1993/01/21  23:29:32  miller
  * Initial version of the IFX library.  It replaces the if[12]build.c
  * read.c timer.c util.c and write.c and if[12].h files from the

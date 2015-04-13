@@ -1,40 +1,47 @@
-#include <stdio.h>
+#include "world.h"
 
-char	*Compound[100];
-char	*Graphs[100];
-char	*Simple[900];
-char	*Macros[900];
-char	*Other[100];
-int	 OtherOp[100];
+char	*Compound[IF_COMPOUND_LAST-IF_COMPOUND_FIRST+1];
+char	*Graphs[IF_GRAPH_LAST-IF_GRAPH_FIRST+1];
+char	*Simple[IF_SIMPLE_LAST-IF_SIMPLE_FIRST+1];
+char	*Macros[IF_SIMPLE_LAST-IF_SIMPLE_FIRST+1];
+char	*Other[1 + IF_OTHER_LAST-IF_OTHER_FIRST+1];
+int	 OtherOp[1 + IF_OTHER_LAST-IF_OTHER_FIRST+1];
 
 #define NewCopy(s) ((char*)(strcpy((char*)(malloc(strlen(s)+1)),s)))
 
 void
 main()
 {
-  char		line[1024],name[100],Mac[100],*p;
-  int		OpCode,MaxCompound = -1,MaxSimple = -1,MaxGraph = -1;
-  int		OtherCount = 0,i,j;
+  char		line[1024], name[100], Mac[100], *p;
+  int		OpCode, MaxCompound = -1, MaxSimple = -1, MaxGraph = -1;
+  int		OtherCount = 0, i, j, LowATcode = 9999, HighATcode = -1;
+
+  int		SimpleCount = 0;
+  int		CompoundCount = 0;
+  int		GraphCount = 0;
+  int		AtCount = 0;
+  int		NodeType = IF_NODE_COMPOUND;
+  int		Testcount;
 
   /* ------------------------------------------------------------ */
   /* Initialize tables						  */
   /* ------------------------------------------------------------ */
-  for ( i = 0; i < sizeof(Simple)/sizeof(Simple[1]); i++ ) {
+  for ( i = 0; i <= IF_SIMPLE_LAST-IF_SIMPLE_FIRST; i++ ) {
     Simple[i] = NULL;
   }
-  for ( i = 0; i < sizeof(Macros)/sizeof(Macros[1]); i++ ) {
+  for ( i = 0; i <= IF_SIMPLE_LAST-IF_SIMPLE_FIRST; i++ ) {
     Macros[i] = NULL;
   }
-  for ( i = 0; i < sizeof(Compound)/sizeof(Compound[1]); i++ ) {
+  for ( i = 0; i <= IF_COMPOUND_LAST-IF_COMPOUND_FIRST; i++ ) {
     Compound[i] = NULL;
   }
-  for ( i = 0; i < sizeof(Graphs)/sizeof(Graphs[1]); i++ ) {
+  for ( i = 0; i <= IF_GRAPH_LAST-IF_GRAPH_FIRST; i++ ) {
     Graphs[i] = NULL;
   }
-  for ( i = 0; i < sizeof(Other)/sizeof(Other[1]); i++ ) {
+  for ( i = 0; i <= 1 + IF_OTHER_LAST-IF_OTHER_FIRST; i++ ) {
     Other[i] = NULL;
   }
-  for ( i = 0; i < sizeof(OtherOp)/sizeof(OtherOp[1]); i++ ) {
+  for ( i = 0; i <= 1 + IF_OTHER_LAST-IF_OTHER_FIRST; i++ ) {
     OtherOp[i] = 0;
   }
 
@@ -42,63 +49,100 @@ main()
   /* Skip lines up to the start of definitions...		  */
   /* ------------------------------------------------------------ */
   while(gets(line)) {
-    if ( strncmp(line,"/* START NODE DEFINITIONS",25) == 0 ) break;
+    if ( strncmp(line, "#define IF_NODE_FIRST", 21) == 0 ) break;
   }
 
   /* ------------------------------------------------------------ */
   /* Now, decode each line in turn...				  */
   /* ------------------------------------------------------------ */
   while(gets(line)) {
-    switch ( line[0] ) {
-     case '/':
-      if ( strncmp(line,"/* END NODE DEFINITIONS",23) == 0 ) goto Done;
-      break;
-
-     case '#':
-      if ( strncmp(line,"#define",7) == 0 ) {
+    if ( line[0]=='#' && strncmp(line, "#define IF", 10) == 0 ) {
 	sscanf(line+7,"%s %d",name,&OpCode);
 
-	if ( OpCode < 100 ) {
+	/* ------------------------------------------------------------ */
+	/* Make sure it looks like an opcode				*/
+        /* Order is COMPOUND, SIMPLE, GRAPH, OTHER.                     */
+	/* ------------------------------------------------------------ */
+        if ( name[2] < 'A' || name[2] > 'Z' ) {
+            if ( strncmp(name, "IF_SIMPLE_FIRST", 15) == 0 )
+                NodeType = IF_NODE_SIMPLE;
+            else if ( strncmp(name, "IF_GRAPH_FIRST", 14) == 0 ) 
+                NodeType = IF_NODE_GRAPH;
+            else if ( strncmp(name, "IF_GRAPH_LAST", 13) == 0 ) 
+                NodeType = IF_NODE_OTHER;
+            else if ( strncmp(name, "IF_NODE_LAST", 12) == 0 ) 
+                goto Done;
+            continue;
+        }
+
+	/* ------------------------------------------------------------ */
+	/* Put in the name table as appropriate				*/
+	/* ------------------------------------------------------------ */
+
+        switch (NodeType) {
+        case IF_NODE_COMPOUND:
+	  CompoundCount++;
+
 	  if ( OpCode > MaxCompound ) MaxCompound = OpCode;
 	  Compound[OpCode] = NewCopy(name);
+          break;
 
-	} else if ( OpCode < 1000 ) {
+        case IF_NODE_SIMPLE:
+	  SimpleCount++;
+	  if ( strcmp(name,"IFAAddHAT") == 0 ) LowATcode = OpCode;
+	  if ( strcmp(name,"IFDiv2") == 0 ) HighATcode = OpCode;
+	  
 	  if ( OpCode > MaxSimple ) MaxSimple = OpCode;
-	  Simple[OpCode-100] = NewCopy(name);
+	  Simple[OpCode-IF_SIMPLE_FIRST] = NewCopy(name);
 	  /* If this has a defined macro (a = name in a comment), use */
 	  /* it as the macro name.  Otherwise, use the IF name */
-	  for(p=line; *p; p++) {
-	    if ( *p == '/' && *(p+1) == '*' ) break;
+	  for ( p=line+10; ; ) {
+            if ( *p=='\0' ) {
+	        strcpy(Mac, name+2);
+                break;
+            }
+	    if ( *p++=='/' && 
+                 *p++=='*' && 
+                 *p++==' ' && 
+                 *p++=='=' && 
+                 *p++==' ') {
+	         sscanf(p, "%s", Mac);
+                 break;
+            } 
 	  }
-	  if ( *p ) p += 2;	/* Skip the comment */
-	  for(;*p && *p != '='; p++); /* Skip to the equal */
-	  if ( *p ) {
-	    sscanf(p+1,"%s",Mac);
-	  } else {
-	    strcpy(Mac,name+2);
-	  }
-	  Macros[OpCode-100] = NewCopy(Mac);
+	  Macros[OpCode-IF_SIMPLE_FIRST] = NewCopy(Mac);
+          break;
 
-	} else if ( OpCode < 2000 ) {
+        case IF_NODE_GRAPH:
+	  GraphCount++;
+
 	  if ( OpCode > MaxGraph ) MaxGraph = OpCode;
-	  Graphs[OpCode-1000] = NewCopy(name);
+	  Graphs[OpCode-IF_GRAPH_FIRST] = NewCopy(name);
+          break;
 
-	} else {
+	case IF_NODE_OTHER:
 	  Other[OtherCount]	= NewCopy(name);
 	  OtherOp[OtherCount]	= OpCode;
 	  OtherCount++;
+          break;
+
+        default:
+	  fprintf(stderr,"WARNING:  missing node category\n");
 	}
-      }
-      break;
-   
-     default:
-      ;
     }
   }
 
  Done:
+  /* ------------------------------------------------------------ */
+  /* Build the AtCode count					  */
+  /* ------------------------------------------------------------ */
+  for(i=LowATcode; i <= HighATcode; i++) {
+    if ( Simple[i-IF_SIMPLE_FIRST] ) AtCount++;
+  }
+
+
   puts("/* This code is mechanically produced.  Make changes in IFX.h */");
-  puts("/* and ``make nametable.c'' to reproduce. */\n");
+  puts("/* and ``make nametabl.c'' to reproduce. */\n");
   puts("#include \"world.h\"");
   puts("static char Undefined[] = \"***NoDefinition\";\n");
 
@@ -116,39 +160,39 @@ main()
   puts("};\n");
 
   /* ------------------------------------------------------------ */
-  printf("static char\t*snames[%d] = {\n",MaxSimple-100+1);
-  for(i=100;i<=MaxSimple;i++) {
+  printf("static char\t*snames[%d] = {\n",MaxSimple-IF_SIMPLE_FIRST+1);
+  for(i=IF_SIMPLE_FIRST;i<=MaxSimple;i++) {
     printf("/* %4d */ %c%s%c%c\n",
 	   i,
-	   (Simple[i-100])?('"'):(' '),
-	   (Simple[i-100])?(Simple[i-100]+2):("Undefined"),
-	   (Simple[i-100])?('"'):(' '),
+	   (Simple[i-IF_SIMPLE_FIRST])?('"'):(' '),
+	   (Simple[i-IF_SIMPLE_FIRST])?(Simple[i-IF_SIMPLE_FIRST]+2):("Undefined"),
+	   (Simple[i-IF_SIMPLE_FIRST])?('"'):(' '),
 	   (i==MaxSimple)?(' '):(',')
 	   );
   }
   puts("};\n");
 
   /* ------------------------------------------------------------ */
-  printf("static char\t*macros[%d] = {\n",MaxSimple-100+1);
-  for(i=100;i<=MaxSimple;i++) {
+  printf("static char\t*macros[%d] = {\n",MaxSimple-IF_SIMPLE_FIRST+1);
+  for(i=IF_SIMPLE_FIRST;i<=MaxSimple;i++) {
     printf("/* %4d */ %c%s%c%c\n",
 	   i,
-	   (Macros[i-100])?('"'):(' '),
-	   (Macros[i-100])?(Macros[i-100]):("Undefined"),
-	   (Macros[i-100])?('"'):(' '),
+	   (Macros[i-IF_SIMPLE_FIRST])?('"'):(' '),
+	   (Macros[i-IF_SIMPLE_FIRST])?(Macros[i-IF_SIMPLE_FIRST]):("Undefined"),
+	   (Macros[i-IF_SIMPLE_FIRST])?('"'):(' '),
 	   (i==MaxSimple)?(' '):(',')
 	   );
   }
   puts("};\n");
 
   /* ------------------------------------------------------------ */
-  printf("static char\t*gnames[%d] = {\n",MaxGraph-1000+1);
-  for(i=1000;i<=MaxGraph;i++) {
+  printf("static char\t*gnames[%d] = {\n",MaxGraph-IF_GRAPH_FIRST+1);
+  for(i=IF_GRAPH_FIRST;i<=MaxGraph;i++) {
     printf("/* %4d */ %c%s%c%c\n",
 	   i,
-	   (Graphs[i-1000])?('"'):(' '),
-	   (Graphs[i-1000])?(Graphs[i-1000]+2):("Undefined"),
-	   (Graphs[i-1000])?('"'):(' '),
+	   (Graphs[i-IF_GRAPH_FIRST])?('"'):(' '),
+	   (Graphs[i-IF_GRAPH_FIRST])?(Graphs[i-IF_GRAPH_FIRST]+2):("Undefined"),
+	   (Graphs[i-IF_GRAPH_FIRST])?('"'):(' '),
 	   (i==MaxGraph)?(' '):(',')
 	   );
   }
@@ -168,17 +212,15 @@ main()
       puts(  "  int opcode;");
       puts(  "{");
     }
-    printf("  if ( opcode >= 0 && opcode <= %d ) return cnames[opcode];\n",
-	   MaxCompound);
-    printf("  if ( opcode >= 100 && opcode <= %d ) return snames[opcode-100];\n",
-	   MaxSimple);
-    printf("  if ( opcode >= 1000 && opcode <= %d ) return gnames[opcode-1000];\n",
-	   MaxGraph);
+    printf("  if ( opcode>=IF_COMPOUND_FIRST && opcode<=IF_COMPOUND_LAST )\n");
+    printf("    return cnames[opcode-IF_COMPOUND_FIRST];\n");
+    printf("  if ( opcode>=IF_SIMPLE_FIRST && opcode<=IF_SIMPLE_LAST )\n");
+    printf("    return snames[opcode-IF_SIMPLE_FIRST];\n");
+    printf("  if ( opcode>=IF_GRAPH_FIRST && opcode<=IF_GRAPH_LAST )\n");
+    printf("    return gnames[opcode-IF_GRAPH_FIRST];\n");
     for(i=0; i<OtherCount; i++) {
       printf("  if ( opcode == %d ) return \"%s\";\n",OtherOp[i],Other[i]+2);
     }
-
-
     puts(  "  return Undefined;");
     puts(  "}");
   }
@@ -187,8 +229,8 @@ main()
   puts("PNODE n;");
   puts("{");
   puts(  "  int opcode = n->type;");
-  printf("  if ( opcode >= 100 && opcode <= %d ) return macros[opcode-100];\n",
-	 MaxSimple);
+  printf("  if ( opcode>=IF_SIMPLE_FIRST && opcode<=IF_SIMPLE_LAST )\n");
+  printf("    return macros[opcode-IF_SIMPLE_FIRST];\n");
   puts("  FPRINTF( stderr, \"HELP: n->type = %d n->if1line %d\\n\", n->type, n->if1line );");
   puts("  Error1( \"GetMacro: REQUEST FOR GRAPH OR COMPOUND MACRO NAME\" );");
   puts("  return NULL;");
@@ -199,10 +241,64 @@ main()
   puts("char *SimpleName(i) int i; { return snames[i]; }\n");
   puts("char *CompoundName(i) int i; { return cnames[i]; }\n");
   puts("char *AtName(i) int i; { return snames[IFAAddLAT+i-IFAAddH]; }\n");
+
+  /* ------------------------------------------------------------ */
+  /* See if we can verify the counts...				  */
+  /* ------------------------------------------------------------ */
+  while(gets(line)) {
+
+    if ( strncmp(line,"#define IF1SimpleNodes",22) == 0 ) {
+      sscanf(line,"#define IF1SimpleNodes (%d)",&Testcount);
+      if ( Testcount != SimpleCount ) {
+	fprintf(stderr,"WARNING:  Simple count mismatch!!!\n");
+	fprintf(stderr,"#define IF1SimpleNodes\t\t(%d)\n",SimpleCount);
+      }
+    }
+
+    if ( strncmp(line,"#define IF1CompoundNodes",24) == 0 ) {
+      sscanf(line,"#define IF1CompoundNodes (%d)",&Testcount);
+      if ( Testcount != CompoundCount ) {
+	fprintf(stderr,"WARNING:  Compound count mismatch!!!\n");
+	fprintf(stderr,"#define IF1CompoundNodes\t(%d)\n",CompoundCount);
+      }
+    }
+
+    if ( strncmp(line,"#define IF1GraphNodes",21) == 0 ) {
+      sscanf(line,"#define IF1GraphNodes (%d)",&Testcount);
+      if ( Testcount != GraphCount ) {
+	fprintf(stderr,"WARNING:  Graph count mismatch!!!\n");
+	fprintf(stderr,"#define IF1GraphNodes\t\t(%d)\n",GraphCount);
+      }
+    }
+
+
+    if ( strncmp(line,"#define IF2AtNodes",18) == 0 ) {
+      sscanf(line,"#define IF2AtNodes (%d)",&Testcount);
+      if ( Testcount != AtCount ) {
+	fprintf(stderr,"WARNING:  At count mismatch!!!\n");
+	fprintf(stderr,"#define IF2AtNodes\t\t(%d)\n",AtCount);
+      }
+    }
+
+  }
   exit(0);
 }
 
 /* $Log: makenames.c,v $
+ * Revision 1.7  1994/06/06  23:31:19  denton
+ * Added low and high markers for node categories: COMPOUND, SIMPLE, GRAPH, OTHER.
+ *
+ * Revision 1.6  1994/04/15  15:51:57  denton
+ * Added config.h to centralize machine specific header files.
+ * Fixed gcc warings.
+ *
+ * Revision 1.5  1994/02/17  18:09:36  denton
+ * Fixed compiler warning
+ *
+ * Revision 1.4  1994/02/15  23:19:28  miller
+ * Modifications to allow new kinds of IF1 types (sets, complex, etc...)
+ * The makenames utility was modified to check count information.
+ *
  * Revision 1.3  1993/06/02  23:46:04  miller
  * A cast of strcpy (in the NewCopy macro) was causing problems for
  * GCC.

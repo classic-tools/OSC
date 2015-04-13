@@ -1,53 +1,33 @@
+/* ------------------------------------------------------------ */
+/* IFX.h - Applicative Language Intermediate Forms 		*/
+/* ------------------------------------------------------------ */
+
 #define IFX_LOADED
 
-#include <stdio.h>
-#include <math.h>
-#include <ctype.h>
-#include <string.h>
-#ifdef HPUX
-#  define index strchr
-#  define rindex strrchr
-#endif
-#include <strings.h>
-
 /* ------------------------------------------------------------ */
-/* ------------------------------------------------------------ */
-/* ------------------------------------------------------------ */
+/* Node Definitions						*/
 /* ------------------------------------------------------------ */
 
-#ifdef CRAY
-double                  atof();	/* MATH LIBRARY STUFF */
-#endif
+#define IF_NODE_FIRST           0
 
-/* PROBLEM STUFF */
-#ifndef RS6000
-char                 *malloc();
-int		     free();
-#endif
-
-
-/* ------------------------------------------------------------ */
-/* ------------------------------------------------------------ */
-/* ------------------------------------------------------------ */
-/* Stuff to make lint work */
-#define PRINTF (void)printf
-#define FPRINTF (void)fprintf
-#define SPRINTF (void)sprintf
-
-/* ---------------------------------------------------------------------- */
-/* START NODE DEFINITIONS ----------------------------------------------- */
 /* COMPOUND */
+#define IF_COMPOUND_FIRST       0
 #define IFForall		0
 #define IFSelect		1
 #define IFTagCase		2
 #define IFLoopA			3
 #define IFLoopB			4
-#define IFIfThenElse		5 /* IF1 Version 1.1 */
-#define IFIterate		6 /* IF1 Version 1.1 */
-#define	IFWhileLoop		7
-#define	IFRepeatLoop		8
+
+#define IFIfThenElse		5   /* IF90 COMPOUNDS */
+#define IFIterate		6
+#define IFWhileLoop		7
+#define IFRepeatLoop		8
+#define IFSeqForall		9
+#define IFUReduce		10
+#define IF_COMPOUND_LAST        10
 
 /* SIMPLE */
+#define IF_SIMPLE_FIRST         100
 #define IFAAddH			100
 #define IFAAddL			101
 #define IFAAdjust		102 /* = AAdj */
@@ -105,6 +85,11 @@ int		     free();
 #define IFPrefixSize		154
 #define IFError			155 /* IF1 Version 1.MY_DEFINITION         */
 #define IFReplaceMulti		156 /* = ReplM */
+#define IFConvert		157
+#define IFCallForeign		158
+#define IFAElementN		159
+#define IFAElementP		160
+#define IFAElementM		161
 
 #define IFAAddLAT		170 /* = AddLAT */
 #define IFAAddHAT		171 /* = AddHAT */
@@ -138,10 +123,6 @@ int		     free();
 #define IFRedTreeAT		198 /* = RedTAT */
 
 #define RESERVED_NUMBER		199	/* DO NOT USE THIS NUMBER */
-
-#define IFAElementN		200
-#define IFAElementP		201
-#define IFAElementM		202
 
 #define IFLoopPoolEnq		200
 #define IFReadyListEnq		201
@@ -234,31 +215,49 @@ int		     free();
 #define IFSPrefixSize		341
 
 #define IFAReplaceRange		400    	/* IF90 nodes */
-#define IFAReplaceMulti		401
-#define IFReduction		402
+#define IFASelectRange          401
+#define IFAReplaceMulti         402
+#define IFReduction             403
+#define IFDot                   404
+#define IFCross                 405
+#define IFAssert                406
+#define IFRequire               407
+#define IF_SIMPLE_LAST          405
 
+#define IF_GRAPH_FIRST          1000
 #define IFSGraph		1000	/* IF1 GRAPH NODE TYPES (NONSTAND) */
 #define IFLGraph		1001
 #define IFIGraph		1002
 #define IFXGraph		1003
 #define IFLPGraph		1004
 #define IFRLGraph		1005
+#define IF_GRAPH_LAST           1005
 
+#define IF_OTHER_FIRST          2000
 #define IFCBegin		2000	/* NONSTANDARD GENERAL NODE TYPES */
 #define IFCEnd			2001
 #define IFEdge			2002
 #define IFLiteral		2003
+#define IF_OTHER_LAST           2003
 
 #define IFUndefined		9999
-/* END NODE DEFINITIONS --------------------------------------- */
+
+#define IF_NODE_LAST            9999
+
+
+#define IF_NODE_COMPOUND	0
+#define IF_NODE_SIMPLE		1
+#define IF_NODE_GRAPH		2
+#define IF_NODE_OTHER		3
+
+#define IF1SimpleNodes		(175)	/* NODE COUNTS FOR makenames.c CHECK */
+#define IF1CompoundNodes	(11)
+#define IF1GraphNodes		(6)
+#define IF2AtNodes		(34)
+
 /* ------------------------------------------------------------ */
-
-
-#define IF1SimpleNodes         57	/* NODE COUNTS */
-#define IF1CompoundNodes       7
-#define IF1CompoundNodes       7
-#define IF1GraphNodes	       4
-#define IF2AtNodes             29
+/* Node Category Type Macros					*/
+/* ------------------------------------------------------------ */
 
 #define IsAtNode(x)    ( ((x)->type >= IFAAddLAT) &&                        \
 			 ((x)->type <= IFDiv2) )
@@ -278,7 +277,8 @@ int		     free();
 #define IsABuildAT(x)  ( (x)->type == IFABuildAT )
 #define IsAFillAT(x)   ( (x)->type == IFAFillAT  )
 #define IsAAddHAT(x)   ( (x)->type == IFAAddHAT )
-#define IsGraph(x)     ( ((x)->type >= IFSGraph) && ((x)->type <= IFRLGraph) )
+#define IsGraph(x)     ( (x)->type >= IF_GRAPH_FIRST && \
+                         (x)->type <= IF_GRAPH_LAST )
 #define IsIGraph(x)    ( (x)->type == IFIGraph )
 #define IsLGraph(x)    ( (x)->type == IFLGraph )
 #define IsSGraph(x)    ( (x)->type == IFSGraph )
@@ -286,7 +286,9 @@ int		     free();
 #define IsLPGraph(x)   ( (x)->type == IFLPGraph )
 #define IsSelect(x)    ( (x)->type == IFSelect )
 #define IsError(x)     ( (x)->type == IFError )
-#define IsCompound(x)  ( (x)->type <  IFAAddH  )
+#define IsBranch(x)    ( (x)->type == IFSelect || (x)->type == IFIfThenElse )
+#define IsCompound(x)  ( (x)->type >= IF_COMPOUND_FIRST && \
+                         (x)->type <= IF_COMPOUND_LAST  )
 #define IsNoOp(x)      ( (x)->type == IFNoOp )
 #define IsMemAlloc(x)  ( (x)->type == IFMemAlloc )
 
@@ -302,6 +304,7 @@ int		     free();
 #define IsMax(x)       ( (x)->type == IFMax    )
 #define IsLoopA(x)     ( (x)->type == IFLoopA  )
 #define IsLoopB(x)     ( (x)->type == IFLoopB  )
+#define IsRepeatLoop(x)( (x)->type == IFRepeatLoop )
 #define IsALimL(x)     ( (x)->type == IFALimL  )
 #define IsALimH(x)     ( (x)->type == IFALimH  )
 #define IsABuild(x)    ( (x)->type == IFABuild )
@@ -322,6 +325,11 @@ int		     free();
 #define IsTagCase(x)   ( (x)->type == IFTagCase )
 #define IsRBuild(x)    ( (x)->type == IFRBuild )
 #define IsLoop(x)      ( ((x)->type == IFLoopA) || ((x)->type == IFLoopB) )
+#define IsAnyLoop(x)    (((x)->type==IFForall) ||\
+                         ((x)->type==IFLoopA) || ((x)->type==IFLoopB) ||\
+                         ((x)->type==IFIterate) || ((x)->type==IFWhileLoop) ||\
+                         ((x)->type==IFRepeatLoop) || ((x)->type==IFSeqForall) )
+
 #define IsLiteral(x)   ( (x)->type == IFLiteral )
 #define IsEdge(x)      ( (x)->type == IFEdge )
 #define IsGenerate(x)  ( ((x)->type == IFAScatter)     ||              \
@@ -342,7 +350,8 @@ int		     free();
 			 ((x)->type == IFRedTree)    ||                \
 			 ((x)->type == IFFirstValue) ||                \
 			 ((x)->type == IFFinalValue) ||                \
-			 ((x)->type == IFRestValues) )
+			 ((x)->type == IFRestValues) ||                \
+			 ((x)->type == IFUReduce) )
 
 #define IsRangeGenerate(x)        ( (x)->type == IFRangeGenerate )
 #define IsFinalValue(x)           ( (x)->type == IFFinalValue  )
@@ -351,12 +360,31 @@ int		     free();
 #define IsScatterBufPartitions(x) ( (x)->type == IFScatterBufPartitions )
 #define IsOptAElement(x)          ( (x)->type == IFOptAElement )
 
+/* ------------------------------------------------------------ */
+/* Miscellaneous Definitions					*/
+/* ------------------------------------------------------------ */
+
 #define REDUCE_SUM        'S'      /* FIRST CHARACTER OF REDUCTION FUNCTIONS  */
 #define REDUCE_PRODUCT    'P'
 #define REDUCE_LEAST      'L'
 #define REDUCE_GREATEST   'G'
 #define REDUCE_CATENATE   'C'
+#define REDUCE_USER       '_'      /* USER-DEFINED */
 
+#define RETURNS_CODE_FIRST      0
+#define RETURNS_USER		0	/* USER-DEFINED */ 
+#define RETURNS_SUM		1
+#define RETURNS_PRODUCT		2
+#define RETURNS_LEAST		3
+#define RETURNS_GREATEST        4
+#define RETURNS_CATENATE	5
+#define RETURNS_ARRAY		6
+#define RETURNS_STREAM		7
+#define RETURNS_HISTOGRAM	8
+#define RETURNS_VALUE    	9
+#define RETURNS_CODE_LAST       9
+
+#define TYPE_CODE_FIRST   0
 #define IF_ARRAY          0            /* IF SYMBOL TABLE TYPES */
 #define IF_BASIC          1
 #define IF_FIELD          2
@@ -369,32 +397,29 @@ int		     free();
 #define IF_UNION          9
 #define IF_UNKNOWN        10
 #define IF_BUFFER         11
-#if 0
 #define IF_SET		  12
-#define BASIC_TYPE_START  13
-#else
-#define IF_SET		  120
-#define BASIC_TYPE_START  12
-#endif
+#define IF_REDUCTION	  13
+#define IF_FOREIGN        14
+#define TYPE_CODE_LAST    IF_FOREIGN
 
-#define IF_BOOL           0 + BASIC_TYPE_START
-#define IF_CHAR           1 + BASIC_TYPE_START
-#define IF_DOUBLE         2 + BASIC_TYPE_START
-#define IF_INTEGER        3 + BASIC_TYPE_START
-#define IF_NULL           4 + BASIC_TYPE_START
-#define IF_REAL           5 + BASIC_TYPE_START
-#define IF_NONTYPE        6 + BASIC_TYPE_START
+#define BASE_CODE_FIRST   (200 + TYPE_CODE_LAST)
+#define IF_BOOL           ( 0 + BASE_CODE_FIRST)	/* boolean */
+#define IF_CHAR           ( 1 + BASE_CODE_FIRST)	/* character */
+#define IF_DOUBLE         ( 2 + BASE_CODE_FIRST)	/* double */
+#define IF_INTEGER        ( 3 + BASE_CODE_FIRST)	/* integer */
+#define IF_NULL           ( 4 + BASE_CODE_FIRST)	/* null */
+#define IF_REAL           ( 5 + BASE_CODE_FIRST)	/* real */
+#define IF_NONTYPE        ( 6 + BASE_CODE_FIRST)	/* no type */
 
-#define IF_BRECORD        7 + BASIC_TYPE_START
+#define IF_BRECORD        ( 7 + BASE_CODE_FIRST)	/* basic record */
 
-#define IF_PTR_DOUBLE     8  + BASIC_TYPE_START         /* FOR GetArrayBase */
-#define IF_PTR_INTEGER    9  + BASIC_TYPE_START
-#define IF_PTR_REAL       10 + BASIC_TYPE_START
-#define IF_PTR            11 + BASIC_TYPE_START
+#define IF_PTR_DOUBLE     ( 8 + BASE_CODE_FIRST)	/* double* */
+#define IF_PTR_INTEGER    ( 9 + BASE_CODE_FIRST)	/* integer* */
+#define IF_PTR_REAL       (10 + BASE_CODE_FIRST)	/* real* */
+#define IF_PTR            (11 + BASE_CODE_FIRST)	/* void* */
+#define BASE_CODE_LAST    IF_PTR
 
-#define TYPE_STOP         IF_PTR
-
-#define IsBasic(x)          ( (x)->type >= BASIC_TYPE_START )
+#define IsBasic(x)          ( (x)->type >= BASE_CODE_FIRST )
 
 #define IsPointer(x)        ( (x)->type >= IF_PTR_DOUBLE &&  \
                               (x)->type <= IF_PTR )
@@ -534,6 +559,7 @@ typedef struct filenode {
 		unsigned Pmark   : 1;                                         \
 		unsigned Cmark   : 1;                                         \
 		unsigned xmark   : 1;                                         \
+		unsigned Fmark   : 1;                                         \
                                                                               \
 		unsigned rstable : 1;  /* ARE THE R AND O MARKS STABLE?   */  \
 		unsigned ostable : 1;                                         \
@@ -561,6 +587,7 @@ typedef struct filenode {
 		char     *name;        /* %na=source_data_name            */  \
 		char     *file;        /* %fn=source_file_name            */  \
 		char     *funct;       /* %sf=source_function_name        */  \
+		int      norm;         /* normalization                   */  \
 		int       line         /* %sl=source_line_number          */
 
 #define CopyVitals(x,y)		\
@@ -577,6 +604,7 @@ typedef struct filenode {
   (x)->Pmark	= FALSE;	\
   (x)->Cmark	= FALSE;	\
   (x)->xmark	= FALSE;	\
+  (x)->Fmark	= FALSE;	\
   (x)->omark1	= FALSE;	\
   (x)->rmark2	= NOMARK;	\
   (x)->omark2	= FALSE;	\
@@ -584,7 +612,7 @@ typedef struct filenode {
   (x)->lmark	= FALSE;	\
   (x)->emark	= FALSE;	\
   (x)->imark	= FALSE;	\
-  (x)->mark	= NULL;		\
+  (x)->mark	= '\0';		\
   (x)->cmark	= FALSE;	\
   (x)->fmark	= FALSE;	\
   (x)->nmark	= FALSE;	\
@@ -614,8 +642,9 @@ typedef struct filenode {
   (x)->MinSlice	= NULL;		\
   (x)->ThinCopy	= FALSE;	\
   (x)->line	= 0;		\
-  (x)->Style	= NULL;		\
+  (x)->Style	= '\0';		\
   (x)->LoopSlice= NULL;		\
+  (x)->norm     = 0;		\
 }
 
 #define CopyPragmas(y,x) \
@@ -625,6 +654,7 @@ typedef struct filenode {
   (x)->Pmark	= (y)->Pmark;	\
   (x)->Cmark	= (y)->Cmark;	\
   (x)->xmark	= (y)->xmark;	\
+  (x)->Fmark	= (y)->Fmark;	\
   (x)->omark1	= (y)->omark1;	\
   (x)->rmark2	= (y)->rmark2;	\
   (x)->omark2	= (y)->omark2;	\
@@ -664,6 +694,36 @@ typedef struct filenode {
   (x)->line	= (y)->line;	\
   (x)->Style	= (y)->Style;	\
   (x)->LoopSlice= (y)->LoopSlice;\
+  (x)->norm     = (y)->norm;    \
+}
+
+/**************************************************************************/
+/* MACRO  **************        DYNMACROS          ************************/
+/**************************************************************************/
+/* PURPOSE: USE A BUFFER dyn_ptr OFF THE STACK dyn_buf WITH INITIAL SIZE  */
+/*          count AND LENGTH dyn_len AND TRUE BUFFER LENGTH dyn_count     */
+/*          HOLDING ELEMENTS OF TYPE dyn_type.  BUT PUT ON HEAP IF IT     */
+/*          GROWS TO LARGE WITH DYNEXPAND CHECK.  FREE AFTER DONE WITH    */
+/*          DYNFREE.                                                      */  
+/**************************************************************************/
+
+#define DYNDECLARE(dyn_ptr, dyn_buf, dyn_len, dyn_count, dyn_type, count) \
+static dyn_type dyn_buf[count]; \
+static dyn_type  *dyn_ptr = dyn_buf; \
+static int dyn_len = 0; \
+static int dyn_count = count
+
+#define DYNFREE(dyn_ptr, dyn_buf, dyn_len, dyn_count, dyn_type, new_ptr) \
+{ if (dyn_ptr!=dyn_buf) (void)free(dyn_ptr); dyn_ptr = new_ptr; }
+
+#define DYNEXPAND(dyn_ptr, dyn_buf, dyn_len, dyn_count, dyn_type, max_len) \
+{ if (max_len>dyn_count) { \
+      int _temp_count = max_len>=(2*dyn_count) ? max_len : (2*dyn_count); \
+      dyn_type *_temp_ptr = (dyn_type*)malloc(_temp_count*sizeof(dyn_type)); \
+      memcpy(_temp_ptr, dyn_ptr, dyn_count*sizeof(dyn_type)); \
+      dyn_count = _temp_count; \
+      DYNFREE(dyn_ptr, dyn_buf, dyn_len, dyn_count, dyn_type, _temp_ptr); \
+  } \
 }
 
 /**************************************************************************/
@@ -672,7 +732,7 @@ typedef struct filenode {
 /* PURPOSE: WRITE NAME, MARK, REFERENCE COUNT, FILE, FUNCTION, AND SOURCE */
 /*          LINE PRAGMAS, FOLLOWED BY EOLN, TO output.                    */
 /**************************************************************************/
-
+  /* If you add pragmas, please add them to the pretty printer */
 #define WritePragmas(x) \
 { \
   if ( (x)->name )	FPRINTF( output, " %%na=%s", (x)->name ); \
@@ -703,11 +763,22 @@ typedef struct filenode {
   if ( (x)->smark )	FPRINTF( output, " %%mk=S" ); \
   if ( (x)->vmark )	FPRINTF( output, " %%mk=V" ); \
   if ( (x)->Pmark )	FPRINTF( output, " %%mk=p" ); \
+  if ( (x)->Fmark )	FPRINTF( output, " %%mk=Y" ); \
   if ( (x)->ID    )	FPRINTF( output, " %%ID=%d",(x)->ID); \
   if ( (x)->lazy )	FPRINTF( output, " %%LZ"); \
   if ( (x)->ThinCopy )	FPRINTF( output, " %%TC"); \
   if ( (x)->Style )	FPRINTF( output, " %%ST=%c",(x)->Style); \
   if ( (x)->LoopSlice )	FPRINTF( output, " %%LS=\"%s\"",(x)->LoopSlice); \
+  if ( (x)->temp && (x)->temp->name ) { \
+    FPRINTF( output, " %%tn=\"" ); \
+    if ( !IsFunction( (x)->temp->info ) ) \
+      FPRINTF( output, "%s\"", (x)->temp->name ); \
+    else if ( strcmp( (x)->temp->name, "args" ) == 0 ) \
+      FPRINTF( output, "((%s*)%s)->In%d\"", \
+        (x)->temp->info->sname, (x)->temp->name, (x)->temp->fld ); \
+    else \
+      FPRINTF( output, "((%s*)%s)->Out%d\"", \
+        (x)->temp->info->sname, (x)->temp->name, (x)->temp->fld ); } \
   (void)fputc('\n', output); \
 }
 
@@ -803,6 +874,8 @@ struct info {
   char *fname1;			/* FIRST FREE STORAGE ROUTINE          */
   char *fname2;			/* SECOND FREE STORAGE ROUTINE         */
   char *cname;			/* UNIQUE PART OF COPY ROUTINE NAME    */
+
+  PTEMP temp;			/* TEMPORARY STORAGE */
 };
 
 struct prags {
@@ -972,6 +1045,12 @@ typedef union bblock BBLOCK, *PBBLOCK;
 #define F_OUT       info2	/* FUNCTION EXPORT TYPES              */
 #define L_NEXT      info2	/* NEXT LIST ENTRY                    */
 #define L_SUB       info1	/* LIST COMPONENT TYPE                */
+#define R_SETUP	    info1	/* SETUP TUPLE			      */
+#define R_MAP	    info2	/* MAPPING FUNCTION TYPE	      */
+#define R_ARGS	    info2->F_IN	/* MAPPING FUNCTION TYPE ARGS	      */
+#define R_RESULT    info2->F_OUT/* MAPPING FUNCTION TYPE RESULTS      */
+#define R_TUPLE     info1       /* REDUCTION TUPLE TYPE LIST          */
+#define R_FUNCT     info2       /* REDUCTION FUNCTION TYPE LIST       */
 
 #define NOMARK             0	/* THE MARK IS DISABLED */
 #define RMARK              1	/* THE R MARK IS ENABLED*/
@@ -1000,18 +1079,34 @@ typedef union bblock BBLOCK, *PBBLOCK;
 #define C_SCNT  scnt		/* # OF SUBGRAPHS IN COMPOUND NODE     */
 #define C_ALST  alst		/* ASSOCIATION LIST OF COMPOUND NODE   */
 
+#define F_GEN   gsucc             /* FORALL SUBGRAPH POSITIONS IN GRAPH LIST */
+#define F_BODY  gsucc->gsucc
+#define F_RET   gsucc->gsucc->gsucc
+
+#define I_TEST  gsucc         /* IFTHENELSE SUBGRAPH POSITIONS IN GRAPH LIST */
+#define I_TRUE  gsucc->gsucc
+#define I_FALSE gsucc->gsucc->gsucc
+
 #define L_INIT  gsucc    /* LOOPA AND LOOPB SUBGRAPH POSITIONS IN GRAPH LIST */
 #define L_TEST  gsucc->gsucc                
 #define L_BODY  gsucc->gsucc->gsucc         
 #define L_RET   gsucc->gsucc->gsucc->gsucc  
 
-#define F_GEN   gsucc             /* FORALL SUBGRAPH POSITIONS IN GRAPH LIST */
-#define F_BODY  gsucc->gsucc
-#define F_RET   gsucc->gsucc->gsucc
+#define R_INIT  gsucc          /* REDUCTION SUBGRAPH POSITIONS IN GRAPH LIST */
+#define R_BODY  gsucc->gsucc
+#define R_RET   gsucc->gsucc->gsucc
+
+#define RPT_BODY gsucc         /* FOR REPEAT SUBGRAPH POSITIONS IN G. LIST */
+#define RPT_TEST gsucc->gsucc
+#define RPT_RET	gsucc->gsucc->gsucc
 
 #define S_TEST  gsucc             /* SELECT SUBGRAPH POSITIONS IN GRAPH LIST */
 #define S_ALT   gsucc->gsucc
 #define S_CONS  gsucc->gsucc->gsucc
+
+#define W_TEST	gsucc		  /* FOR WHILE SUBGRAPH POSITIONS IN G. LIST */
+#define W_BODY	gsucc->gsucc
+#define W_RET	gsucc->gsucc->gsucc
 
 #define IsNodeListEmpty(x)	( (x)->G_NODES == NULL )
 #define IsOneExport(x)		( (x)->exp->esucc == NULL )
@@ -1071,16 +1166,6 @@ typedef union bblock BBLOCK, *PBBLOCK;
 #define OK		0	/* PROGRAM EXIT STATUS CODES   */
 #define ERROR		1
 
-#define FALSE		0
-#define TRUE     	1
-
-#define BAD             0	/* FORALL SPLIT TYPES */
-#define LOW             1
-#define HIGH            2
-#define NOT_LOW         3
-#define NOT_HIGH        4
-
-
 /* ------------------------------------------------------------ */
 /* ------------------------------------------------------------ */
 /* ------------------------------------------------------------ */
@@ -1089,17 +1174,17 @@ extern char	*program;
 extern FILE	*input;
 extern FILE	*output;
 extern int info;	/* The info value */
+extern char infofile[200];
 #define RequestInfo(x,info) (info & (x))
 #define _InfoMask(x)		(1<<((x)-1))
-#define I_GeneralInfo		_InfoMask(1)
-#define I_MoreInfo		_InfoMask(2)
-#define I_DetailedInfo		_InfoMask(3)
-#define I_VectorConcurrent	_InfoMask(4)
-#define I_DeveloperInfo1	_InfoMask(13)
-#define I_DeveloperInfo2	_InfoMask(14)
-#define I_DeveloperInfo3	_InfoMask(15)
-#define I_DeveloperInfo4	_InfoMask(16)
+#define I_Info1		_InfoMask(1) /* IF1OPT */
+#define I_Info2		_InfoMask(2) /* IF2MEM */
+#define I_Info3		_InfoMask(3) /* IF2UP */
+#define I_Info4		_InfoMask(4) /* IF2PART */
+#define I_Info5		_InfoMask(5) /* IF2GEN */	
 
+extern char     *reduct[];      /* REDUCTION INTERFACE FUNCTION TABLE */
+extern int      rtop;
 extern int	noassoc;	/* NO ASSOCIATIVE TRANSFORMATIONS */
 extern PNODE	fhead;		/* Adjusted linked list of functions */
 extern PNODE	nfirst;		/* FIRST NODE OF FILE          */
@@ -1134,6 +1219,7 @@ extern int	AllowVMarks;	/* True if you want %mk=V inputs */
 extern int	FixPortsToo;	/* True to fix up loop port assignments */
 extern int	FullyOrdered;	/* Assume Ordered Input?? */
 extern int	DMarkProblem;	/* Do we have the DMARK problem (if2gen only)*/
+extern int      CheckForBadEdges;/* Check edges for legitimate src and dst. */
 
 extern void	TypeAssignPragmas();
 extern void	NodeAssignPragmas();
@@ -1144,13 +1230,13 @@ extern void	TypeInitPragmas();
 extern void	NodeInitPragmas();
 extern void	EdgeInitPragmas();
 
+extern void	AddName();
+extern int	InNameList();
 extern void	AddToNameList();
 extern void	AddToImportList();
 extern void	PlaceInEntryTable();
 extern void	PlaceInFortranTable();
 extern void	PlaceInCTable();
-
-extern void	exit();
 
 /* ------------------------------------------------------------ */
 /* ------------------------------------------------------------ */
@@ -1222,7 +1308,9 @@ extern int	scpinvcnt;	/* COUNT OF INVARIANT SAVED CALL PARAM */
 extern int	sspcnt;		/* COUNT OF SAVED SLICE PARAMETERS */
 extern int	sspinvcnt;	/* COUNT OF INVARIANT SAVED SLICE PARAM */
 extern int	dicnt;		/* COUNT OF REMOVED COMPOUND IMPORTS */
+extern int	tdicnt;		/* COUNT OF REMOVED COMPOUND IMPORTS */
 extern int	leicnt;		/* COUNT OF REMOVED LOOP ENQUE IMPORTS */
+extern int	tleicnt;		/* COUNT OF REMOVED LOOP ENQUE IMPORTS */
 extern int	tagtcnt;	/* COUNT OF TAG TEST CONVERSIONS */
 
 /* SmashItems.c */
@@ -1231,7 +1319,6 @@ extern PINFO	htable[];	/* EQUIVALENCE CLASS HEAD POINTERS */
 extern PINFO	ttable[];	/* EQUIVALENCE CLASS TAIL POINTERS */
 
 /* CallItems.c */
-extern int	color;		/* CURRENT COLOR IN CYCLE DETECTION */
 extern PNODE	chead;		/* COMPOUND NODE TRUNK HEAD */
 extern PNODE	ctail;		/* COMPOUND NODE TRUNK HEAD */
 extern PCALL	cghead;		/* CALL GRAPH TRUNK HEAD */
@@ -1268,12 +1355,16 @@ extern int	fsyncatns;
 extern int	incratns;
 extern int	fincratns;
 
+/* InfoAlloc.c */
+extern int      LargestTypeLabelSoFar;
+
 /* ------------------------------------------------------------ */
 /* ------------------------------------------------------------ */
 /* FUNCTIONS */
 extern void	AddPatch();
 extern void	AddStamp();
 extern void	AddTimeStamp();
+extern void	AddToGraphList();
 extern void	AddToNodeList();
 extern PADE	AdeAlloc();
 extern int	AreConstsEqual();
@@ -1304,6 +1395,7 @@ extern void	CopyEdgeAndLink();
 extern void	CopyEdgeAndThreadToUse();
 extern char	*CopyString();
 extern void	CreateAndInsertAde();
+extern PEDGE	DirectEdge();
 extern int	DontCombineFill();
 extern PEDGE	EdgeAlloc();
 extern void	EnterInSet();
@@ -1311,16 +1403,25 @@ extern void	EnterScope();
 extern void	Error1();
 extern void	Error2();
 extern void	ExitScope();
+extern PNODE	FindEnclosing();
 extern PEDGE	FindExport();
 extern PNODE	FindFunction();
 extern PNODE	FindGraph();
 extern PNODE	FindGraphNode();
 extern PEDGE	FindImport();
 extern PINFO	FindInfo();
+extern int	FindLabel();
+extern int	FindLargestExport();
+extern int	FindLargestImport();
+extern int	FindLargestPort();
+extern int	FindLargestLabel();
 extern PNODE	FindLastGraph();
 extern PEDGE	FindLastImport();
 extern PNODE	FindLastNode();
+extern PNODE	FindLargestNode();
 extern PNODE	FindNode();
+extern int      FindReturnsCode();
+extern char     *FindReturnsString();
 extern PEDGE	FindSource();
 extern int	FixConstantImports();
 extern int	FixSignedConstantImports();
@@ -1336,7 +1437,9 @@ extern void	If2Read();
 extern void	If2Write();
 extern void	ImportSwap();
 extern PINFO	InfoAlloc();
+extern int	IntegerPower();
 extern char	*IntToAscii();
+extern int	IsABRecord();
 extern int	IsAdePresent();
 extern int	IsAggregate();
 extern int	IsCInterface();
@@ -1351,6 +1454,7 @@ extern int	IsPMarked();
 extern int	IsPath();
 extern void	IsPathInit();
 extern int	IsReadOnly();
+extern int	IsReductionInterface();
 extern int 	IsStamp();
 extern void	LinkAdeExport();
 extern void	LinkAdeImport();
@@ -1455,7 +1559,141 @@ extern char	*CompoundName();
 extern char	*AtName();
 extern void	ReadItems();
 extern void	BuildItems();
+extern void	CopyEdgeAndReset();
+extern void	CopyExports();
+extern void	CopyImports();
+extern PNODE	CopyNode();
+extern PINFO    NewType();
+extern PINFO    GetAggregate();
+extern void     CheckEdge();
+
 /* $Log: IFX.h,v $
+ * Revision 1.47  1994/07/21  22:34:42  denton
+ * Added DYNMACROS for buffers on stack and heap.
+ *
+ * Revision 1.46  1994/07/21  00:11:32  denton
+ * Upped count of simple nodes to match in makenames.c
+ *
+ * Revision 1.45  1994/07/20  17:20:12  solomon
+ * Added RETURNS_VALUE to reduction type codes.  Added IFASelectRange
+ * and IFRequire codes to the IF90 nodes.  Changed the Repeat and While
+ * loop subgraph position macros to reflect the removal of the
+ * courtesy graph.
+ *
+ * Revision 1.44  1994/07/15  17:53:47  denton
+ * Added " around tn
+ *
+ * Revision 1.43  1994/07/14  16:36:33  denton
+ * Fix overlap of IF1 nodes for makenames.
+ *
+ * Revision 1.42  1994/07/13  18:08:35  denton
+ * Removed BAD from IFX.h and fix MakeAde to use LOW_PRI (it incorrectly used LOW)
+ *
+ * Revision 1.41  1994/07/12  16:34:30  denton
+ * Fix simple node count
+ *
+ * Revision 1.40  1994/07/12  16:32:25  denton
+ * Added IFConvert, IFCallForeign, and IF_FOREIGN for foreign language interface
+ *
+ * Revision 1.39  1994/07/01  23:46:42  denton
+ * color is now static
+ *
+ * Revision 1.38  1994/06/24  16:01:30  denton
+ * Added -IF3.
+ *
+ * Revision 1.37  1994/06/16  21:31:57  mivory
+ * info format and option changes M. Y. I.
+ *
+ * Revision 1.36  1994/06/16  00:10:33  denton
+ * Added IsBranch and IFUReduce to macros
+ *
+ * Revision 1.35  1994/06/06  23:31:16  denton
+ * Added low and high markers for node categories: COMPOUND, SIMPLE, GRAPH, OTHER.
+ *
+ * Revision 1.34  1994/05/25  23:56:45  solomon
+ * Added FindLargestNode() to Library.
+ *
+ * Revision 1.33  1994/05/25  19:44:33  denton
+ * Added FindLargestLabel to return the value of LargestTypeLabelSoFar.
+ * Shortened name of GetAggregateType.c to remove ar warnings.
+ *
+ * Revision 1.32  1994/05/04  18:12:02  denton
+ * FindEnclosingCompound->FindEnclosing
+ *
+ * Revision 1.31  1994/05/04  00:50:23  denton
+ * Added IsAnyLoop and repaird compound node count.
+ *
+ * Revision 1.30  1994/05/03  23:02:21  denton
+ * Replaced tab with space so mypp parse would work correctly.
+ *
+ * Revision 1.29  1994/05/03  19:26:36  denton
+ * Added IFCReduce and R_BODY for compound reduction node.
+ *
+ * Revision 1.28  1994/05/03  18:25:25  denton
+ * Added FindReturns and RETURNS_* for Sisal90 returns clauses.
+ *
+ * Revision 1.27  1994/05/03  16:20:38  denton
+ * Fixed funky CVS automatic merge.
+ *
+ * Revision 1.26  1994/04/29  17:05:28  denton
+ * Added I_TEST etc. for IFIfThenElse
+ *
+ * Revision 1.25  1994/04/15  21:51:51  denton
+ * Use config.h for system specific header files.
+ * Removed most gcc -Wall warnings.
+ *
+ * Revision 1.24  1994/04/15  15:51:47  denton
+ * Added config.h to centralize machine specific header files.
+ * Fixed gcc warings.
+ *
+ * Revision 1.23  1994/04/14  20:39:17  solomon
+ * Changed #define TYPE_CODE_LAST from IF_SET to IF_REDUCTION.
+ * Added extern int LargestTypeLabelSoFar used when creating new types.
+ * Added extern int CheckForBadEdges to be set in ifxstuff.c files.  When TRUE,
+ * the function CheckEdge is invoked for every edge.
+ * Added function declarations for the following functions: NewType(),
+ * GetAggregate(), and CheckEdge().
+ *
+ * Revision 1.22  1994/04/01  00:02:46  denton
+ * NULL -> '\0' where appropriate
+ *
+ * Revision 1.21  1994/03/31  01:46:31  denton
+ * Replace anachronistic BSD functions, index->strchr, rindex->strrchr
+ *
+ * Revision 1.20  1994/03/24  19:39:46  denton
+ * Distributed DSA, non-coherent cache, non-static shared memory.
+ *
+ * Revision 1.19  1994/03/22  00:43:48  miller
+ * Fixed names, updated Makefile to reflect CopyEdgeAndRe.c and IntegerPower.c
+ *
+ * Revision 1.18  1994/03/09  23:14:44  miller
+ * Changes for the new frontend -- Added a new typecode (IF_SET)
+ *
+ * Revision 1.17  1994/03/03  19:46:32  solomon
+ * Added external declarations for the following functions:
+ * CopyEdgeAndReset, CopyExports, CopyImports, and CopyNode.
+ *
+ * Revision 1.16  1994/03/03  17:19:30  solomon
+ * Added the macro: #define IFRepeatLoop(x) ((x)->type == IFRepeatLoop).
+ *
+ * Revision 1.15  1994/02/18  23:39:19  denton
+ * Removed redundant ifdef
+ *
+ * Revision 1.14  1994/02/17  16:50:57  denton
+ * Removed redundant externs
+ *
+ * Revision 1.13  1994/02/15  23:20:29  miller
+ * Allow new IF1 types (Typeset, complex, etc...)
+ *
+ * Revision 1.12  1994/02/01  22:27:10  miller
+ * LINUX updates
+ *
+ * Revision 1.11  1994/01/28  17:26:28  denton
+ * Changes for user-defined reductions
+ *
+ * Revision 1.10  1994/01/28  00:09:37  miller
+ * new man pages and new helper functions for library
+ *
  * Revision 1.9  1993/11/12  20:05:03  miller
  * Support for IF90 typeset type
  *

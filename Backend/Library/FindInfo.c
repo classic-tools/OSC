@@ -21,8 +21,8 @@ int type;
 
   label += tbase;
 
-  if ( tmax < label )
-    tmax = label;
+  if ( LargestTypeLabelSoFar < label )
+    LargestTypeLabelSoFar = label;
 
   if ( ihead == NULL )
     return( ihead = itail = InfoAlloc( label, type ) );
@@ -31,6 +31,11 @@ int type;
 }
 
 /* $Log: FindInfo.c,v $
+ * Revision 1.2  1994/04/14  21:43:22  solomon
+ * Changed variable tmax to variable LargestTypeLabelSoFar.  Variable tmax
+ * was used for a couple different things.  LargestTypeSoFar is used only
+ * for types.  Also added code to update LargestTypeSoFar when appropriate.
+ *
  * Revision 1.1  1993/01/21  23:28:32  miller
  * Initial version of the IFX library.  It replaces the if[12]build.c
  * read.c timer.c util.c and write.c and if[12].h files from the

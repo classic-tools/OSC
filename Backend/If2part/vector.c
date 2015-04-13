@@ -1,4 +1,11 @@
 /* $Log: vector.c,v $
+ * Revision 1.3  1994/06/16  21:31:17  mivory
+ * info format and option changes M. Y. I.
+ *
+ * Revision 1.2  1994/04/15  15:51:19  denton
+ * Added config.h to centralize machine specific header files.
+ * Fixed gcc warings.
+ *
  * Revision 1.1  1993/01/14  22:29:11  miller
  * Carry along work to propagate the new pragmas.  Also fixed up to report
  * reasons why loops don't vectorize / parallelize.  Split off some of the
@@ -638,7 +645,7 @@ int PartIsVecCandidate( f,ReasonP )
        case IFPlus:
        case IFMinus:
 	if ( n->imp == c || n->imp->isucc == c )
-	  for ( e = n->exp; e != NULL; e->esucc )
+	  for ( e = n->exp; e != NULL; e = e->esucc )
 	    if ( e->dst->type != IFAElement ) {
 	      vbpmfan++;
 	      *ReasonP = "Plus/Minus operation has fanout";
@@ -706,23 +713,23 @@ int PartIsVecCandidate( f,ReasonP )
 /**************************************************************************/
 void VectorSummary()
 {
-    FPRINTF( stderr, "\n   * VECTORIZATION SUMMARY\n" );
-    FPRINTF( stderr, "\n\n" );
+    FPRINTF( infoptr, "\n **** VECTORIZATION SUMMARY\n" );
+    FPRINTF( infoptr, "\n\n" );
 
-    FPRINTF( stderr, "NUMBER OF VECTORIZATION ATTEMPTS:  %d\n", vnum );
-    FPRINTF( stderr, "NUMBER OF VECTORIZED LOOPS:        %d\n", vok );
-    FPRINTF( stderr, "NOT A SINGLE RangeGenerate:        %d\n", vrg );
-    FPRINTF( stderr, "ILLEGAL USE OF CONTROL IN BODY:    %d\n", vbc );
-    FPRINTF( stderr, "RETURN EXPORT TYPE ERROR:          %d\n", vrtype );
-    FPRINTF( stderr, "RETURN FANOUT:                     %d\n", vrfan );
-    FPRINTF( stderr, "ILLEGAL RETURN NODE:               %d\n", vrn );
-    FPRINTF( stderr, "BODY EXPORT AND IMPORT TYPE ERROR: %d\n", vbtype );
-    FPRINTF( stderr, "ILLEGAL ARRAY USAGE IN BODY:       %d\n", vbadst );
-    FPRINTF( stderr, "INVARIANTS IN BODY:                %d\n", vbinvar );
-    FPRINTF( stderr, "ILLEGAL + and - NODE FANOUT:       %d\n", vbpmfan );
-    FPRINTF( stderr, "ILLEGAL AElement SOURCE:           %d\n", vbasrc );
-    FPRINTF( stderr, "ILLEGAL AElement INDEX:            %d\n", vbaelx );
-    FPRINTF( stderr, "ILLEGAL AElement DESTINATION:      %d\n", vbaeldst );
-    FPRINTF( stderr, "ILLEGAL BODY NODE:                 %d\n", vbn );
-    FPRINTF( stderr, "REDUCTION FILTER:                  %d\n", vrrf );
+    FPRINTF( infoptr, " NUMBER OF VECTORIZATION ATTEMPTS:  %d\n", vnum );
+    FPRINTF( infoptr, " NUMBER OF VECTORIZED LOOPS:        %d\n", vok );
+    FPRINTF( infoptr, " NOT A SINGLE RangeGenerate:        %d\n", vrg );
+    FPRINTF( infoptr, " ILLEGAL USE OF CONTROL IN BODY:    %d\n", vbc );
+    FPRINTF( infoptr, " RETURN EXPORT TYPE ERROR:          %d\n", vrtype );
+    FPRINTF( infoptr, " RETURN FANOUT:                     %d\n", vrfan );
+    FPRINTF( infoptr, " ILLEGAL RETURN NODE:               %d\n", vrn );
+    FPRINTF( infoptr, " BODY EXPORT AND IMPORT TYPE ERROR: %d\n", vbtype );
+    FPRINTF( infoptr, " ILLEGAL ARRAY USAGE IN BODY:       %d\n", vbadst );
+    FPRINTF( infoptr, " INVARIANTS IN BODY:                %d\n", vbinvar );
+    FPRINTF( infoptr, " ILLEGAL + and - NODE FANOUT:       %d\n", vbpmfan );
+    FPRINTF( infoptr, " ILLEGAL AElement SOURCE:           %d\n", vbasrc );
+    FPRINTF( infoptr, " ILLEGAL AElement INDEX:            %d\n", vbaelx );
+    FPRINTF( infoptr, " ILLEGAL AElement DESTINATION:      %d\n", vbaeldst );
+    FPRINTF( infoptr, " ILLEGAL BODY NODE:                 %d\n", vbn );
+    FPRINTF( infoptr, " REDUCTION FILTER:                  %d\n", vrrf );
 }

@@ -361,10 +361,10 @@ PNODE g;
 
 void WriteInvarInfo()
 {
-  FPRINTF( stderr, "\n   * LOOP INVARIANT NODE REMOVAL\n\n" );
-  FPRINTF( stderr, " Loop Invariants Removed:   %d\n", icnt   );
-  FPRINTF( stderr, " Exposed Invariants:        %d\n", eivcnt );
-  FPRINTF( stderr, " Movements into Selects:    %d\n", amcnt  );
+  FPRINTF( infoptr, "\n **** LOOP INVARIANT NODE REMOVAL\n\n" );
+  FPRINTF( infoptr, " Loop Invariants Removed:   %d\n", icnt   );
+  FPRINTF( infoptr, " Exposed Invariants:        %d\n", eivcnt );
+  FPRINTF( infoptr, " Movements into Selects:    %d\n", amcnt  );
 }
 
 

@@ -10,9 +10,14 @@
 
 
 static int   vfcnt = 0;             /* COUNT OF GENERATED VECTOR FORALLS  */
+static int   Tvfcnt = 0;             /* COUNT OF VECTOR FORALLS  */
 static int   cfcnt = 0;         /* COUNT OF GENERATED CONCURRENT FORALLS  */
+static int   Tcfcnt = 0;         /* COUNT OF CONCURRENT FORALLS  */
 static int   mcnt  = 0;                           /* COUNT OF MOVED NODES */
+static int   Tmcnt  = 0;                           /* COUNT OF NODES */
 static int   scnt  = 0;                  /* COUNT OF SPLIT AElement NODES */
+static int   Tscnt  = 0;                  /* COUNT OF AElement NODES */
+static char printinfo[2000]; 
 
 
 /**************************************************************************/
@@ -293,11 +298,11 @@ PNODE f;
 
 void WriteConcurInfo()
 {
-  FPRINTF( stderr, "\n   * FORALL SPLITTING FOR CONCURRENTIZATION\n\n" );
-  FPRINTF( stderr, " Generated Vector Forall Nodes:     %d\n", vfcnt );
-  FPRINTF( stderr, " Generated Concurrent Forall Nodes: %d\n", cfcnt );
-  FPRINTF( stderr, " Moved Nodes:                       %d\n", mcnt );
-  FPRINTF( stderr, " Split AElement Nodes:              %d\n", scnt  );
+  FPRINTF( infoptr, "\n\n **** FORALL SPLITTING FOR CONCURRENTIZATION\n\n%s\n" ,printinfo);
+  FPRINTF( infoptr, " Generated Vector Forall Nodes:     %d of %d\n", vfcnt,Tvfcnt );
+  FPRINTF( infoptr, " Generated Concurrent Forall Nodes: %d of %d\n", cfcnt,Tcfcnt );
+  FPRINTF( infoptr, " Moved Nodes:                       %d of %d\n", mcnt,Tmcnt );
+  FPRINTF( infoptr, " Split AElement Nodes:              %d of %d\n", scnt,Tscnt  );
 }
 
 
@@ -319,6 +324,7 @@ int   cport;
   register int   c;
 
   for ( c = 0, n = b->G_NODES; n != NULL; n = n->nsucc ) {
+    ++Tmcnt;
     switch ( n->type ) {
       /* case IFAbs: HURTS VECTORIZATION (SEE if2vector.c IN If2gen) */
       case IFDiv:             
@@ -427,7 +433,8 @@ PEDGE high;
 
   /* UNTANGLE AElement[NPM] FANOUT */
 
-  for ( n = FindLastNode( b ); n != b; n = n->npred )
+  for ( n = FindLastNode( b ); n != b; n = n->npred ) {
+    ++Tscnt;
     switch( n->type ) {
       case IFAElementN:
       case IFAElementP:
@@ -489,6 +496,7 @@ PEDGE high;
       default:
 	break;
       }
+  }
 
   if ( IsForall(f1) )
     vfcnt++;
@@ -588,6 +596,8 @@ PNODE g;
     if ( !IsForall( n ) )
       continue;
 
+    ++Tvfcnt;
+
     /* CHECK IF THE CONTROL IS SUITABLE FOR VECTORIZATION */
     if ( n->F_GEN->G_NODES->nsucc != NULL )
       continue;
@@ -598,6 +608,11 @@ PNODE g;
     EncodeIndexing( n->F_BODY, n->F_GEN->imp->iport, (int*)NULL );
 
     if ( IsFractureCandidate( n->F_BODY, n->F_GEN->imp->iport ) ) {
+#ifdef MYI
+      SPRINTF(printinfo,
+        "%s Parallelizing loop %d at line %d, funct %s, file %s\n\n",
+        printinfo, n->ID, n->line, n->funct, n->file);	
+#endif
       DoTheConcurrentization( n, n->F_BODY, n->F_RET, n->F_GEN->imp,
 			      n->F_GEN->imp->src->imp,
 			      n->F_GEN->imp->src->imp->isucc      );
@@ -649,6 +664,8 @@ PNODE g;
 
     if ( !IsLoopB( n ) )
       continue;
+
+    ++Tcfcnt;
 
     /* CHECK IF THE CONTROL IS SUITABLE FOR PARALLELIZATION */
 

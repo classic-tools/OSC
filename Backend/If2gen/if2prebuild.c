@@ -8,6 +8,14 @@
 
 #include "world.h"
 
+static int IsBIPWellFormed();
+static int IsMAllocInvariant();
+static int AreAllReadOnly();
+static void ModifyRedAT();
+static int GetBIPType();
+static char mem[2000];
+static char sptr[2000];
+
 #define MAX_MALLOCS 100           /* MAX NUMBER OF MemAlloc STACK ENTRIES */
 #define MAX_DIMS    5            /* MAX NUMBER OF POINTER SWAP DIMENSIONS */
 
@@ -36,6 +44,7 @@ static int biprts  = 0;                  /* COUNT OF BIP AT-NODE ROOTS    */
 static int bipmvc  = 0;                  /* COUNT OF BIP MOVEMENTS        */
 
 static int mchcnt  = 0;        /* COUNT OF COMBINED AND HOISTED MemAllocs */
+static int tmchcnt  = 0;        /* COUNT OF COMBINED AND HOISTED MemAllocs */
 
 static int psccnt = 0;                /* COUNT OF POINTER SWAP CANDIDATES */
 
@@ -415,7 +424,9 @@ PEDGE b;
   /* CORRESPONDING DEALLOCATION AND MANAGEMENT NODES */
 
   psma = NodeAlloc( ++maxint, matype );
+  psma->norm = ma->norm;
   psma->usucc = ma;
+
   psmm = NodeAlloc( ++maxint, mmtype );
   psmm->usucc = root;
 
@@ -874,8 +885,6 @@ PEDGE i;
   register PEDGE ce;
   register PNODE ma;
   register PNODE rn;
-  static int IsBIPWellFormed();
-  static int IsMAllocInvariant();
 
   n = i->src;
 
@@ -1180,7 +1189,6 @@ PEDGE  e;
 {
   register PNODE f;
   register PNODE n;
-  static int AreAllReadOnly();
 
   if ( e->cm == -1 || e->pm > 0 || e->wmark || e->dmark )
     return( FALSE );
@@ -1230,23 +1238,23 @@ PEDGE  e;
       break;
 
     case IFSelect:
-      if ( IsExport( n->S_TEST, e->iport ) != NULL )
+      if ( IsExport( n->S_TEST, e->iport ) != 0 )
         return( FALSE );
 
-      if ( IsExport( n->S_CONS, e->iport ) != NULL )
+      if ( IsExport( n->S_CONS, e->iport ) != 0 )
         if ( !AreAllReadOnly( n->S_CONS, e->iport ) )
           return( FALSE );
 
-      if ( IsExport( n->S_ALT, e->iport ) != NULL )
+      if ( IsExport( n->S_ALT, e->iport ) != 0 )
         if ( !AreAllReadOnly( n->S_ALT, e->iport ) )
           return( FALSE );
 
       break;
 
     case IFForall:
-      if ( IsExport( n->F_GEN, e->iport ) != NULL )
+      if ( IsExport( n->F_GEN, e->iport ) != 0 )
         return( FALSE );
-      if ( IsExport( n->F_RET, e->iport ) != NULL )
+      if ( IsExport( n->F_RET, e->iport ) != 0 )
         return( FALSE );
 
       if ( !AreAllReadOnly( n->F_BODY, e->iport ) )
@@ -1256,11 +1264,11 @@ PEDGE  e;
 
     case IFLoopA:
     case IFLoopB:
-      if ( IsExport( n->L_INIT, e->iport ) != NULL )
+      if ( IsExport( n->L_INIT, e->iport ) != 0 )
         return( FALSE );
-      if ( IsExport( n->L_TEST, e->iport ) != NULL )
+      if ( IsExport( n->L_TEST, e->iport ) != 0 )
         return( FALSE );
-      if ( IsExport( n->L_RET,  e->iport ) != NULL )
+      if ( IsExport( n->L_RET,  e->iport ) != 0 )
         return( FALSE );
 
       if ( !AreAllReadOnly( n->L_BODY, e->iport ) )
@@ -1429,7 +1437,6 @@ PNODE ma;
                x := for j in 1,n returns array of j + i end for;
              returns value of x
              end for; */
-/*
 /*                                                                        */
 /*  %$entry=case4a
     define case4a
@@ -1616,6 +1623,14 @@ DoTheRest:
 
               IncDimCounter();
               case1++;
+#ifdef MYI
+              SPRINTF(sptr,
+                  "%s Swapping pointer %d at line %s, funct %s, file %s\n",
+                  sptr, n->ID, n->line, n->funct, n->file);
+              SPRINTF(sptr,
+                  "%s with pointer %d at line %s, funct %s, file %s\\nn",
+                  sptr, m->ID, m->line, m->funct, m->file);
+#endif
               break;
               }
 
@@ -1649,6 +1664,14 @@ DoTheRest:
 	      ret->cm = 0;
 
               IncDimCounter();
+#ifdef MYI
+              SPRINTF(sptr,
+                  "%s Swapping pointer %4d at line %s, funct %s, file %s\n",
+                  sptr, n->ID, n->line, n->funct, n->file);
+              SPRINTF(sptr,
+                  "%s with pointer %4d at line %s, funct %s, file %s\\nn",
+                  sptr, m->ID, m->line, m->funct, m->file);
+#endif
               case7++;
               break;
               }
@@ -1668,6 +1691,14 @@ DoTheRest:
 	      /* free( we ); */
 
               IncDimCounter();
+#ifdef MYI
+              SPRINTF(sptr,
+                  "%s Swapping pointer %4d at line %s, funct %s, file %s\n",
+                  sptr, n->ID, n->line, n->funct, n->file);
+              SPRINTF(sptr,
+                  "%s with pointer %4d at line %s, funct %s, file %s\\nn",
+                  sptr, m->ID, m->line, m->funct, m->file);
+#endif
               case2++;
               break;
               }
@@ -1717,6 +1748,14 @@ DoTheRest:
 		}
 
               IncDimCounter();
+#ifdef MYI
+              SPRINTF(sptr,
+                  "%s Swapping pointer %4d at line %s, funct %s, file %s\n",
+                  sptr, n->ID, n->line, n->funct, n->file);
+              SPRINTF(sptr,
+                  "%s with pointer %4d at line %s, funct %s, file %s\\nn",
+                  sptr, m->ID, m->line, m->funct, m->file);
+#endif
               case3++;
               break;
               }
@@ -1761,6 +1800,14 @@ DoTheRest:
 	      /* free( wee ); */
 
               IncDimCounter();
+#ifdef MYI
+              SPRINTF(sptr,
+                  "%s Swapping pointer %4d at line %s, funct %s, file %s\n",
+                  sptr, n->ID, n->line, n->funct, n->file);
+              SPRINTF(sptr,
+                  "%s with pointer %4d at line %s, funct %s, file %s\\nn",
+                  sptr, m->ID, m->line, m->funct, m->file);
+#endif
               case5++;
               break;
               }
@@ -1800,6 +1847,14 @@ DoTheRest:
 	      ret->cm = 0;
 
               IncDimCounter();
+#ifdef MYI
+              SPRINTF(sptr,
+                  "%s Swapping pointer %4d at line %s, funct %s, file %s\n",
+                  sptr, n->ID, n->line, n->funct, n->file);
+              SPRINTF(sptr,
+                  "%s with pointer %4d at line %s, funct %s, file %s\\nn",
+                  sptr, m->ID, m->line, m->funct, m->file);
+#endif
               case6++;
               break;
               }
@@ -1823,11 +1878,19 @@ DoTheRest:
 	      /* free( we ); */
 
               IncDimCounter();
+#ifdef MYI
+              SPRINTF(sptr,
+                  "%s Swapping pointer %4d at line %s, funct %s, file %s\n",
+                  sptr, n->ID, n->line, n->funct, n->file);
+              SPRINTF(sptr,
+                  "%s with pointer %4d at line %s, funct %s, file %s\\nn",
+                  sptr, m->ID, m->line, m->funct, m->file);
+#endif
               case4a++;
               break;
               }
 
-	    /* GOD DAMN I'M SMART!!! */
+	    /* WOW I'M SMART!!! */
             if ( !IsXGraph(m) )
               break;
 
@@ -1843,6 +1906,14 @@ DoTheRest:
 	      we->xmark = TRUE;
 
               IncDimCounter();
+#ifdef MYI
+              SPRINTF(sptr,
+                  "%s Swapping pointer %4d at line %s, funct %s, file %s\n",
+                  sptr, n->ID, n->line, n->funct, n->file);
+              SPRINTF(sptr,
+                  "%s with pointer %4d at line %s, funct %s, file %s\\nn",
+                  sptr, m->ID, m->line, m->funct, m->file);
+#endif
               case4b++;
               break;
               }
@@ -2079,38 +2150,43 @@ int   ok;
 
 void WritePrebuildInfo()
 {
-  FPRINTF( stderr, "\n**** PREBUILD OPTIMIZATIONS\n" );
-  FPRINTF( stderr, " Basic Record Node Conversions:        %d\n", brcnt  );
-  FPRINTF( stderr, " Ragged Array Allocates:               %d\n", rcnt1  );
-  FPRINTF( stderr, " Ragged Invariants:                    %d\n", rinv   );
+/*  FPRINTF( infoptr2, "\n **** PREBUILD OPTIMIZATIONS\n\n" );
+  FPRINTF( infoptr, " Basic Record Node Conversions:        %d\n", brcnt  );
+  FPRINTF( infoptr, " Ragged Array Allocates:               %d\n", rcnt1  );
+  FPRINTF( infoptr, " Ragged Invariants:                    %d\n", rinv   );
 
-  FPRINTF( stderr, " External Pointer Swap Shares [case1,2] %d\n", ss1cnt);
+  FPRINTF( infoptr, " External Pointer Swap Shares [case1,2] %d\n", ss1cnt);
 
-  FPRINTF( stderr, " BIP AT-Node count:                    %d\n", bipats );
-  FPRINTF( stderr, " BIP Root Nodes:                       %d\n", biprts );
-  FPRINTF( stderr, " BIP Node Movements:                   %d\n", bipmvc );
-  FPRINTF( stderr, " Prebuild Dope Optimizations SINGULAR: %d\n", bipone );
-  FPRINTF( stderr, " Prebuild Dope Optimizations MULTIPLE: %d\n", bipmult);
+  FPRINTF( infoptr, " BIP AT-Node count:                    %d\n", bipats );
+  FPRINTF( infoptr, " BIP Root Nodes:                       %d\n", biprts );
+  FPRINTF( infoptr, " BIP Node Movements:                   %d\n", bipmvc );
+  FPRINTF( infoptr, " Prebuild Dope Optimizations SINGULAR: %d\n", bipone );
+  FPRINTF( infoptr, " Prebuild Dope Optimizations MULTIPLE: %d\n", bipmult);
 
-  FPRINTF( stderr, " Prebuild Dope Optimizations REGULAR:  %d\n\n", bipreg );
-  FPRINTF( stderr, " Combined And Hoisted MemAllocDVIs:    %d\n\n", mchcnt );
+  FPRINTF( infoptr, " Prebuild Dope Optimizations REGULAR:  %d\n\n", bipreg ); */
 
-  FPRINTF( stderr, " Pointer Swap Candidates:              %d\n", psccnt );
+  FPRINTF( infoptr2, "\n **** MEMALLOCDVI OPTIMIZATIONS\n\n" );
+  FPRINTF( infoptr2, "%s", mem );
+  FPRINTF( infoptr2, " Combined And Hoisted MemAllocDVIs:    %d of %d\n\n", mchcnt, tmchcnt );
 
-  FPRINTF( stderr, " Pointer Swap Successes:               %d\n", 
+  FPRINTF( infoptr2, "\n **** POINTER SWAPS\n\n" );
+  FPRINTF( infoptr2, "%s", ptr );
+  FPRINTF( infoptr2, " Pointer Swap Candidates:              %d\n", psccnt );
+
+  FPRINTF( infoptr2, " Pointer Swap Successes:               %d\n\n", 
            case1 + case2 + case3 + case4a + case4b + case5 + case6 + case7 );
 
-  FPRINTF( stderr, " Pointer Swap Successes by Dim[%d,%d,%d,%d,%d,other=%d]\n",
+  FPRINTF( infoptr2, " Pointer Swap Successes by Dim[%d,%d,%d,%d,%d,other=%d]\n",
            psdcnt[1],psdcnt[2],psdcnt[3],psdcnt[4],psdcnt[5],psdcnt[0]       );
 
-  FPRINTF( stderr, " Pointer Swap Case 1:                  %d\n", case1  );
-  FPRINTF( stderr, " Pointer Swap Case 2:                  %d\n", case2  );
-  FPRINTF( stderr, " Pointer Swap Case 3:                  %d\n", case3  );
-  FPRINTF( stderr, " Pointer Swap Case 4a:                 %d\n", case4a );
-  FPRINTF( stderr, " Pointer Swap Case 4b:                 %d\n", case4b );
-  FPRINTF( stderr, " Pointer Swap Case 5:                  %d\n", case5  );
-  FPRINTF( stderr, " Pointer Swap Case 6:                  %d\n", case6  );
-  FPRINTF( stderr, " Pointer Swap Case 7:                  %d\n", case7  );
+  FPRINTF( infoptr2, " Pointer Swap Case 1:                  %d\n", case1  );
+  FPRINTF( infoptr2, " Pointer Swap Case 2:                  %d\n", case2  );
+  FPRINTF( infoptr2, " Pointer Swap Case 3:                  %d\n", case3  );
+  FPRINTF( infoptr2, " Pointer Swap Case 4a:                 %d\n", case4a );
+  FPRINTF( infoptr2, " Pointer Swap Case 4b:                 %d\n", case4b );
+  FPRINTF( infoptr2, " Pointer Swap Case 5:                  %d\n", case5  );
+  FPRINTF( infoptr2, " Pointer Swap Case 6:                  %d\n", case6  );
+  FPRINTF( infoptr2, " Pointer Swap Case 7:                  %d\n", case7  );
 }
 
 
@@ -2152,7 +2228,6 @@ PEDGE e;
   register PNODE src;
   register PNODE rt;
   register PEDGE ee;
-  static void ModifyRedAT();
 
   if ( e == NULL )
     return;
@@ -2310,7 +2385,6 @@ PEDGE v;
   register PEDGE e2;
   register PEDGE i;
   register PEDGE e;
-  static int GetBIPType();
 
   sg = v->src;
 
@@ -3037,6 +3111,8 @@ PNODE g;
         if ( cn->type != IFMemAllocDVI )
           continue;
 
+	++tmchcnt;
+
         /* 1-DIM ONLY */
         if ( !IsBasic( cn->exp->info->A_ELEM->A_ELEM ) )
           continue;
@@ -3056,6 +3132,8 @@ PNODE g;
           if ( an->type != IFMemAllocDVI )
             continue;
 
+	++tmchcnt;
+
           if ( an->exp->sr != cn->exp->sr )
             continue;
 
@@ -3067,7 +3145,7 @@ PNODE g;
 
           /* MAKE SURE cn AND an ARE EQUIVALENT */
           if ( IsConst( an->imp ) ) {
-            if ( strcmp( an->imp->CoNsT, cn->imp->CoNsT ) != NULL )
+            if ( strcmp( an->imp->CoNsT, cn->imp->CoNsT ) != 0 )
               continue;
           } else {
             if ( !IsSGraph( an->imp->src ) )
@@ -3078,7 +3156,7 @@ PNODE g;
             }
 
           if ( IsConst( an->imp->isucc ) ) {
-            if ( strcmp(an->imp->isucc->CoNsT,cn->imp->isucc->CoNsT) != NULL )
+            if ( strcmp(an->imp->isucc->CoNsT,cn->imp->isucc->CoNsT) != 0 )
               continue;
           } else {
             if ( !IsSGraph( an->imp->isucc->src ) )
@@ -3089,6 +3167,14 @@ PNODE g;
             }
 
           /* THEY ARE EQUIVALENT SO COMBINE AND HOIST THEM ONE LEVEL */
+#ifdef MYI
+          SPRINTF(mem, 
+              "%s Combining MemAllocDVI %d at line %d, funct %s, file %s\n",
+              mem, n->ID, n->line, n->funct, n->file);	
+          SPRINTF(mem, 
+              "%s with MemAllocDVI %d at line %d, funct %s, file %s\n\n",
+              mem, an->ID, an->line, an->funct, an->file);	
+#endif
           port  = ++maxint;
           binfo = an->exp->info;
           sr    = an->exp->sr;

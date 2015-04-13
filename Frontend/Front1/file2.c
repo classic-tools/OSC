@@ -214,7 +214,7 @@ stryng directoryname;
   boolean successfulopen;
   stryng etablename, etablesuffix;
 
-  string10(&etablesuffix, "/etablebin");
+  string10(&etablesuffix, "/etabl.bin");
   stripspaces(&etablesuffix);
   etablename = directoryname;
   if (etablename.len < maxstringchars)
@@ -295,7 +295,7 @@ stryng *directoryname;
 
   if (!errortables)
     return;
-  string10(&etablesuffix, "/etablebin");
+  string10(&etablesuffix, "/etabl.bin");
   stripspaces(&etablesuffix);
   etablename = *directoryname;
   if (etablename.len < maxstringchars)
@@ -2301,7 +2301,7 @@ stryng directoryname;
 
   if (debug)
     printf("start readtables\n");
-  string10(&ptablesuffix, "/ptablebin");
+  string10(&ptablesuffix, "/ptabl.bin");
   stripspaces(&ptablesuffix);
   ptablename = directoryname;
   if (ptablename.len < maxstringchars)

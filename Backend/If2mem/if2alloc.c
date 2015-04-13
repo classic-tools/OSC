@@ -7,6 +7,7 @@
  * */
 
 #include "world.h"
+extern int agg;
 
 
 /**************************************************************************/
@@ -479,6 +480,8 @@ PNODE f;
         /* GET NODE p'S BUFFER, A FUNCTION OF ITS AT-NODE CHILD           */
 
 	b = GetBuffer( p ); 
+
+	++agg;
 
 	/* LINK p'S BUFFER TO p.  IF p MAIPULATES A MULTIPLE VALUE THEN   */
 	/* THE BUFFER IS APPROPRIATELY LINKED TO OTHER POTENTIAL AT-NODES */

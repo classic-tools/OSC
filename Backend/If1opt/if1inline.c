@@ -16,7 +16,7 @@
 static PCALL callhead = NULL;           /* HEAD AND TAIL OF CALL GRAPH TRUNK */
 static PCALL calltail = NULL;
 
-	int   color = FIRST_COLOR;    /* CURRENT COLOR IN CYCLE DETECTION  */
+static int   color = FIRST_COLOR;    /* CURRENT COLOR IN CYCLE DETECTION  */
 static int   sskip = 0;                    /* COUNT OF SKIPPED EXPANSIONS */
 
 int NoInlining = FALSE;		/* Allow Inlined functions */
@@ -180,7 +180,7 @@ static void ReadInlineRequests()
 	if ( c->InLineFunction ) {
 	    PRINTF(" Expand %s Calls Inline (y/n): ",
 			 c->graph->G_NAME );
-	    ans = NULL;
+	    ans = '\0';
 	    (void)scanf( " %c", &ans );
 
 	    if ( ans == 'n' ) {
@@ -380,34 +380,39 @@ static void WriteInlineInfo()
 {
     register PCALL c;
     register PCALL r;
+    char *prevc = "prevc";
+    
 
-    FPRINTF( stderr, "\n ANNOTATED CALL GRAPH: (skip=%d,MaxSZ=%d) [%s]\n\n", 
+    FPRINTF( infoptr, "\n **** ANNOTATED CALL GRAPH: (skip=%d,MaxSZ=%d) [%s]\n\n", 
 		     sskip, SIZE_THRESHOLD,
 		     (IsStamp(MONOLITH))? "MONOLITH" : "INCOMPLETE"       );
 
     for ( c = callhead; c != NULL; c = c->callee ) {
 	if ( IsXGraph( c->graph ) )
-	    FPRINTF( stderr, " EXPORT" );
+	    FPRINTF( infoptr, " EXPORT" );
 
-	FPRINTF( stderr, " FUNCTION %s(...) sz=%d [mk=%c]:",
+	FPRINTF( infoptr, " FUNCTION %s(...) sz=%d [mk=%c]:",
 		      (c->graph->funct)? c->graph->funct : c->graph->G_NAME,
 		      c->graph->size,
 		      (c->graph->mark)? c->graph->mark : ' '            );
 
 	if ( !c->InLineFunction ) {
 	    if ( c->disabled )
-		FPRINTF( stderr, " Not Inlined By Request of User" );
+		FPRINTF( infoptr, " Not Inlined By Request of User" );
             else if ( c->cycle )
-		FPRINTF( stderr, " Not Inlined Because Part of Cycle" );
+		FPRINTF( infoptr, " Not Inlined Because Part of Cycle" );
 	    else 
-		FPRINTF( stderr, " Not Inlined Because Imported" );
+		FPRINTF( infoptr, " Not Inlined Because Imported" );
 	    }
 
-	FPRINTF( stderr, "\n" );
+	FPRINTF( infoptr, "\n" );
 
-	for ( r = c->caller; r != NULL; r = r->caller )
-	    FPRINTF( stderr, "     CALL %s %s\n", r->callee->graph->G_NAME,
+	for ( r = c->caller; r != NULL; r = r->caller ) {
+	    if (strcmp (prevc, r->callee->graph->G_NAME) != 0)
+	    FPRINTF( infoptr, "     CALL %s %s\n", r->callee->graph->G_NAME,
 		             (r->skipped == TRUE)? "(SKIPPED)" : "" );
+            prevc = r->callee->graph->G_NAME;
+        }
 	}
 }
 
@@ -448,6 +453,6 @@ void If1Inline()
       }
     }
 
-    if ( RequestInfo(I_GeneralInfo,info) )
+    if ( RequestInfo(I_Info1,info) )
 	WriteInlineInfo();
 }

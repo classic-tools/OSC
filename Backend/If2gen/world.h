@@ -1,4 +1,14 @@
 /* $Log: world.h,v $
+ * Revision 1.15  1994/06/16  21:30:43  mivory
+ * info format and option changes M. Y. I.
+ *
+ * Revision 1.14  1994/04/15  15:51:07  denton
+ * Added config.h to centralize machine specific header files.
+ * Fixed gcc warings.
+ *
+ * Revision 1.13  1994/02/15  23:40:56  miller
+ * Changes to allow new IF1/2 types (complex, typesets, etc...)
+ *
  * Revision 1.12  1993/03/23  22:46:16  miller
  * date problem
  *
@@ -24,10 +34,16 @@
  * Make changes for LINT and combined files.
  * */
 
+#include "../../config.h"
 #include "../Library/IFX.h"
 
 
-extern int    vinfo;		/* DUMP CONCURRENT-VECTOR INFORMATION? */
+extern int    info;		/* DUMP INFORMATION? */
+extern FILE *infoptr;		/* INFORMATION output file */
+extern FILE *infoptr1;		/* INFORMATION output file */
+extern FILE *infoptr2;		/* INFORMATION output file */
+extern FILE *infoptr3;		/* INFORMATION output file */
+extern FILE *infoptr4;		/* INFORMATION output file */
 extern int    aimp;		/* OPTIMIZE ARRAY DEREFERENCE OPERATIONS? */
 extern int    if2opt;		/* OPTIMIZE GatherAT NODES? */
 
@@ -120,6 +136,8 @@ extern void	PrintFrameDeallocs();
 
 /* if2names.c */
 extern char	*GetCopyFunction();
+extern char	*GetReadFunction();
+extern char	*GetWriteFunction();
 extern char	*GetIncRefCountName();
 extern char	*GetSetRefCountName();
 
@@ -204,6 +222,7 @@ extern void	PrintLoop();
 extern void	PrintFirstSum();
 extern void	PrintTri();
 extern void	PrintVMinMax();
+extern int	LCMSize();
 
 /* if2aimp.c */
 extern void	NormalizeVectorLoop();

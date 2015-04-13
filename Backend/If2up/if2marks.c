@@ -8,6 +8,7 @@
 
 #include "world.h"
 
+static void PropagateMarks();
 
 static int lnstable  = 0;   /* COUNT OF RETRIES DURING LOOP PROCESSING    */
 static int fnstable  = 0;   /* COUNT OF FUNCTION RETRIES BECAUSE UNSTABLE */
@@ -287,7 +288,6 @@ PNODE c;
     register PEDGE i;
     register int   s;
     register int   ss;
-    static void PropagateMarks();
 
     f = FindFunction( c->imp->CoNsT );
 
@@ -387,7 +387,6 @@ PNODE s;
     register int   so;
     register PEDGE ii;
     register PNODE sg;
-    static void PropagateMarks();
 
     /* ASSIGN s IMPORT MARKS TO ALL CORRESPONDING SUBGRAPH EXPORTS AND */
     /* AND PROPAGATE THEM THROUGH THE SUBGRAPHS.                       */
@@ -457,7 +456,6 @@ PNODE f;
 {
     register PEDGE i;
     register PEDGE e;
-    static void PropagateMarks();
 
     /* IF AN f IMPORT IS ONLY REFERENCED IN ITS GENERATE SUBGRAPH THEN    */
     /* PROPAGATE THE IMPORT'S MARKS THROUGH THE SUBGRAPH.                 */
@@ -528,7 +526,6 @@ PNODE l;
     register int   ocnt;
     register int   d;
     register int   dd;
-    static void PropagateMarks();
 
     /* CLEAN UP MARKS FROM PREVIOUS LOOP EXAMINATION                      */
 
@@ -960,10 +957,10 @@ void If2PropagateMarks()
 	    }
 	}
 
-    if ( RequestInfo(I_DeveloperInfo1,info) ) {
-      FPRINTF( stderr, "\n   * MARK PROPAGATION BEHAVIOR\n\n" );
-      FPRINTF( stderr,   " Number of Unstable  Loops:     %d\n", lnstable  );
-      FPRINTF( stderr,   " Number of Unstable  Functions: %d\n", fnstable  );
-      FPRINTF( stderr,   " Number of Unvisited Functions: %d\n", fnvisited );
-    }
+/*    if ( RequestInfo(I_Info3,info)  ) {
+      FPRINTF( infoptr, "\n **** MARK PROPAGATION BEHAVIOR\n\n" );
+      FPRINTF( infoptr,   " Number of Unstable  Loops:     %d\n", lnstable  );
+      FPRINTF( infoptr,   " Number of Unstable  Functions: %d\n", fnstable  );
+      FPRINTF( infoptr,   " Number of Unvisited Functions: %d\n", fnvisited );
+    } */
 }

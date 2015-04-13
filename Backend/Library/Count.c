@@ -69,6 +69,9 @@ PNODE g;
 	  rcat++;
 	  break;
 
+	 case REDUCE_USER:
+	  break;
+
 	 default:
 	  Error1( "ILLEGAL REDUCTION FUNCTION" );
 	}
@@ -96,6 +99,9 @@ PNODE g;
 
 
 /* $Log: Count.c,v $
+ * Revision 1.2  1994/03/09  01:12:33  denton
+ * Fix -info1-32 for reductions
+ *
  * Revision 1.1  1993/01/21  23:28:14  miller
  * Initial version of the IFX library.  It replaces the if[12]build.c
  * read.c timer.c util.c and write.c and if[12].h files from the

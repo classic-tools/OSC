@@ -1,5 +1,3 @@
-# DO NOT USE A LOWER CASE M FOR AN OPTION -- RESERVED FOR USE
-# IN THE IBM PORT
 # ------------------------------------------------------------
 help
 "Same as -usage"
@@ -99,6 +97,18 @@ number of workers.
 Note that the \-ls and \-gss options conflict.
 {
   DefaultLoopStyle = 'G';
+}
+
+# ------------------------------------------------------------
+cached
+"Use cached scheduling algorithm instead of block slicing"
+-cached
+If compiled for concurrent execution,
+slice each concurrentized 
+.I for
+loop using cached scheduling.  
+{
+  DefaultLoopStyle = 'C';
 }
 
 # ------------------------------------------------------------
@@ -368,6 +378,15 @@ to the end of the function.
 }
 
 # ------------------------------------------------------------
+m
+"Indicate the master process on distributed processors."
+-m
+If set, terminate parsing since a slave has been started.
+{
+  return;
+}
+
+# ------------------------------------------------------------
 nostrings
 "Do not print array[character] in string (quoted) format"
 -nostrings
@@ -378,6 +397,7 @@ the array must be 1.
 {
   FibreStrings = FALSE;
 }
+
 # ------------------------------------------------------------
 z
 "Do not print the program's output."

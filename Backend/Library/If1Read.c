@@ -96,6 +96,7 @@ void If1Read()
 	 case IF_TAG:
 	 case IF_TUPLE:
 	 case IF_SET:
+	 case IF_REDUCTION:
 	  ref2 = ReadInteger();
 	  break;
 
@@ -141,6 +142,9 @@ void If1Read()
 }
 
 /* $Log: If1Read.c,v $
+ * Revision 1.3  1994/03/09  23:14:46  miller
+ * Changes for the new frontend -- Added a new typecode (IF_SET)
+ *
  * Revision 1.2  1993/11/12  19:56:30  miller
  * Support for IF90 typeset type
  *

@@ -1,8 +1,8 @@
-#if HPUX || HPUXPA
+#include "world.h"
+
+#if defined(HPUX) || defined(HPUXPA) || defined(CRAYT3D)
 
 #define SOMECODE
-
-#include <signal.h>
 
 char	*sys_siglist[NSIG] = {
 	"Signal 0",

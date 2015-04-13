@@ -726,6 +726,7 @@ PNODE g;
 
     CombineKports( n );
 
+    ASSERT( IsCompound( n ), "Not a compound" );
     switch ( n->type ) {
       case IFSelect:
 	RemoveCses( n->S_ALT );
@@ -749,7 +750,7 @@ PNODE g;
 	CombineRports( n->L_RET );
 	break;
 
-      default: /* MUST BE A FORALL */
+      case IFForall:
         RemoveCses( n->F_GEN );
 	CombineMports( n );
 
@@ -758,8 +759,18 @@ PNODE g;
 
         RemoveCses( n->F_RET  );
         CombineRports( n->F_RET );
-	}
-      }
+        break;
+
+      case IFUReduce:	/* TBD: can do some combination of ports too. */
+	RemoveCses( n->R_INIT );
+	RemoveCses( n->R_BODY );
+	RemoveCses( n->R_RET );
+        break;
+
+      default:
+        UNEXPECTED("Unknown compound");
+    }
+  }
 }
 
 
@@ -771,17 +782,17 @@ PNODE g;
 
 void WriteCseInfo()
 {
-    FPRINTF( stderr, "\n   * COMMON SUBEXPRESSION ELIMINATION\n\n" );
+    FPRINTF( infoptr, "\n **** COMMON SUBEXPRESSION ELIMINATION\n\n" );
 
-    FPRINTF( stderr, " Combined Nodes:         %d\n", ncnt  );
-    FPRINTF( stderr, " Combined K Imports:     %d\n", ikcnt  );
-    FPRINTF( stderr, " Combined R Imports:     %d\n", ircnt );
-    FPRINTF( stderr, " Combined M Imports:     %d\n", imcnt );
-    FPRINTF( stderr, " Combined T Imports:     %d\n", itcnt );
-    FPRINTF( stderr, " Opened Array References %d\n", oacnt );
+    FPRINTF( infoptr, " Combined Nodes:         %d\n", ncnt  );
+    FPRINTF( infoptr, " Combined K Imports:     %d\n", ikcnt  );
+    FPRINTF( infoptr, " Combined R Imports:     %d\n", ircnt );
+    FPRINTF( infoptr, " Combined M Imports:     %d\n", imcnt );
+    FPRINTF( infoptr, " Combined T Imports:     %d\n", itcnt );
+    FPRINTF( infoptr, " Opened Array References %d\n", oacnt );
 
-    FPRINTF( stderr, "\n   * NODE STRIPPING\n\n" );
-    FPRINTF( stderr, " Removed Return Nodes:     %d\n", srcnt );
+    FPRINTF( infoptr, "\n **** NODE STRIPPING\n\n" );
+    FPRINTF( infoptr, " Removed Return Nodes:     %d\n", srcnt );
 }
 
 

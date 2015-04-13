@@ -864,6 +864,13 @@ int            STestOpt;
                 GenAssignNewLports( p, n );
 		GenAssignNewRports( n->L_RET );
 		break;
+
+            case IFUReduce:
+		UNIMPLEMENTED( "IFUReduce" );
+		break;
+
+            default:
+		UNEXPECTED( "Unknown compound" );
 	    }
 
 	for ( i = n->imp; i != NULL; i = i->isucc )
@@ -1861,27 +1868,31 @@ void If2AImp()
 /* PURPOSE: WRITE ARRAY IMPROVEMENT OPTIMIZATION FEEDBACK TO stderr.      */
 /**************************************************************************/
 
+
 void WriteIf2AImpInfo()
 {
-  FPRINTF( stderr, "\n**** ARRAY IMPROVMENTS\n" );
-  FPRINTF( stderr, " GetArrayBase Nodes Inserted:          %d\n", gabc  );
-  FPRINTF( stderr, " Special GetArrayBase Nodes Inserted:  %d\n", sgabs );
-  FPRINTF( stderr, " GetArrayBase Invariants Removed:      %d\n", vcnt  );
-  FPRINTF( stderr, " GetArrayBase Nodes Combined:          %d\n", ccnt  );
-  FPRINTF( stderr, " Removed K Imports:                    %d\n", rkcnt );
-  FPRINTF( stderr, " Unremoved Array Imports:              %d\n", nrkcnt);
-  FPRINTF( stderr, " Combined K Imports:                   %d\n", ckcnt );
-  FPRINTF( stderr, " Globally Combined GetArrayBase Nodes: %d\n", gccnt );
-  FPRINTF( stderr, " Optimized AReplace Nodes:             %d\n", arcnt );
-  FPRINTF( stderr, " Optimized GetArrayBase Path Nodes:    %d\n", cgabp );
-  FPRINTF( stderr, " Migrated GetArrayBase Nodes:          %d\n", mgab  );
-  FPRINTF( stderr, " Special GetArrayBase Invariants:      %d\n", spicnt);
-  FPRINTF( stderr, " Array Indexing Optimizations:         %d\n", aicnt );
-  FPRINTF( stderr, " Failed Array Indexing Optimizations:  %d\n", aifcnt);
-  FPRINTF( stderr, " Normalized Vector Loops:              %d\n", nvl   );
-  FPRINTF( stderr, " Moved Array Read Operations:          %d\n", rmov   );
-  FPRINTF( stderr, " Formed Cray X-MP Chains:              %d\n", chains );
-  FPRINTF( stderr, "\n**** SELECT TEST IMPROVEMENTS\n" );
-  FPRINTF( stderr, " Select Nodes:                         %d\n", scnt  );
-  FPRINTF( stderr, " Optimized Select Tests:               %d\n", sopt  );
+  FPRINTF( infoptr, "\n **** ARRAY IMPROVMENTS\n\n" );
+  FPRINTF( infoptr, " GetArrayBase Nodes Inserted:          %d\n", gabc  );
+  FPRINTF( infoptr, " Special GetArrayBase Nodes Inserted:  %d\n", sgabs );
+  FPRINTF( infoptr, " GetArrayBase Invariants Removed:      %d\n", vcnt  );
+  FPRINTF( infoptr, " GetArrayBase Nodes Combined:          %d\n", ccnt  );
+  FPRINTF( infoptr, " Removed K Imports:                    %d\n", rkcnt );
+  FPRINTF( infoptr, " Unremoved Array Imports:              %d\n", nrkcnt);
+  FPRINTF( infoptr, " Combined K Imports:                   %d\n", ckcnt );
+  FPRINTF( infoptr, " Globally Combined GetArrayBase Nodes: %d\n", gccnt );
+  FPRINTF( infoptr, " Optimized AReplace Nodes:             %d\n", arcnt );
+  FPRINTF( infoptr, " Optimized GetArrayBase Path Nodes:    %d\n", cgabp );
+  FPRINTF( infoptr, " Migrated GetArrayBase Nodes:          %d\n", mgab  );
+  FPRINTF( infoptr, " Special GetArrayBase Invariants:      %d\n", spicnt);
+  FPRINTF( infoptr, " Array Indexing Optimizations:         %d\n", aicnt );
+  FPRINTF( infoptr, " Failed Array Indexing Optimizations:  %d\n", aifcnt);
+  FPRINTF( infoptr, " Normalized Vector Loops:              %d\n", nvl   );
+  FPRINTF( infoptr, " Moved Array Read Operations:          %d\n", rmov   );
+  FPRINTF( infoptr, " Formed Cray X-MP Chains:              %d\n", chains );
+}
+
+void WriteIf2AImpInfo2()
+{
+  FPRINTF( infoptr1, "\n **** SELECT TEST IMPROVEMENTS\n\n" );
+  FPRINTF( infoptr1, " Optimized Select Tests:               %d of %d\n", sopt,scnt  );
 }

@@ -1,3 +1,7 @@
+#!/bin/sh
+# Execute a SISAL program on a range of processors to record resource usages.
+#
+
 if ( test $# -lt 3 ) then
     { echo 'Usage:  speedups startp endp abs [ options ] ...'; exit 1; }
 fi

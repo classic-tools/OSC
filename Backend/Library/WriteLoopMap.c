@@ -11,16 +11,19 @@ void WriteLoopMap( msg )
 {
   register PNODE f;
 
-  FPRINTF( stderr, "\n   * LOOP MAP %s\n\n",msg );
+  FPRINTF( infoptr, "\n%s\n\n",msg );
   for ( f = glstop->gsucc; f != NULL; f = f->gsucc ) {
     if ( IsIGraph( f ) ) continue;
 
-    FPRINTF( stderr, "FUNCTION %s\n",f->G_NAME);
+    FPRINTF( infoptr, " FUNCTION %s\n",f->G_NAME);
     WriteTheLMap( 1,1,f );	/* Starting level 1, par-loop level 1 */
   }
 }
 
 /* $Log: WriteLoopMap.c,v $
+ * Revision 1.4  1994/06/16  21:32:05  mivory
+ * info format and option changes M. Y. I.
+ *
  * Revision 1.3  1993/03/23  22:51:11  miller
  * date problem
  *

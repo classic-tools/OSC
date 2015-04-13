@@ -16,12 +16,19 @@ static PEDGE lo;                             /* FORALL NODE'S LOWER BOUND */
 static PEDGE hi;                             /* FORALL NODE'S UPPER BOUND */
 
 
-static int   lcnt  = 0;                      /* COUNT OF LOW SPLITS       */
-static int  nlcnt  = 0;                      /* COUNT OF NOT_LOW SPLITS   */
-static int   hcnt  = 0;                      /* COUNT OF HIGH SPLITS      */
-static int  nhcnt  = 0;                      /* COUNT OF NOT_HIGH SPLITS  */
+static int   lcnt  = 0;                      /* COUNT OF SPLIT_LOW SPLITS       */
+static int  nlcnt  = 0;                      /* COUNT OF SPLIT_NOT_LOW SPLITS   */
+static int   hcnt  = 0;                      /* COUNT OF SPLIT_HIGH SPLITS      */
+static int   Tcnt  = 0;                      /* COUNT OF loops      */
+static int  nhcnt  = 0;                      /* COUNT OF SPLIT_NOT_HIGH SPLITS  */
 static int  rfail  = 0;                      /* COUNT RETURN GRAPH ABORTS */
+DYNDECLARE(printinfo,printbuf,printlen,printcount,char,2000);
 
+#define SPLIT_BAD       0                    /* FORALL SPLIT TYPES */
+#define SPLIT_LOW       1
+#define SPLIT_HIGH      2
+#define SPLIT_NOT_LOW   3
+#define SPLIT_NOT_HIGH  4
 
 /**************************************************************************/
 /* LOCAL  **************       GetOperand          ************************/
@@ -74,51 +81,51 @@ PNODE n;
       case IFNotEqual:
 	/* GET THE LEFT OPERAND OF THE EQUAL NODE */
 	if ( (i1 = GetOperand( f, n->imp )) == NULL ) 
-	  return( BAD );
+	  return( SPLIT_BAD );
 
 	/* GET THE RIGHT OPERAND OF THE EQUAL NODE */
 	if ( (i2 = GetOperand( f, n->imp->isucc )) == NULL ) 
-	  return( BAD );
+	  return( SPLIT_BAD );
 
 	/* FOR i in L,H ... */
 
 	if ( i1 == f->F_GEN->imp ) {
 	  /* i ~= L */
 	  if ( AreValuesEqual( i2, lo ) )
-	    return( NOT_LOW );
+	    return( SPLIT_NOT_LOW );
 
 	  /* i ~= H */
 	  if ( AreValuesEqual( i2, hi ) )
-	    return( NOT_HIGH );
+	    return( SPLIT_NOT_HIGH );
 	  }
 
-	return( BAD );
+	return( SPLIT_BAD );
 
       case IFEqual:
 	/* GET THE LEFT OPERAND OF THE EQUAL NODE */
 	if ( (i1 = GetOperand( f, n->imp )) == NULL ) 
-	  return( BAD );
+	  return( SPLIT_BAD );
 
 	/* GET THE RIGHT OPERAND OF THE EQUAL NODE */
 	if ( (i2 = GetOperand( f, n->imp->isucc )) == NULL ) 
-	  return( BAD );
+	  return( SPLIT_BAD );
 
 	/* FOR i in L,H ... */
 
 	if ( i1 == f->F_GEN->imp ) {
 	  /* i = L */
 	  if ( AreValuesEqual( i2, lo ) )
-	    return( LOW );
+	    return( SPLIT_LOW );
 
 	  /* i = H */
 	  if ( AreValuesEqual( i2, hi ) )
-	    return( HIGH );
+	    return( SPLIT_HIGH );
 	  }
 
-	return( BAD );
+	return( SPLIT_BAD );
 
       default:
-	return( BAD );
+	return( SPLIT_BAD );
       }
 }
 
@@ -147,7 +154,7 @@ char  *v;
     if ( !(n->type == IFEqual || n->type == IFNotEqual) )
       continue;
 
-    if ( (tt = SplitType( f, n )) == BAD )
+    if ( (tt = SplitType( f, n )) == SPLIT_BAD )
       continue;
 
     if ( t != tt )
@@ -287,12 +294,15 @@ int     mt;
 
 void WriteSplitInfo()
 {
-  FPRINTF( stderr, "\n   * LOOP SPLITTING\n\n" );
-  FPRINTF( stderr, " Low Splits:               %d\n", lcnt  );
-  FPRINTF( stderr, " High Splits:              %d\n", hcnt  );
-  FPRINTF( stderr, " Not Low Splits:           %d\n", nlcnt );
-  FPRINTF( stderr, " Not High Splits:          %d\n", nhcnt );
-  FPRINTF( stderr, " Return Subgraph Failures: %d\n", rfail );
+  FPRINTF( infoptr, "\n\n **** LOOP SPLITTING\n\n%s\n", printinfo);
+
+  FPRINTF( infoptr, " Loops Split:              %d of %d\n", 
+		lcnt + hcnt + nlcnt + nhcnt, Tcnt );
+/*  FPRINTF( infoptr, " Low Splits:               %d\n", lcnt );
+  FPRINTF( infoptr, " High Splits:              %d\n", hcnt  );
+  FPRINTF( infoptr, " Not Low Splits:           %d\n", nlcnt );
+  FPRINTF( infoptr, " Not High Splits:          %d\n", nhcnt );
+  FPRINTF( infoptr, " Return Subgraph Failures: %d\n", rfail ); */
 }
 
 
@@ -300,12 +310,13 @@ void WriteSplitInfo()
 /* LOCAL  **************     IsSplitCandidate      ************************/
 /**************************************************************************/
 /* PURPOSE: CHECK IF FORALL NODE f IS A LOOP SPLIT CANDIDATE. IF SO, THEN */
-/*          RETURN ITS SPLIT TYPE (LOW, NOT_LOW, HIGH, NOT_HIGH); ELSE    */
-/*          RETURN BAD.                                                   */
+/*          RETURN ITS SPLIT TYPE (SPLIT_LOW, SPLIT_NOT_LOW, SPLIT_HIGH, SPLIT_NOT_HIGH); ELSE    */
+/*          RETURN SPLIT_BAD.                                                   */
 /**************************************************************************/
 
-static int IsSplitCandidate( f )
+static int IsSplitCandidate( f, ReasonP )
 PNODE f;
+char **ReasonP;
 {
   register PNODE r;
   register PNODE n;
@@ -314,66 +325,82 @@ PNODE f;
 
   r = f->F_GEN->G_NODES;
 
-  if ( r->nsucc != NULL )
-    return( BAD );
+  if ( r->nsucc != NULL ) {
+    *ReasonP = "successor is not null";
+    return( SPLIT_BAD );
+  }
 
-  if ( r->type != IFRangeGenerate )
-    return( BAD );
+  if ( r->type != IFRangeGenerate ) {
+    *ReasonP = "type is not range generate";
+    return( SPLIT_BAD );
+  }
 
   /* ONLY SPLIT INNERMOST LOOPS!!! */
   if ( !IsInnerLoop( f->F_BODY ) ) {
-    return( BAD );
+    *ReasonP = "not the innermost loop";
+    return( SPLIT_BAD );
     }
 
   /* GET THE CONTROL ROD */
   c = r->exp;
 
-  /* GET THE LOW AND HIGH BOUND OF THE LOOP */
+  /* GET THE SPLIT_LOW AND SPLIT_HIGH BOUND OF THE LOOP */
   if ( IsConst( r->imp ) )
     lo = r->imp;
   else
     lo = FindImport( f, r->imp->eport );
 
-  if ( lo == NULL )
-    return( BAD );
+  if ( lo == NULL ) {
+    *ReasonP = "loop has no low bound";
+    return( SPLIT_BAD );
+  }
 
   if ( IsConst( r->imp->isucc ) )
     hi = r->imp->isucc;
   else
     hi = FindImport( f, r->imp->isucc->eport );
 
-  if ( hi == NULL )
-    return( BAD );
+  if ( hi == NULL ) {
+    *ReasonP = "loop has no high bound";
+    return( SPLIT_BAD );
+  }
 
-  if ( AreValuesEqual( lo, hi ) )
-    return( BAD );
+  if ( AreValuesEqual( lo, hi ) ) {
+    *ReasonP = "high and low bounds are equal";
+    return( SPLIT_BAD );
+  }
 
   /* IDENTIFY THE SPLIT TYPE, IF SUCH A TYPE EVEN EXISTS */
-  s = BAD;
+  s = SPLIT_BAD;
 
   for ( n = f->F_BODY; n != NULL; n = n->nsucc ) {
     /* WITH SHORT CIRCUIT FOR FASTER EXECUTION */
     if ( n->type == IFEqual || n->type == IFNotEqual )
-      if ( (t = SplitType( f, n )) != BAD )
+      if ( (t = SplitType( f, n )) != SPLIT_BAD )
         s = t;
     }
 
-  if ( s == BAD )
-    return( BAD );
+  if ( s == SPLIT_BAD ) {
+    *ReasonP = "loop is of the wrong split type";
+    return( SPLIT_BAD );
+  }
 
   /* CURRENTLY, SPLIT LOOPS MUST BUILD UNFILTERED ARRAYS */
   for ( n = f->F_RET->G_NODES; n != NULL; n = n->nsucc )
     switch ( n->type ) {
       case IFAGather:
 	/* FILTER? */
-	if ( n->imp->isucc->isucc != NULL )
-	  return( BAD );
+	if ( n->imp->isucc->isucc != NULL ) {
+    	  *ReasonP = "loop builds a filtered array";
+	  return( SPLIT_BAD );
+        }
 
 	break;
 
       default:
+    	  *ReasonP = "loop builds wrong type of array";
 	rfail++;
-	return( BAD );
+	return( SPLIT_BAD );
       }
 
   return( s );
@@ -383,9 +410,9 @@ PNODE f;
 /**************************************************************************/
 /* LOCAL  **************         DoHighSplit       ************************/
 /**************************************************************************/
-/* PURPOSE: THE SPLIT TYPE OF FORALL f1 IS ONE OF THE HIGH TYPES (DEFINED */
+/* PURPOSE: THE SPLIT TYPE OF FORALL f1 IS ONE OF THE SPLIT_HIGH TYPES (DEFINED */
 /*          BY kind).  THIS ROUTINE SPLITS f1 INTO TWO LOOPS, THE SECOND  */
-/*          JUST HANDLES THE HIGH TEST.                                   */
+/*          JUST HANDLES THE SPLIT_HIGH TEST.                                   */
 /**************************************************************************/
 
 static void DoHighSplit( f1, kind )
@@ -439,13 +466,13 @@ int   kind;
     LinkExport( f2, e2 );
     }
 
-  if ( kind == HIGH ) {
-    FixBody( HIGH, f1, "FALSE" );
-    FixBody( HIGH, f2, "TRUE" );
+  if ( kind == SPLIT_HIGH ) {
+    FixBody( SPLIT_HIGH, f1, "FALSE" );
+    FixBody( SPLIT_HIGH, f2, "TRUE" );
     hcnt++;
   } else {
-    FixBody( NOT_HIGH, f1, "TRUE" );
-    FixBody( NOT_HIGH, f2, "FALSE" );
+    FixBody( SPLIT_NOT_HIGH, f1, "TRUE" );
+    FixBody( SPLIT_NOT_HIGH, f2, "FALSE" );
     nhcnt++;
     }
 
@@ -460,9 +487,9 @@ int   kind;
 /**************************************************************************/
 /* LOCAL  **************          DoLowSplit       ************************/
 /**************************************************************************/
-/* PURPOSE: THE SPLIT TYPE OF FORALL f1 IS ONE OF THE LOW TYPES (DEFINED  */
+/* PURPOSE: THE SPLIT TYPE OF FORALL f1 IS ONE OF THE SPLIT_LOW TYPES (DEFINED  */
 /*          BY kind).  THIS ROUTINE SPLITS f1 INTO TWO LOOPS, THE FIRST   */
-/*          JUST HANDLES THE LOW TEST.                                    */
+/*          JUST HANDLES THE SPLIT_LOW TEST.                                    */
 /**************************************************************************/
 
 static void DoLowSplit( f1, kind )
@@ -516,13 +543,13 @@ int   kind;
     LinkExport( f2, e2 );
     }
 
-  if ( kind == LOW ) {
-    FixBody( LOW, f1, "TRUE" );
-    FixBody( LOW, f2, "FALSE" );
+  if ( kind == SPLIT_LOW ) {
+    FixBody( SPLIT_LOW, f1, "TRUE" );
+    FixBody( SPLIT_LOW, f2, "FALSE" );
     lcnt++;
   } else {
-    FixBody( NOT_LOW, f1, "FALSE" );
-    FixBody( NOT_LOW, f2, "TRUE" );
+    FixBody( SPLIT_NOT_LOW, f1, "FALSE" );
+    FixBody( SPLIT_NOT_LOW, f2, "TRUE" );
     nlcnt++;
     }
 
@@ -546,6 +573,7 @@ PNODE g;
   register PNODE n;
   register PNODE sg;
   register int   kind;
+  char *Reason;
 
   for ( n = g->G_NODES; n != NULL; n = n->nsucc ) {
     if ( IsCompound( n ) ) {
@@ -557,24 +585,32 @@ PNODE g;
 
     if ( !IsForall( n ) )
       continue;
+
+    ++Tcnt;
     
-    if ( (kind = IsSplitCandidate( n )) == BAD )
+    if ( (kind = IsSplitCandidate( n , &Reason)) == SPLIT_BAD ) 
       continue;
 
     switch( kind ) {
-      case NOT_LOW:
-      case LOW:
+      case SPLIT_NOT_LOW:
+      case SPLIT_LOW:
         DoLowSplit( n, kind );
 	break;
 
-      case HIGH:
-      case NOT_HIGH:
+      case SPLIT_HIGH:
+      case SPLIT_NOT_HIGH:
         DoHighSplit( n, kind );
 	break;
 
       default:
 	Error2( "SplitForalls", "ILLEGAL IsSplitCandidate KIND" );
       }
+    if (RequestInfo(I_Info1,info)) {
+    DYNEXPAND(printinfo,printbuf,printlen,printcount,char,printlen+200);
+    printlen += (SPRINTF(printinfo + printlen, 
+      " Splitting loop %d at line %d, funct %s, file %s\n\n",
+       n->ID, n->line, n->funct, n->file), strlen(printinfo + printlen));
+  }
     }
 }
 

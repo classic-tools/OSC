@@ -17,24 +17,33 @@ int   copy;
   if ( !Warnings ) return;	/* Are warnings suppressed? */
 
   if ( funct == NULL ) 
-    funct = "???()";
+    funct = "NULL?()";
 
   if ( file == NULL )  
-    file = "???.sis";
+    file = "NULL?.sis";
 
   if ( copy )
     FPRINTF(stderr,
-	    "%s: W - %s ON LINE %d OF %s IN %s INTRODUCES COPYING\n",
+	    " %s: W - %s ON LINE %d OF %s IN %s INTRODUCES COPYING\n",
 	    program, op, sourceline, funct, file
 	    );
   else
     FPRINTF(stderr,
-	    "%s:  W - %s ON LINE %d OF %s IN %s MAY INTRODUCE COPYING\n",
+	    " %s:  W - %s ON LINE %d OF %s IN %s MAY INTRODUCE COPYING\n",
 	    program, op, sourceline, funct, file
 	    );
 }
 
 /* $Log: PrintWarning.c,v $
+ * Revision 1.5  1994/06/17  20:51:46  mivory
+ * make check bug fix and if2mem bug fix MYI
+ *
+ * Revision 1.4  1994/06/16  21:32:02  mivory
+ * info format and option changes M. Y. I.
+ *
+ * Revision 1.3  1994/04/01  22:15:47  denton
+ * Fixed ANSI trigraph replacement.
+ *
  * Revision 1.2  1993/04/16  17:09:57  miller
  * Added support for warnings suppression (-w)
  *

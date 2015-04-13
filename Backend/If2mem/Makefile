@@ -1,14 +1,14 @@
-# **** FILE CREATION MASKS
 SHELL = /bin/sh
-DMASK = 700
-XMASK = 755
-MMASK = 744
+XMASK = 555
+MMASK = 444
 
 .SUFFIXES: .c .o
 
 CC           = cc -g
-BIN_PATH     = ../../bin
-MAN_PATH     = ../../Man
+BIN_PATH     = ../../../bin
+LIB_PATH     = ../../../lib
+INC_PATH     = ../../../include
+MAN_PATH     = ../../../man
 BINSTALL     = cp
 SINSTALL     = cp
 PAR          =
@@ -18,7 +18,7 @@ COMMONSRC = ifxstuff.c
 OBJ = if2mem.o mem.o if2level.o if2size.o if2alloc.o if2clean.o if2pic.o
 SRC = if2mem.c mem.c if2level.c if2size.c if2alloc.c if2clean.c if2pic.c
 
-INCL   = world.h ../Library/IFX.h
+INCL   = world.h ../Library/IFX.h ../../config.h
 
 MINIMAL=0
 .c.o:

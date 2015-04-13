@@ -12,7 +12,7 @@ void  AssignNewLabels( g )
 register PNODE g;
 {
   register int   lab;
-  register PNODE n;
+  register PNODE n,nn;
 
   if ( FixPortsToo ) {
     /*************************************************************************/
@@ -51,10 +51,16 @@ register PNODE g;
 	break;
 
        case IFSelect:
-	n->S_TEST->imp->iport = 1; /* B PORT NUMBER */
+	nn = n;
+	if (n->S_TEST->imp != NULL)
+	  n->S_TEST->imp->iport = 1; /* B PORT NUMBER */
 
+	for (nn = n->S_ALT; nn != NULL; nn = nn->gsucc)
+	  AssignNewRports( nn );
+/*
 	AssignNewRports( n->S_ALT );
 	AssignNewRports( n->S_CONS );
+*/
 	break;
 
        case IFForall:
@@ -63,17 +69,30 @@ register PNODE g;
 	break;
 
        case IFLoopA:
-	n->L_TEST->imp->iport = 1; /* B PORT NUMBER */
+	if(n->L_TEST->imp != NULL)
+	  n->L_TEST->imp->iport = 1; /* B PORT NUMBER */
 
 	(void)AssignNewLoopTports( AssignNewLports( p, n ), n );
-	AssignNewRports( n->L_RET );
+	if ((n->L_BODY != NULL) && (n->L_RET != NULL))
+	  AssignNewRports( n->L_RET );
 	break;
 
        case IFLoopB:
-	n->L_TEST->imp->iport = 1; /* B PORT NUMBER */
+	if((n->L_INIT) && (n->L_TEST) && (n->L_TEST->imp != NULL))
+	  n->L_TEST->imp->iport = 1; /* B PORT NUMBER */
 
 	AssignNewLports( p, n );
-	AssignNewRports( n->L_RET );
+	if ((n->L_BODY != NULL) && (n->L_RET != NULL))
+	  AssignNewRports( n->L_RET );
+	break;
+
+       case IFRepeatLoop:
+	if(n->gsucc->imp != NULL)
+	  n->gsucc->imp->iport = 1; /* B PORT NUMBER */
+
+	AssignNewLports( p, n );
+	if ((n->gsucc->gsucc != NULL) && (n->gsucc->gsucc->gsucc != NULL))
+	  AssignNewRports( n->gsucc->gsucc->gsucc );
 	break;
       }
     }
@@ -89,6 +108,10 @@ register PNODE g;
 }
 
 /* $Log: AssignNewLabe.c,v $
+ * Revision 1.2  1994/03/03  17:12:40  solomon
+ * Added some tests to help prevent failing when dealing with invalid
+ * if1 code.
+ *
  * Revision 1.1  1993/04/16  18:59:45  miller
  * Name shortening to keep the archiver from truncating names in Backend/Library
  * Since some names were changed, other files were affected.  All names in the

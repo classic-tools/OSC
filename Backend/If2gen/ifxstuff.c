@@ -12,6 +12,7 @@ int streams		= FALSE; /* Has a stream been found? */
 int sgnok		= TRUE;	/* Allow negative constants */
 int			echange = 0;
 int			nchange = 0;
+int CheckForBadEdges    = FALSE; /* Turn edge checking on/off */
 
 
 double mcosts[12]	= { 0.0,0.0,0.0,0.0,0.0,0.0, /* Don't care about */
@@ -53,6 +54,7 @@ void PlaceInCTable(c) char *c; {}
   (x)->cm = pragmas.cm;	\
   (x)->vmark = pragmas.vmark;	\
   (x)->fmark = pragmas.fmark;	\
+  (x)->Fmark = pragmas.Fmark;	\
   (x)->smark = pragmas.smark;	\
   (x)->ccost = pragmas.ccost;	\
   (x)->MinSlice= pragmas.MinSlice; \

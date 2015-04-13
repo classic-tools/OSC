@@ -25,3 +25,5 @@ struct DimInfo {
 extern char *SINFOFile;
 extern void InitDimInfo();
 extern void OptInitDimInfo();
+extern char* ParseCEscapes();
+extern void ParseCommandLine();

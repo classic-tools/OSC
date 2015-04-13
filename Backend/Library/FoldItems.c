@@ -41,10 +41,15 @@ int scpinvcnt = 0;          /* COUNT OF INVARIANT SAVED CALL PARAM */
 int sspcnt    = 0;          /* COUNT OF SAVED SLICE PARAMETERS     */
 int sspinvcnt = 0;          /* COUNT OF INVARIANT SAVED SLICE PARAM*/
 int dicnt     = 0;          /* COUNT OF REMOVED COMPOUND IMPORTS   */
+int tdicnt     = 0;          /* COUNT OF REMOVED COMPOUND IMPORTS   */
 int leicnt    = 0;          /* COUNT OF REMOVED LOOP ENQUE IMPORTS */
+int tleicnt    = 0;          /* COUNT OF REMOVED LOOP ENQUE IMPORTS */
 int tagtcnt   = 0;          /* COUNT OF TAG TEST CONVERSIONS       */
 
 /* $Log: FoldItems.c,v $
+ * Revision 1.2  1994/06/16  21:31:53  mivory
+ * info format and option changes M. Y. I.
+ *
  * Revision 1.1  1993/01/21  23:28:41  miller
  * Initial version of the IFX library.  It replaces the if[12]build.c
  * read.c timer.c util.c and write.c and if[12].h files from the

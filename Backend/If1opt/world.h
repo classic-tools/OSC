@@ -1,4 +1,14 @@
 /* $Log: world.h,v $
+ * Revision 1.15  1994/06/16  21:30:06  mivory
+ * info format and option changes M. Y. I.
+ *
+ * Revision 1.14  1994/04/15  15:50:37  denton
+ * Added config.h to centralize machine specific header files.
+ *
+ * Revision 1.13  1994/03/03  19:29:38  solomon
+ * Removed the if1copy.c file from this directory.  Therefore, I removed
+ * the external function declarations associated with that file.
+ *
  * Revision 1.12  1993/11/30  00:25:02  miller
  * folding math intrinsics
  *
@@ -30,15 +40,14 @@
  * Make changes for LINT and combined files.
  * */
 
+#include "../../config.h"
 #include "../Library/IFX.h"
-#include <math.h>
-#include <signal.h>
 
 extern int    asetl;		/* REMOVE UNNECESSARY ASetL NODES? */
 extern int    ifuse;		/* PERFORM INDEPENDENT FUSION */
 extern int    sfuse;		/* PERFORM SELECT FUSION? */
 extern int    dfuse;		/* PERFORM DEPENDENT FUSION? */
-extern int    vinfo;		/* DUMP VECTORIZATION INFORMATION? */
+extern int    info;		/* DUMP INFORMATION? */
 extern int    slfis;		/* PERFORM STREAM LOOP FISSION? */
 extern int    inter;		/* PERFORM INLINE EXPANSION? */
 extern int    inlineall;	/* INLINE EVERYTHING BUT REQUESTS? */
@@ -85,15 +94,19 @@ extern int DeBuG;		/* OPT FOR PROGRAM DEBUGGING? */
 extern int noassoc;		/* NO ASSOCIATIVE TRANSFORMATIONS */
 
 extern int AggressiveVectors;	/* Aggressively combine vectorizing loops? */
+
+extern FILE *infoptr;
+
 /* ------------------------------------------------------------ */
+
+/* callreorder.c */
+extern void	CallReorder();
+
+/* cascade.c */
+extern void	If1TestCascade();
+
 /* if1check.c */
 extern void	If1Check();
-
-/* if1copy.c */
-extern void	CopyEdgeAndReset();
-extern void	CopyExports();
-extern void	CopyImports();
-extern PNODE	CopyNode();
 
 /* if1count.c */
 extern void	If1Count();
@@ -129,8 +142,6 @@ extern void	WriteFoldInfo();
 extern void	If1Fold();
 
 /* if1fusion.c */
-extern int	SummarizeForall();
-extern int	DumpThem();
 extern void	If1DFusion();
 extern void	WriteFusionInfo();
 extern void	If1IFusion();
@@ -172,6 +183,10 @@ extern void	If1Par();
 
 /* if1pprint.c */
 extern void	If1PPrint();
+
+/* if1reduce.c */
+extern void	If1Reduce();
+extern void	WriteReduceInfo();
 
 /* if1split.c */
 extern void	WriteSplitInfo();

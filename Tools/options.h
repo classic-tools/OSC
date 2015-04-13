@@ -59,7 +59,7 @@ if (argv[idx][0] == '-' ) {                                              /* M */
   /*                 Use <path> as the C compiler                 */     /* h */
   /* ------------------------------------------------------------ */     /* a */
     CorrectUsage = "Usage: -CC=<path>";                                  /* n */
-    if ( argv[idx][3] == NULL ) goto OptionError;                        /* g */
+    if ( argv[idx][3] == '\0' ) goto OptionError;                        /* g */
                                                                          /* e */
       cc = &argv[idx][4];                                                /*   */
       newcc = TRUE;                                                      /* M */
@@ -97,7 +97,7 @@ if (argv[idx][0] == '-' ) {                                              /* M */
   /*               Define macro for C preprocessor                */     /* M */
   /* ------------------------------------------------------------ */     /* a */
     CorrectUsage = "Usage: -D<defn>";                                    /* c */
-    if ( argv[idx][1] == NULL ) goto OptionError;                        /* h */
+    if ( argv[idx][1] == '\0' ) goto OptionError;                        /* h */
                                                                          /* i */
       cppoptions[++cppoptioncnt] = argv[idx];                            /* n */
                                                                          /* e */
@@ -112,7 +112,7 @@ if (argv[idx][0] == '-' ) {                                              /* M */
   /*              Use <path> as the FORTRAN compiler              */     /* e */
   /* ------------------------------------------------------------ */     /* d */
     CorrectUsage = "Usage: -FF=<path>";                                  /*   */
-    if ( argv[idx][3] == NULL ) goto OptionError;                        /* D */
+    if ( argv[idx][3] == '\0' ) goto OptionError;                        /* D */
                                                                          /* o */
       ff = &argv[idx][4];                                                /*   */
       newff = TRUE;                                                      /* N */
@@ -122,327 +122,359 @@ if (argv[idx][0] == '-' ) {                                              /* M */
     goto OptionError;                                                    /* C */
                                                                          /* h */
    case 'I':                                                             /* a */
-    if ( strcmp(argv[idx]+1,"IF1") == 0 ) {                              /* n */
+    if ( strcmp(argv[idx]+1,"IF0") == 0 ) {                              /* n */
                                                                          /* g */
   /* ------------------------------------------------------------ */     /* e */
-  /*                             -IF1                             */     /*   */
-  /*                   Compile to IF1 and stop                    */     /* M */
+  /*                             -IF0                             */     /*   */
+  /*                   Compile to IF0 and stop                    */     /* M */
   /* ------------------------------------------------------------ */     /* a */
                                                                          /* c */
-      stopIF1 = TRUE;                                                    /* h */
+      stopIF0 = TRUE;                                                    /* h */
                                                                          /* i */
       break;                                                             /* n */
-    } else if ( isdigit(argv[idx][2]) ) {                                /* e */
+    } else if ( strcmp(argv[idx]+1,"IF1") == 0 ) {                       /* e */
                                                                          /*   */
   /* ------------------------------------------------------------ */     /* G */
-  /*                           -I<num>                            */     /* e */
-  /*            Set assumed iteration count for loops             */     /* n */
+  /*                             -IF1                             */     /* e */
+  /*                   Compile to IF1 and stop                    */     /* n */
   /* ------------------------------------------------------------ */     /* e */
                                                                          /* r */
+      stopIF1 = TRUE;                                                    /* a */
+                                                                         /* t */
+      break;                                                             /* e */
+    } else if ( strcmp(argv[idx]+1,"IF3") == 0 ) {                       /* d */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* D */
+  /*                             -IF3                             */     /* o */
+  /*                        Add IF3 output                        */     /*   */
+  /* ------------------------------------------------------------ */     /* N */
+                                                                         /* o */
+      stopIF3 = TRUE;                                                    /* t */
+                                                                         /*   */
+      break;                                                             /* C */
+    } else if ( isdigit(argv[idx][2]) ) {                                /* h */
+                                                                         /* a */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                           -I<num>                            */     /* g */
+  /*            Set assumed iteration count for loops             */     /* e */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* M */
       iter = argv[idx];                                                  /* a */
-      iter[1] = '@';                                                     /* t */
+      iter[1] = '@';                                                     /* c */
+                                                                         /* h */
+      break;                                                             /* i */
+    } else {                                                             /* n */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                           -I<path>                           */     /* G */
+  /*              Search <path> for C include files               */     /* e */
+  /* ------------------------------------------------------------ */     /* n */
+    CorrectUsage = "Usage: -I<path>";                                    /* e */
+    if ( argv[idx][1] == '\0' ) goto OptionError;                        /* r */
+                                                                         /* a */
+      cppoptions[++cppoptioncnt] = argv[idx];                            /* t */
                                                                          /* e */
       break;                                                             /* d */
-    } else {                                                             /*   */
+    }                                                                    /*   */
                                                                          /* D */
+   case 'K':                                                             /* o */
+    if ( strcmp(argv[idx]+1,"Keep") == 0 ) {                             /*   */
+                                                                         /* N */
   /* ------------------------------------------------------------ */     /* o */
-  /*                           -I<path>                           */     /*   */
-  /*              Search <path> for C include files               */     /* N */
-  /* ------------------------------------------------------------ */     /* o */
-    CorrectUsage = "Usage: -I<path>";                                    /* t */
-    if ( argv[idx][1] == NULL ) goto OptionError;                        /*   */
-                                                                         /* C */
-      cppoptions[++cppoptioncnt] = argv[idx];                            /* h */
+  /*                            -Keep                             */     /* t */
+  /*       Keep intermediate files instead of deleting them       */     /*   */
+  /* ------------------------------------------------------------ */     /* C */
+                                                                         /* h */
+      Keep = TRUE;                                                       /* a */
+      TMPDIR="";                                                         /* n */
+                                                                         /* g */
+      break;                                                             /* e */
+    }                                                                    /*   */
+    goto OptionError;                                                    /* M */
                                                                          /* a */
-      break;                                                             /* n */
-    }                                                                    /* g */
+   case 'L':                                                             /* c */
+    if ( isdigit(argv[idx][2]) ) {                                       /* h */
+                                                                         /* i */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                           -L<num>                            */     /* e */
+  /*        Set nested parallelization threshold to <num>         */     /*   */
+  /* ------------------------------------------------------------ */     /* G */
                                                                          /* e */
-   case 'K':                                                             /*   */
-    if ( strcmp(argv[idx]+1,"Keep") == 0 ) {                             /* M */
+      level = argv[idx];                                                 /* n */
+      level[1] = 'L';                                                    /* e */
+                                                                         /* r */
+      break;                                                             /* a */
+    } else if ( strncmp(argv[idx]+1,"Loopstyle=",10) == 0 ) {            /* t */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /* d */
+  /*                    -Loopstyle=<stylechar>                    */     /*   */
+  /*    Set the default loop parallelism style to <stylechar>     */     /* D */
+  /* ------------------------------------------------------------ */     /* o */
+    CorrectUsage = "Usage: -Loopstyle=<stylechar>";                      /*   */
+    if ( argv[idx][10] == '\0' ) goto OptionError;                       /* N */
+                                                                         /* o */
+      LoopStyle[2] = argv[idx][11];                                      /* t */
+                                                                         /*   */
+      break;                                                             /* C */
+    }                                                                    /* h */
+    goto OptionError;                                                    /* a */
+                                                                         /* n */
+   case 'M':                                                             /* g */
+    if ( strcmp(argv[idx]+1,"MEM") == 0 ) {                              /* e */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* M */
+  /*                             -MEM                             */     /* a */
+  /*              Stop after memory allocation phase              */     /* c */
+  /* ------------------------------------------------------------ */     /* h */
+                                                                         /* i */
+      stopMEM = TRUE;                                                    /* n */
+                                                                         /* e */
+      break;                                                             /*   */
+    } else if ( strcmp(argv[idx]+1,"MONO") == 0 ) {                      /* G */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                            -MONO                             */     /* e */
+  /*          Stop after compiling and linking IF1 files          */     /* r */
+  /* ------------------------------------------------------------ */     /* a */
+                                                                         /* t */
+      stopMONO = TRUE;                                                   /* e */
+                                                                         /* d */
+      break;                                                             /*   */
+    }                                                                    /* D */
+    goto OptionError;                                                    /* o */
+                                                                         /*   */
+   case 'N':                                                             /* N */
+    if ( strcmp(argv[idx]+1,"NoSliceThrottle") == 0 ) {                  /* o */
+                                                                         /* t */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                       -NoSliceThrottle                       */     /* C */
+  /*   Turn off the slice throttle feature (MinSlice estimate)    */     /* h */
+  /* ------------------------------------------------------------ */     /* a */
+                                                                         /* n */
+      MinSliceThrottle = FALSE;                                          /* g */
+                                                                         /* e */
+      break;                                                             /*   */
+    } else if ( isdigit(argv[idx][2]) ) {                                /* M */
                                                                          /* a */
   /* ------------------------------------------------------------ */     /* c */
-  /*                            -Keep                             */     /* h */
-  /*       Keep intermediate files instead of deleting them       */     /* i */
+  /*                           -N<num>                            */     /* h */
+  /*        Set nested parallelization threshold to <num>         */     /* i */
   /* ------------------------------------------------------------ */     /* n */
                                                                          /* e */
-      Keep = TRUE;                                                       /*   */
-      TMPDIR="";                                                         /* G */
+      level = argv[idx];                                                 /*   */
+      level[1] = 'L';                                                    /* G */
                                                                          /* e */
       break;                                                             /* n */
     }                                                                    /* e */
     goto OptionError;                                                    /* r */
                                                                          /* a */
-   case 'L':                                                             /* t */
-    if ( isdigit(argv[idx][2]) ) {                                       /* e */
+   case 'O':                                                             /* t */
+    if ( strcmp(argv[idx]+1,"O") == 0 ) {                                /* e */
                                                                          /* d */
   /* ------------------------------------------------------------ */     /*   */
-  /*                           -L<num>                            */     /* D */
-  /*        Set nested parallelization threshold to <num>         */     /* o */
+  /*                              -O                              */     /* D */
+  /*                  Use enabled optimizations                   */     /* o */
   /* ------------------------------------------------------------ */     /*   */
                                                                          /* N */
-      level = argv[idx];                                                 /* o */
-      level[1] = 'L';                                                    /* t */
+      noimp = FALSE;                                                     /* o */
+      bounds = FALSE;                                                    /* t */
                                                                          /*   */
       break;                                                             /* C */
-    } else if ( strncmp(argv[idx]+1,"Loopstyle=",10) == 0 ) {            /* h */
+    } else if ( strcmp(argv[idx]+1,"OPT") == 0 ) {                       /* h */
                                                                          /* a */
   /* ------------------------------------------------------------ */     /* n */
-  /*                    -Loopstyle=<stylechar>                    */     /* g */
-  /*    Set the default loop parallelism style to <stylechar>     */     /* e */
+  /*                             -OPT                             */     /* g */
+  /*                 Stop after IF1 optimizations                 */     /* e */
   /* ------------------------------------------------------------ */     /*   */
-    CorrectUsage = "Usage: -Loopstyle=<stylechar>";                      /* M */
-    if ( argv[idx][10] == NULL ) goto OptionError;                       /* a */
-                                                                         /* c */
-      LoopStyle[2] = argv[idx][11];                                      /* h */
-                                                                         /* i */
-      break;                                                             /* n */
-    }                                                                    /* e */
-    goto OptionError;                                                    /*   */
-                                                                         /* G */
-   case 'M':                                                             /* e */
-    if ( strcmp(argv[idx]+1,"MEM") == 0 ) {                              /* n */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /* r */
-  /*                             -MEM                             */     /* a */
-  /*              Stop after memory allocation phase              */     /* t */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /* d */
-      stopMEM = TRUE;                                                    /*   */
-                                                                         /* D */
-      break;                                                             /* o */
-    } else if ( strcmp(argv[idx]+1,"MONO") == 0 ) {                      /*   */
-                                                                         /* N */
-  /* ------------------------------------------------------------ */     /* o */
-  /*                            -MONO                             */     /* t */
-  /*          Stop after compiling and linking IF1 files          */     /*   */
-  /* ------------------------------------------------------------ */     /* C */
-                                                                         /* h */
-      stopMONO = TRUE;                                                   /* a */
-                                                                         /* n */
-      break;                                                             /* g */
-    }                                                                    /* e */
-    goto OptionError;                                                    /*   */
                                                                          /* M */
-   case 'N':                                                             /* a */
-    if ( strcmp(argv[idx]+1,"NoSliceThrottle") == 0 ) {                  /* c */
-                                                                         /* h */
-  /* ------------------------------------------------------------ */     /* i */
-  /*                       -NoSliceThrottle                       */     /* n */
-  /*   Turn off the slice throttle feature (MinSlice estimate)    */     /* e */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* G */
-      MinSliceThrottle = FALSE;                                          /* e */
-                                                                         /* n */
-      break;                                                             /* e */
-    } else if ( isdigit(argv[idx][2]) ) {                                /* r */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* t */
-  /*                           -N<num>                            */     /* e */
-  /*        Set nested parallelization threshold to <num>         */     /* d */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* D */
-      level = argv[idx];                                                 /* o */
-      level[1] = 'L';                                                    /*   */
-                                                                         /* N */
-      break;                                                             /* o */
-    }                                                                    /* t */
-    goto OptionError;                                                    /*   */
-                                                                         /* C */
-   case 'O':                                                             /* h */
-    if ( strcmp(argv[idx]+1,"O") == 0 ) {                                /* a */
-                                                                         /* n */
-  /* ------------------------------------------------------------ */     /* g */
-  /*                              -O                              */     /* e */
-  /*                  Use enabled optimizations                   */     /*   */
-  /* ------------------------------------------------------------ */     /* M */
-                                                                         /* a */
-      noimp = FALSE;                                                     /* c */
-      bounds = FALSE;                                                    /* h */
-                                                                         /* i */
-      break;                                                             /* n */
-    } else if ( strcmp(argv[idx]+1,"OPT") == 0 ) {                       /* e */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* G */
-  /*                             -OPT                             */     /* e */
-  /*                 Stop after IF1 optimizations                 */     /* n */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /* r */
       stopOPT = TRUE;                                                    /* a */
+                                                                         /* c */
+      break;                                                             /* h */
+    }                                                                    /* i */
+    goto OptionError;                                                    /* n */
+                                                                         /* e */
+   case 'P':                                                             /*   */
+    if ( strcmp(argv[idx]+1,"PART") == 0 ) {                             /* G */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                            -PART                             */     /* e */
+  /*                Stop after partitioning phase                 */     /* r */
+  /* ------------------------------------------------------------ */     /* a */
                                                                          /* t */
-      break;                                                             /* e */
-    }                                                                    /* d */
-    goto OptionError;                                                    /*   */
-                                                                         /* D */
-   case 'P':                                                             /* o */
-    if ( strcmp(argv[idx]+1,"PART") == 0 ) {                             /*   */
-                                                                         /* N */
-  /* ------------------------------------------------------------ */     /* o */
-  /*                            -PART                             */     /* t */
-  /*                Stop after partitioning phase                 */     /*   */
-  /* ------------------------------------------------------------ */     /* C */
-                                                                         /* h */
-      stopPART = TRUE;                                                   /* a */
-                                                                         /* n */
-      break;                                                             /* g */
-    } else if ( strcmp(argv[idx]+1,"Prof") == 0 ) {                      /* e */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* M */
-  /*                            -Prof                             */     /* a */
-  /*                  Profile compiler execution                  */     /* c */
-  /* ------------------------------------------------------------ */     /* h */
-                                                                         /* i */
-      Prof = TRUE;                                                       /* n */
-      verbose = TRUE;                                                    /* e */
-                                                                         /*   */
-      break;                                                             /* G */
-    } else if ( isdigit(argv[idx][2]) ) {                                /* e */
-                                                                         /* n */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                           -P<num>                            */     /* r */
-  /*    Assume <num> processors are available for partitioning    */     /* a */
-  /* ------------------------------------------------------------ */     /* t */
-                                                                         /* e */
-      procs = argv[idx];                                                 /* d */
-      procs[1] = 'P';                                                    /*   */
-                                                                         /* D */
-      break;                                                             /* o */
-    }                                                                    /*   */
-    goto OptionError;                                                    /* N */
+      stopPART = TRUE;                                                   /* e */
+                                                                         /* d */
+      break;                                                             /*   */
+    } else if ( strcmp(argv[idx]+1,"Prof") == 0 ) {                      /* D */
                                                                          /* o */
-   case 'S':                                                             /* t */
-    if ( strcmp(argv[idx]+1,"S") == 0 ) {                                /*   */
-                                                                         /* C */
-  /* ------------------------------------------------------------ */     /* h */
-  /*                              -S                              */     /* a */
-  /*           Stop after generating assembly language            */     /* n */
-  /* ------------------------------------------------------------ */     /* g */
-                                                                         /* e */
-      stopS = TRUE;                                                      /*   */
-      TMPDIR="";                                                         /* M */
-                                                                         /* a */
-      break;                                                             /* c */
-    }                                                                    /* h */
-    goto OptionError;                                                    /* i */
-                                                                         /* n */
-   case 'U':                                                             /* e */
-    if ( strcmp(argv[idx]+1,"UP") == 0 ) {                               /*   */
-                                                                         /* G */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                             -UP                              */     /* n */
-  /*             Stop after update in place analysis              */     /* e */
-  /* ------------------------------------------------------------ */     /* r */
-                                                                         /* a */
-      stopUP = TRUE;                                                     /* t */
-                                                                         /* e */
-      break;                                                             /* d */
-    } else {                                                             /*   */
-                                                                         /* D */
-  /* ------------------------------------------------------------ */     /* o */
-  /*                           -U<defn>                           */     /*   */
-  /*            Undefine definition for C preprocessor            */     /* N */
-  /* ------------------------------------------------------------ */     /* o */
-    CorrectUsage = "Usage: -U<defn>";                                    /* t */
-    if ( argv[idx][1] == NULL ) goto OptionError;                        /*   */
-                                                                         /* C */
-      cppoptions[++cppoptioncnt] = argv[idx];                            /* h */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                            -Prof                             */     /* N */
+  /*                  Profile compiler execution                  */     /* o */
+  /* ------------------------------------------------------------ */     /* t */
+                                                                         /*   */
+      Prof = TRUE;                                                       /* C */
+      verbose = TRUE;                                                    /* h */
                                                                          /* a */
       break;                                                             /* n */
-    }                                                                    /* g */
+    } else if ( isdigit(argv[idx][2]) ) {                                /* g */
                                                                          /* e */
-   case 'a':                                                             /*   */
-    if ( strcmp(argv[idx]+1,"aggvector") == 0 ) {                        /* M */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* c */
-  /*                          -aggvector                          */     /* h */
-  /*          Aggressively fuse independent vector loops          */     /* i */
-  /* ------------------------------------------------------------ */     /* n */
-                                                                         /* e */
-      AggressiveVector =TRUE;                                            /*   */
-                                                                         /* G */
-      break;                                                             /* e */
-    } else if ( strcmp(argv[idx]+1,"alliantfx") == 0 ) {                 /* n */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /* r */
-  /*                          -alliantfx                          */     /* a */
-  /*               Compile for Alliant architecture               */     /* t */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /* d */
-      novec = FALSE;                                                     /*   */
-      avector = TRUE;                                                    /* D */
-      alliantfx = TRUE;                                                  /* o */
-                                                                         /*   */
-      break;                                                             /* N */
-    } else if ( strcmp(argv[idx]+1,"avector") == 0 ) {                   /* o */
-                                                                         /* t */
   /* ------------------------------------------------------------ */     /*   */
-  /*                           -avector                           */     /* C */
-  /*                  Use Alliant style vectors                   */     /* h */
-  /* ------------------------------------------------------------ */     /* a */
+  /*                           -P<num>                            */     /* M */
+  /*    Assume <num> processors are available for partitioning    */     /* a */
+  /* ------------------------------------------------------------ */     /* c */
+                                                                         /* h */
+      procs = argv[idx];                                                 /* i */
+      procs[1] = 'P';                                                    /* n */
+                                                                         /* e */
+      break;                                                             /*   */
+    }                                                                    /* G */
+    goto OptionError;                                                    /* e */
                                                                          /* n */
-      novec = FALSE;                                                     /* g */
-      avector =TRUE;                                                     /* e */
+   case 'S':                                                             /* e */
+    if ( strcmp(argv[idx]+1,"S") == 0 ) {                                /* r */
+                                                                         /* a */
+  /* ------------------------------------------------------------ */     /* t */
+  /*                              -S                              */     /* e */
+  /*           Stop after generating assembly language            */     /* d */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* D */
+      stopS = TRUE;                                                      /* o */
+      TMPDIR="";                                                         /*   */
+                                                                         /* N */
+      break;                                                             /* o */
+    } else if ( strcmp(argv[idx]+1,"SliceThrottle") == 0 ) {             /* t */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* C */
+  /*                        -SliceThrottle                        */     /* h */
+  /*    Turn on the slice throttle feature (MinSlice estimate)    */     /* a */
+  /* ------------------------------------------------------------ */     /* n */
+                                                                         /* g */
+      MinSliceThrottle = TRUE;                                           /* e */
                                                                          /*   */
       break;                                                             /* M */
     }                                                                    /* a */
     goto OptionError;                                                    /* c */
                                                                          /* h */
-   case 'b':                                                             /* i */
-    if ( strcmp(argv[idx]+1,"bind") == 0 ) {                             /* n */
+   case 'U':                                                             /* i */
+    if ( strcmp(argv[idx]+1,"UP") == 0 ) {                               /* n */
                                                                          /* e */
   /* ------------------------------------------------------------ */     /*   */
-  /*                            -bind                             */     /* G */
-  /*   Array descriptor data will not change in calls to SISAL    */     /* e */
+  /*                             -UP                              */     /* G */
+  /*             Stop after update in place analysis              */     /* e */
   /* ------------------------------------------------------------ */     /* n */
                                                                          /* e */
-      BindProcessors = TRUE;                                             /* r */
+      stopUP = TRUE;                                                     /* r */
                                                                          /* a */
       break;                                                             /* t */
-    } else if ( strcmp(argv[idx]+1,"bounds") == 0 ) {                    /* e */
+    } else {                                                             /* e */
                                                                          /* d */
   /* ------------------------------------------------------------ */     /*   */
-  /*                           -bounds                            */     /* D */
-  /*          Generate code to check for various errors           */     /* o */
+  /*                           -U<defn>                           */     /* D */
+  /*            Undefine definition for C preprocessor            */     /* o */
+  /* ------------------------------------------------------------ */     /*   */
+    CorrectUsage = "Usage: -U<defn>";                                    /* N */
+    if ( argv[idx][1] == '\0' ) goto OptionError;                        /* o */
+                                                                         /* t */
+      cppoptions[++cppoptioncnt] = argv[idx];                            /*   */
+                                                                         /* C */
+      break;                                                             /* h */
+    }                                                                    /* a */
+                                                                         /* n */
+   case 'a':                                                             /* g */
+    if ( strcmp(argv[idx]+1,"aggvector") == 0 ) {                        /* e */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* M */
+  /*                          -aggvector                          */     /* a */
+  /*          Aggressively fuse independent vector loops          */     /* c */
+  /* ------------------------------------------------------------ */     /* h */
+                                                                         /* i */
+      AggressiveVector =TRUE;                                            /* n */
+                                                                         /* e */
+      break;                                                             /*   */
+    } else if ( strcmp(argv[idx]+1,"alliantfx") == 0 ) {                 /* G */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                          -alliantfx                          */     /* e */
+  /*               Compile for Alliant architecture               */     /* r */
+  /* ------------------------------------------------------------ */     /* a */
+                                                                         /* t */
+      novec = FALSE;                                                     /* e */
+      avector = TRUE;                                                    /* d */
+      alliantfx = TRUE;                                                  /*   */
+                                                                         /* D */
+      break;                                                             /* o */
+    } else if ( strcmp(argv[idx]+1,"avector") == 0 ) {                   /*   */
+                                                                         /* N */
+  /* ------------------------------------------------------------ */     /* o */
+  /*                           -avector                           */     /* t */
+  /*                  Use Alliant style vectors                   */     /*   */
+  /* ------------------------------------------------------------ */     /* C */
+                                                                         /* h */
+      novec = FALSE;                                                     /* a */
+      avector =TRUE;                                                     /* n */
+                                                                         /* g */
+      break;                                                             /* e */
+    }                                                                    /*   */
+    goto OptionError;                                                    /* M */
+                                                                         /* a */
+   case 'b':                                                             /* c */
+    if ( strcmp(argv[idx]+1,"batch") == 0 ) {                            /* h */
+                                                                         /* i */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                            -batch                            */     /* e */
+  /*       ...options  Submit as NQS batch job (Cray only)        */     /*   */
+  /* ------------------------------------------------------------ */     /* G */
+                                                                         /* e */
+#ifdef Cray                                                              /* n */
+      SubmitNQS(argc,argv,idx);                                          /* e */
+#endif                                                                   /* r */
+                                                                         /* a */
+      break;                                                             /* t */
+    } else if ( strcmp(argv[idx]+1,"bind") == 0 ) {                      /* e */
+                                                                         /* d */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                            -bind                             */     /* D */
+  /*   Array descriptor data will not change in calls to SISAL    */     /* o */
   /* ------------------------------------------------------------ */     /*   */
                                                                          /* N */
-      bounds = TRUE;                                                     /* o */
+      BindProcessors = TRUE;                                             /* o */
                                                                          /* t */
       break;                                                             /*   */
-    }                                                                    /* C */
-    goto OptionError;                                                    /* h */
-                                                                         /* a */
-   case 'c':                                                             /* n */
-    if ( strcmp(argv[idx]+1,"c") == 0 ) {                                /* g */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                          -c <funct>                          */     /* M */
-  /*          Consider <funct> available as a C external          */     /* a */
-  /* ------------------------------------------------------------ */     /* c */
-    CorrectUsage = "Usage: -c <funct>";                                  /* h */
-    if ( (++idx) >= argc ) goto OptionError;                             /* i */
-                                                                         /* n */
-      coptions[++coptioncnt] = argv[idx];                                /* e */
-                                                                         /*   */
-      break;                                                             /* G */
-    } else if ( strcmp(argv[idx]+1,"call") == 0 ) {                      /* e */
-                                                                         /* n */
+    } else if ( strcmp(argv[idx]+1,"bounds") == 0 ) {                    /* C */
+                                                                         /* h */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                           -bounds                            */     /* n */
+  /*          Generate code to check for various errors           */     /* g */
   /* ------------------------------------------------------------ */     /* e */
-  /*                        -call <funct>                         */     /* r */
-  /*               Call <funct> instead of inlining               */     /* a */
-  /* ------------------------------------------------------------ */     /* t */
-    CorrectUsage = "Usage: -call <funct>";                               /* e */
-    if ( (++idx) >= argc ) goto OptionError;                             /* d */
                                                                          /*   */
-      calloptions[++calloptioncnt] = argv[idx];                          /* D */
-                                                                         /* o */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"cinfo") == 0 ) {                     /* N */
-                                                                         /* o */
-  /* ------------------------------------------------------------ */     /* t */
-  /*                            -cinfo                            */     /*   */
-  /*               Get concurentization information               */     /* C */
-  /* ------------------------------------------------------------ */     /* h */
+      bounds = TRUE;                                                     /* M */
                                                                          /* a */
-      cinfo |= ParseMap("1");                                            /* n */
+      break;                                                             /* c */
+    }                                                                    /* h */
+    goto OptionError;                                                    /* i */
+                                                                         /* n */
+   case 'c':                                                             /* e */
+    if ( strcmp(argv[idx]+1,"c") == 0 ) {                                /*   */
+                                                                         /* G */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                              -c                              */     /* n */
+  /*  Compile to .o file (requires -e <funct> or -main <funct>)   */     /* e */
+  /* ------------------------------------------------------------ */     /* r */
+                                                                         /* a */
+      smodule = TRUE;                                                    /* t */
+      stopc = TRUE;                                                      /* e */
+      TMPDIR="";                                                         /* d */
+                                                                         /*   */
+      break;                                                             /* D */
+    } else if ( strcmp(argv[idx]+1,"call") == 0 ) {                      /* o */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* N */
+  /*                        -call <funct>                         */     /* o */
+  /*               Call <funct> instead of inlining               */     /* t */
+  /* ------------------------------------------------------------ */     /*   */
+    CorrectUsage = "Usage: -call <funct>";                               /* C */
+    if ( (++idx) >= argc ) goto OptionError;                             /* h */
+                                                                         /* a */
+      calloptions[++calloptioncnt] = argv[idx];                          /* n */
                                                                          /* g */
       break;                                                             /* e */
     } else if ( strcmp(argv[idx]+1,"concur") == 0 ) {                    /*   */
@@ -505,1263 +537,1261 @@ if (argv[idx][0] == '-' ) {                                              /* M */
       newchains = TRUE;                                                  /*   */
                                                                          /* C */
       break;                                                             /* h */
-    } else if ( strcmp(argv[idx]+1,"cvinfo") == 0 ) {                    /* a */
+    } else if ( strncmp(argv[idx]+1,"cc=",3) == 0 ) {                    /* a */
                                                                          /* n */
   /* ------------------------------------------------------------ */     /* g */
-  /*                           -cvinfo                            */     /* e */
-  /*      Get vectorization and concurentization information      */     /*   */
-  /* ------------------------------------------------------------ */     /* M */
-                                                                         /* a */
-      cinfo |= ParseMap("1");                                            /* c */
-      vinfo |= ParseMap("1");                                            /* h */
-                                                                         /* i */
-      break;                                                             /* n */
-    } else if ( strncmp(argv[idx]+1,"cc=",3) == 0 ) {                    /* e */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* G */
   /*                       -cc=<directive>                        */     /* e */
-  /*             Supply <directive> to the C compiler             */     /* n */
-  /* ------------------------------------------------------------ */     /* e */
-    CorrectUsage = "Usage: -cc=<directive>";                             /* r */
-    if ( argv[idx][3] == NULL ) goto OptionError;                        /* a */
-                                                                         /* t */
-      ccoptions[++ccoptionscnt] = &argv[idx][4];                         /* e */
-                                                                         /* d */
-      break;                                                             /*   */
-    } else if ( strncmp(argv[idx]+1,"cvinfo=",7) == 0 ) {                /* D */
-                                                                         /* o */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                     -cvinfo=<rangelist>                      */     /* N */
-  /*   Get more vectorization and concurentization information    */     /* o */
-  /* ------------------------------------------------------------ */     /* t */
-    CorrectUsage = "Usage: -cvinfo=<rangelist>";                         /*   */
-    if ( argv[idx][7] == NULL ) goto OptionError;                        /* C */
+  /*             Supply <directive> to the C compiler             */     /*   */
+  /* ------------------------------------------------------------ */     /* M */
+    CorrectUsage = "Usage: -cc=<directive>";                             /* a */
+    if ( argv[idx][3] == '\0' ) goto OptionError;                        /* c */
                                                                          /* h */
-      cinfo |= ParseMap(argv[idx]+8);                                    /* a */
-      vinfo |= ParseMap(argv[idx]+8);                                    /* n */
-                                                                         /* g */
-      break;                                                             /* e */
-    }                                                                    /*   */
-    goto OptionError;                                                    /* M */
-                                                                         /* a */
-   case 'd':                                                             /* c */
-    if ( strcmp(argv[idx]+1,"d") == 0 ) {                                /* h */
-                                                                         /* i */
-  /* ------------------------------------------------------------ */     /* n */
-  /*                              -d                              */     /* e */
-  /*                          Debug mode                          */     /*   */
-  /* ------------------------------------------------------------ */     /* G */
-                                                                         /* e */
-      debug = TRUE;                                                      /* n */
-                                                                         /* e */
-      break;                                                             /* r */
-    } else if ( strcmp(argv[idx]+1,"db") == 0 ) {                        /* a */
-                                                                         /* t */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                        -db <database>                        */     /* d */
-  /*        Use <database> as inter-module data repository        */     /*   */
-  /* ------------------------------------------------------------ */     /* D */
-    CorrectUsage = "Usage: -db <database>";                              /* o */
-    if ( (++idx) >= argc ) goto OptionError;                             /*   */
-                                                                         /* N */
-      mdb = argv[idx];                                                   /* o */
-                                                                         /* t */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"dfuse") == 0 ) {                     /* C */
-                                                                         /* h */
-  /* ------------------------------------------------------------ */     /* a */
-  /*                            -dfuse                            */     /* n */
-  /*                Preform dependent loop fusion                 */     /* g */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /*   */
-      nodfuse = FALSE;                                                   /* M */
-                                                                         /* a */
-      break;                                                             /* c */
-    } else if ( strcmp(argv[idx]+1,"double_real") == 0 ) {               /* h */
-                                                                         /* i */
-  /* ------------------------------------------------------------ */     /* n */
-  /*                         -double_real                         */     /* e */
-  /*        Treat all SISAL real data as double_real data.        */     /*   */
-  /* ------------------------------------------------------------ */     /* G */
-                                                                         /* e */
-      dbl = TRUE;                                                        /* n */
-                                                                         /* e */
-      break;                                                             /* r */
-    }                                                                    /* a */
-    goto OptionError;                                                    /* t */
-                                                                         /* e */
-   case 'e':                                                             /* d */
-    if ( strcmp(argv[idx]+1,"e") == 0 ) {                                /*   */
-                                                                         /* D */
-  /* ------------------------------------------------------------ */     /* o */
-  /*                          -e <funct>                          */     /*   */
-  /*               Use <funct> as main entry point                */     /* N */
-  /* ------------------------------------------------------------ */     /* o */
-    CorrectUsage = "Usage: -e <funct>";                                  /* t */
-    if ( (++idx) >= argc ) goto OptionError;                             /*   */
-                                                                         /* C */
-      eoptions[++eoptioncnt] = argv[idx];                                /* h */
-                                                                         /* a */
-      break;                                                             /* n */
-    } else if ( strcmp(argv[idx]+1,"explode") == 0 ) {                   /* g */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                           -explode                           */     /* M */
-  /*                  Aggressively explode loops                  */     /* a */
-  /* ------------------------------------------------------------ */     /* c */
-                                                                         /* h */
-      explode = TRUE;                                                    /* i */
+      ccoptions[++ccoptionscnt] = &argv[idx][4];                         /* i */
                                                                          /* n */
       break;                                                             /* e */
-    } else if ( strcmp(argv[idx]+1,"explodeI") == 0 ) {                  /*   */
-                                                                         /* G */
+    }                                                                    /*   */
+    goto OptionError;                                                    /* G */
+                                                                         /* e */
+   case 'd':                                                             /* n */
+    if ( strcmp(argv[idx]+1,"d") == 0 ) {                                /* e */
+                                                                         /* r */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                              -d                              */     /* t */
+  /*                          Debug mode                          */     /* e */
+  /* ------------------------------------------------------------ */     /* d */
+                                                                         /*   */
+      debug = TRUE;                                                      /* D */
+                                                                         /* o */
+      break;                                                             /*   */
+    } else if ( strcmp(argv[idx]+1,"db") == 0 ) {                        /* N */
+                                                                         /* o */
+  /* ------------------------------------------------------------ */     /* t */
+  /*                        -db <database>                        */     /*   */
+  /*        Use <database> as inter-module data repository        */     /* C */
+  /* ------------------------------------------------------------ */     /* h */
+    CorrectUsage = "Usage: -db <database>";                              /* a */
+    if ( (++idx) >= argc ) goto OptionError;                             /* n */
+                                                                         /* g */
+      mdb = argv[idx];                                                   /* e */
+                                                                         /*   */
+      break;                                                             /* M */
+    } else if ( strcmp(argv[idx]+1,"dfuse") == 0 ) {                     /* a */
+                                                                         /* c */
+  /* ------------------------------------------------------------ */     /* h */
+  /*                            -dfuse                            */     /* i */
+  /*                Preform dependent loop fusion                 */     /* n */
   /* ------------------------------------------------------------ */     /* e */
-  /*                          -explodeI                           */     /* n */
-  /*             Aggressively explode innermost loops             */     /* e */
-  /* ------------------------------------------------------------ */     /* r */
+                                                                         /*   */
+      nodfuse = FALSE;                                                   /* G */
+                                                                         /* e */
+      break;                                                             /* n */
+    } else if ( strcmp(argv[idx]+1,"double_real") == 0 ) {               /* e */
+                                                                         /* r */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                         -double_real                         */     /* t */
+  /*        Treat all SISAL real data as double_real data.        */     /* e */
+  /* ------------------------------------------------------------ */     /* d */
+                                                                         /*   */
+      dbl = TRUE;                                                        /* D */
+                                                                         /* o */
+      break;                                                             /*   */
+    }                                                                    /* N */
+    goto OptionError;                                                    /* o */
+                                                                         /* t */
+   case 'e':                                                             /*   */
+    if ( strcmp(argv[idx]+1,"e") == 0 ) {                                /* C */
+                                                                         /* h */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                          -e <funct>                          */     /* n */
+  /*                Use <funct> as an entry point                 */     /* g */
+  /* ------------------------------------------------------------ */     /* e */
+    CorrectUsage = "Usage: -e <funct>";                                  /*   */
+    if ( (++idx) >= argc ) goto OptionError;                             /* M */
                                                                          /* a */
-      explode  = TRUE;                                                   /* t */
-      explodeI = TRUE;                                                   /* e */
+      eoptions[++eoptioncnt] = argv[idx];                                /* c */
+                                                                         /* h */
+      break;                                                             /* i */
+    } else if ( strcmp(argv[idx]+1,"explode") == 0 ) {                   /* n */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                           -explode                           */     /* G */
+  /*                  Aggressively explode loops                  */     /* e */
+  /* ------------------------------------------------------------ */     /* n */
+                                                                         /* e */
+      explode = TRUE;                                                    /* r */
+                                                                         /* a */
+      break;                                                             /* t */
+    } else if ( strcmp(argv[idx]+1,"explodeI") == 0 ) {                  /* e */
+                                                                         /* d */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                          -explodeI                           */     /* D */
+  /*             Aggressively explode innermost loops             */     /* o */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* N */
+      explode  = TRUE;                                                   /* o */
+      explodeI = TRUE;                                                   /* t */
+                                                                         /*   */
+      break;                                                             /* C */
+    } else if ( strcmp(argv[idx]+1,"externC") == 0 ) {                   /* h */
+                                                                         /* a */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                       -externC <funct>                       */     /* g */
+  /*          Consider <funct> available as a C external          */     /* e */
+  /* ------------------------------------------------------------ */     /*   */
+    CorrectUsage = "Usage: -externC <funct>";                            /* M */
+    if ( (++idx) >= argc ) goto OptionError;                             /* a */
+                                                                         /* c */
+      coptions[++coptioncnt] = argv[idx];                                /* h */
+                                                                         /* i */
+      break;                                                             /* n */
+    } else if ( strcmp(argv[idx]+1,"externFORTRAN") == 0 ) {             /* e */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* G */
+  /*                    -externFORTRAN <funct>                    */     /* e */
+  /*       Consider <funct> available as a FORTRAN external       */     /* n */
+  /* ------------------------------------------------------------ */     /* e */
+    CorrectUsage = "Usage: -externFORTRAN <funct>";                      /* r */
+    if ( (++idx) >= argc ) goto OptionError;                             /* a */
+                                                                         /* t */
+      foptions[++foptioncnt] = argv[idx];                                /* e */
                                                                          /* d */
       break;                                                             /*   */
     }                                                                    /* D */
     goto OptionError;                                                    /* o */
                                                                          /*   */
    case 'f':                                                             /* N */
-    if ( strcmp(argv[idx]+1,"f") == 0 ) {                                /* o */
+    if ( strcmp(argv[idx]+1,"fflopinfo") == 0 ) {                        /* o */
                                                                          /* t */
   /* ------------------------------------------------------------ */     /*   */
-  /*                          -f <funct>                          */     /* C */
-  /*       Consider <funct> available as a FORTRAN external       */     /* h */
+  /*                      -fflopinfo <funct>                      */     /* C */
+  /*       Write floating point counts in <funct> to stderr       */     /* h */
   /* ------------------------------------------------------------ */     /* a */
-    CorrectUsage = "Usage: -f <funct>";                                  /* n */
+    CorrectUsage = "Usage: -fflopinfo <funct>";                          /* n */
     if ( (++idx) >= argc ) goto OptionError;                             /* g */
                                                                          /* e */
-      foptions[++foptioncnt] = argv[idx];                                /*   */
-                                                                         /* M */
-      break;                                                             /* a */
-    } else if ( strcmp(argv[idx]+1,"fflopinfo") == 0 ) {                 /* c */
-                                                                         /* h */
-  /* ------------------------------------------------------------ */     /* i */
-  /*                      -fflopinfo <funct>                      */     /* n */
-  /*       Write floating point counts in <funct> to stderr       */     /* e */
-  /* ------------------------------------------------------------ */     /*   */
-    CorrectUsage = "Usage: -fflopinfo <funct>";                          /* G */
-    if ( (++idx) >= argc ) goto OptionError;                             /* e */
-                                                                         /* n */
-      calloptions[++calloptioncnt] = argv[idx];                          /* e */
-      flopoptions[++flopoptioncnt] = argv[idx];                          /* r */
+      calloptions[++calloptioncnt] = argv[idx];                          /*   */
+      flopoptions[++flopoptioncnt] = argv[idx];                          /* M */
       flpinfo = TRUE;                                                    /* a */
-                                                                         /* t */
-      break;                                                             /* e */
-    } else if ( strcmp(argv[idx]+1,"flopinfo") == 0 ) {                  /* d */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* D */
-  /*                          -flopinfo                           */     /* o */
-  /*          Write all floating point counts to s.info           */     /*   */
-  /* ------------------------------------------------------------ */     /* N */
-                                                                         /* o */
-      flpinfo = TRUE;                                                    /* t */
-                                                                         /*   */
-      break;                                                             /* C */
-    } else if ( strcmp(argv[idx]+1,"forC") == 0 ) {                      /* h */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* n */
-  /*                            -forC                             */     /* g */
-  /*             Compile into a program callable by C             */     /* e */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* M */
-      forC = TRUE;                                                       /* a */
                                                                          /* c */
       break;                                                             /* h */
-    } else if ( strcmp(argv[idx]+1,"forFORTRAN") == 0 ) {                /* i */
+    } else if ( strcmp(argv[idx]+1,"flopinfo") == 0 ) {                  /* i */
                                                                          /* n */
   /* ------------------------------------------------------------ */     /* e */
-  /*                         -forFORTRAN                          */     /*   */
-  /*          Compile into a program callable by FORTRAN          */     /* G */
+  /*                          -flopinfo                           */     /*   */
+  /*          Write all floating point counts to s.info           */     /* G */
   /* ------------------------------------------------------------ */     /* e */
                                                                          /* n */
-      forF = TRUE;                                                       /* e */
+      flpinfo = TRUE;                                                    /* e */
                                                                          /* r */
       break;                                                             /* a */
-    } else if ( strcmp(argv[idx]+1,"freeall") == 0 ) {                   /* t */
+    } else if ( strcmp(argv[idx]+1,"forC") == 0 ) {                      /* t */
                                                                          /* e */
   /* ------------------------------------------------------------ */     /* d */
-  /*                           -freeall                           */     /*   */
-  /*                 Force release of all storage                 */     /* D */
+  /*                            -forC                             */     /*   */
+  /*             Compile into a program callable by C             */     /* D */
   /* ------------------------------------------------------------ */     /* o */
                                                                          /*   */
-      freeall = TRUE;                                                    /* N */
+      forC = TRUE;                                                       /* N */
                                                                          /* o */
       break;                                                             /* t */
-    } else if ( strcmp(argv[idx]+1,"fuse") == 0 ) {                      /*   */
+    } else if ( strcmp(argv[idx]+1,"forFORTRAN") == 0 ) {                /*   */
                                                                          /* C */
   /* ------------------------------------------------------------ */     /* h */
-  /*                            -fuse                             */     /* a */
-  /*                     Perform loop fusion                      */     /* n */
+  /*                         -forFORTRAN                          */     /* a */
+  /*          Compile into a program callable by FORTRAN          */     /* n */
   /* ------------------------------------------------------------ */     /* g */
                                                                          /* e */
-      noifuse  = FALSE;                                                  /*   */
-      nodfuse = FALSE;                                                   /* M */
-                                                                         /* a */
-      break;                                                             /* c */
-    } else if ( strncmp(argv[idx]+1,"ff=",3) == 0 ) {                    /* h */
-                                                                         /* i */
-  /* ------------------------------------------------------------ */     /* n */
-  /*                       -ff=<directive>                        */     /* e */
-  /*        Give <directive> to the local FORTRAN compiler        */     /*   */
-  /* ------------------------------------------------------------ */     /* G */
-    CorrectUsage = "Usage: -ff=<directive>";                             /* e */
-    if ( argv[idx][3] == NULL ) goto OptionError;                        /* n */
-                                                                         /* e */
-      ffoptions[++ffoptionscnt] = &argv[idx][4];                         /* r */
-                                                                         /* a */
-      break;                                                             /* t */
-    }                                                                    /* e */
-    goto OptionError;                                                    /* d */
-                                                                         /*   */
-   case 'g':                                                             /* D */
-    if ( strcmp(argv[idx]+1,"glue") == 0 ) {                             /* o */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* N */
-  /*                            -glue                             */     /* o */
-  /*    Disable the optimization of non-inlined function calls    */     /* t */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* C */
-      SISglue = TRUE;                                                    /* h */
-                                                                         /* a */
-      break;                                                             /* n */
-    }                                                                    /* g */
-    goto OptionError;                                                    /* e */
-                                                                         /*   */
-   case 'h':                                                             /* M */
-    if ( strcmp(argv[idx]+1,"help") == 0 ) {                             /* a */
-                                                                         /* c */
-  /* ------------------------------------------------------------ */     /* h */
-  /*                            -help                             */     /* i */
-  /*                        Same as -usage                        */     /* n */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /*   */
-      PrintUsageTable(argv,idx);                                         /* G */
-                                                                         /* e */
-      break;                                                             /* n */
-    } else if ( strcmp(argv[idx]+1,"hybrid") == 0 ) {                    /* e */
-                                                                         /* r */
-  /* ------------------------------------------------------------ */     /* a */
-  /*                           -hybrid                            */     /* t */
-  /*               Generate both C and FORTRAN code               */     /* e */
-  /* ------------------------------------------------------------ */     /* d */
-                                                                         /*   */
-      hybrid = TRUE;                                                     /* D */
-                                                                         /* o */
-      break;                                                             /*   */
-    } else if ( isdigit(argv[idx][2]) ) {                                /* N */
-                                                                         /* o */
-  /* ------------------------------------------------------------ */     /* t */
-  /*                           -h<num>                            */     /*   */
-  /*        Slice loops only if cost is greater than <num>        */     /* C */
-  /* ------------------------------------------------------------ */     /* h */
-                                                                         /* a */
-      huge = argv[idx];                                                  /* n */
-      huge[1] = 'H';                                                     /* g */
-                                                                         /* e */
-      break;                                                             /*   */
-    }                                                                    /* M */
-    goto OptionError;                                                    /* a */
-                                                                         /* c */
-   case 'i':                                                             /* h */
-    if ( strcmp(argv[idx]+1,"icse") == 0 ) {                             /* i */
-                                                                         /* n */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                            -icse                             */     /*   */
-  /*        Push identical operations out of conditionals         */     /* G */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /* n */
-      noaggressive = FALSE;                                              /* e */
-                                                                         /* r */
-      break;                                                             /* a */
-    } else if ( strcmp(argv[idx]+1,"info") == 0 ) {                      /* t */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /* d */
-  /*                            -info                             */     /*   */
-  /*                Produce an information listing                */     /* D */
-  /* ------------------------------------------------------------ */     /* o */
-                                                                         /*   */
-      info |= ParseMap("1");                                             /* N */
-                                                                         /* o */
-      break;                                                             /* t */
-    } else if ( strcmp(argv[idx]+1,"inlineall") == 0 ) {                 /*   */
-                                                                         /* C */
-  /* ------------------------------------------------------------ */     /* h */
-  /*                          -inlineall                          */     /* a */
-  /*                     Inline all functions                     */     /* n */
-  /* ------------------------------------------------------------ */     /* g */
-                                                                         /* e */
-      inlineall = TRUE;                                                  /*   */
+      forF = TRUE;                                                       /*   */
                                                                          /* M */
       break;                                                             /* a */
-    } else if ( strcmp(argv[idx]+1,"inter") == 0 ) {                     /* c */
+    } else if ( strcmp(argv[idx]+1,"freeall") == 0 ) {                   /* c */
                                                                          /* h */
   /* ------------------------------------------------------------ */     /* i */
-  /*                            -inter                            */     /* n */
-  /*         Interactively select functions for inlining          */     /* e */
+  /*                           -freeall                           */     /* n */
+  /*                 Force release of all storage                 */     /* e */
   /* ------------------------------------------------------------ */     /*   */
                                                                          /* G */
-      inter = TRUE;                                                      /* e */
+      freeall = TRUE;                                                    /* e */
                                                                          /* n */
       break;                                                             /* e */
-    } else if ( isdigit(argv[idx][2]) ) {                                /* r */
+    } else if ( strcmp(argv[idx]+1,"fuse") == 0 ) {                      /* r */
                                                                          /* a */
   /* ------------------------------------------------------------ */     /* t */
-  /*                           -i<num>                            */     /* e */
-  /*            Set assumed iteration count for loops             */     /* d */
+  /*                            -fuse                             */     /* e */
+  /*                     Perform loop fusion                      */     /* d */
   /* ------------------------------------------------------------ */     /*   */
                                                                          /* D */
-      iter = argv[idx];                                                  /* o */
-      iter[1] = '@';                                                     /*   */
+      noifuse  = FALSE;                                                  /* o */
+      nodfuse = FALSE;                                                   /*   */
                                                                          /* N */
       break;                                                             /* o */
-    } else if ( strncmp(argv[idx]+1,"info=",5) == 0 ) {                  /* t */
+    } else if ( strncmp(argv[idx]+1,"ff=",3) == 0 ) {                    /* t */
                                                                          /*   */
   /* ------------------------------------------------------------ */     /* C */
-  /*                      -info=<rangelist>                       */     /* h */
-  /*                     Get more information                     */     /* a */
+  /*                       -ff=<directive>                        */     /* h */
+  /*        Give <directive> to the local FORTRAN compiler        */     /* a */
   /* ------------------------------------------------------------ */     /* n */
-    CorrectUsage = "Usage: -info=<rangelist>";                           /* g */
-    if ( argv[idx][5] == NULL ) goto OptionError;                        /* e */
+    CorrectUsage = "Usage: -ff=<directive>";                             /* g */
+    if ( argv[idx][3] == '\0' ) goto OptionError;                        /* e */
                                                                          /*   */
-      info |= ParseMap(argv[idx]+6);                                     /* M */
+      ffoptions[++ffoptionscnt] = &argv[idx][4];                         /* M */
                                                                          /* a */
       break;                                                             /* c */
-    }                                                                    /* h */
-    goto OptionError;                                                    /* i */
-                                                                         /* n */
-   case 'l':                                                             /* e */
-    if ( strcmp(argv[idx]+1,"listing") == 0 ) {                          /*   */
-                                                                         /* G */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                           -listing                           */     /* n */
-  /*        Produce a root.lst file for each root.sis file        */     /* e */
-  /* ------------------------------------------------------------ */     /* r */
-                                                                         /* a */
-      list = TRUE;                                                       /* t */
-                                                                         /* e */
-      break;                                                             /* d */
-    } else {                                                             /*   */
-                                                                         /* D */
-  /* ------------------------------------------------------------ */     /* o */
-  /*                         -l<library>                          */     /*   */
-  /*                     Add a loader library                     */     /* N */
-  /* ------------------------------------------------------------ */     /* o */
-    CorrectUsage = "Usage: -l<library>";                                 /* t */
-    if ( argv[idx][1] == NULL ) goto OptionError;                        /*   */
-                                                                         /* C */
-      ld[++ldcnt] = argv[idx];                                           /* h */
-                                                                         /* a */
-      break;                                                             /* n */
-    }                                                                    /* g */
-                                                                         /* e */
-   case 'm':                                                             /*   */
-    if ( strcmp(argv[idx]+1,"makeloopreport") == 0 ) {                   /* M */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* c */
-  /*                    -makeloopreport <file>                    */     /* h */
-  /*   Create a loop report showing the partitioner's decisions   */     /* i */
-  /* ------------------------------------------------------------ */     /* n */
-    CorrectUsage = "Usage: -makeloopreport <file>";                      /* e */
-    if ( (++idx) >= argc ) goto OptionError;                             /*   */
-                                                                         /* G */
-      LoopReportOut = argv[idx];                                         /* e */
-                                                                         /* n */
-      break;                                                             /* e */
-    } else if ( strcmp(argv[idx]+1,"maxconcur") == 0 ) {                 /* r */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* t */
-  /*                          -maxconcur                          */     /* e */
-  /*    Disable cost estimate.  Parallelize all eligible loops    */     /* d */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* D */
-      concur = TRUE;                                                     /* o */
-      huge  = "-H1.0";                                                   /*   */
-      procs = "-P4000000";                                               /* N */
-                                                                         /* o */
-      break;                                                             /* t */
-    } else if ( strcmp(argv[idx]+1,"module") == 0 ) {                    /*   */
-                                                                         /* C */
-  /* ------------------------------------------------------------ */     /* h */
-  /*                           -module                            */     /* a */
-  /*             Compile files into a callable module             */     /* n */
-  /* ------------------------------------------------------------ */     /* g */
-                                                                         /* e */
-      smodule = TRUE;                                                    /*   */
-                                                                         /* M */
-      break;                                                             /* a */
-    } else if ( strcmp(argv[idx]+1,"movereads") == 0 ) {                 /* c */
-                                                                         /* h */
-  /* ------------------------------------------------------------ */     /* i */
-  /*                          -movereads                          */     /* n */
-  /*                 Move read operations (Cray)                  */     /* e */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* G */
-      movereads = TRUE;                                                  /* e */
-                                                                         /* n */
-      break;                                                             /* e */
-    }                                                                    /* r */
-    goto OptionError;                                                    /* a */
-                                                                         /* t */
-   case 'n':                                                             /* e */
-    if ( strcmp(argv[idx]+1,"nancy") == 0 ) {                            /* d */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* D */
-  /*                            -nancy                            */     /* o */
-  /*        Do not use original Cray microtasking software        */     /*   */
-  /* ------------------------------------------------------------ */     /* N */
-                                                                         /* o */
-      useORTS = FALSE;                                                   /* t */
-                                                                         /*   */
-      break;                                                             /* C */
-    } else if ( strcmp(argv[idx]+1,"newchains") == 0 ) {                 /* h */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* n */
-  /*                          -newchains                          */     /* g */
-  /*                    Form Cray X-MP Chains                     */     /* e */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* M */
-      newchains = TRUE;                                                  /* a */
-                                                                         /* c */
-      break;                                                             /* h */
-    } else if ( strcmp(argv[idx]+1,"nltss") == 0 ) {                     /* i */
-                                                                         /* n */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                            -nltss                            */     /*   */
-  /*            Use NLTSS pragmas to generate vectors             */     /* G */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /* n */
-      nltss = TRUE;                                                      /* e */
-                                                                         /* r */
-      break;                                                             /* a */
-    } else if ( strcmp(argv[idx]+1,"noOinvar") == 0 ) {                  /* t */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /* d */
-  /*                          -noOinvar                           */     /*   */
-  /*          Do not remove invariants from inner loops           */     /* D */
-  /* ------------------------------------------------------------ */     /* o */
-                                                                         /*   */
-      noOinvar = TRUE;                                                   /* N */
-                                                                         /* o */
-      break;                                                             /* t */
-    } else if ( strcmp(argv[idx]+1,"noaimp") == 0 ) {                    /*   */
-                                                                         /* C */
-  /* ------------------------------------------------------------ */     /* h */
-  /*                           -noaimp                            */     /* a */
-  /*              Do not optimize array dereferences              */     /* n */
-  /* ------------------------------------------------------------ */     /* g */
-                                                                         /* e */
-      noaimp = TRUE;                                                     /*   */
-                                                                         /* M */
-      break;                                                             /* a */
-    } else if ( strcmp(argv[idx]+1,"noamove") == 0 ) {                   /* c */
-                                                                         /* h */
-  /* ------------------------------------------------------------ */     /* i */
-  /*                           -noamove                           */     /* n */
-  /*   Do not apply anti-movement optimization (from compounds)   */     /* e */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* G */
-      noamove = TRUE;                                                    /* e */
-                                                                         /* n */
-      break;                                                             /* e */
-    } else if ( strcmp(argv[idx]+1,"noassoc") == 0 ) {                   /* r */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* t */
-  /*                           -noassoc                           */     /* e */
-  /*     Disable parallel reduction of associative operations     */     /* d */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* D */
-      noassoc = TRUE;                                                    /* o */
-                                                                         /*   */
-      break;                                                             /* N */
-    } else if ( strcmp(argv[idx]+1,"nobip") == 0 ) {                     /* o */
-                                                                         /* t */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                            -nobip                            */     /* C */
-  /*                         Disable BIP                          */     /* h */
-  /* ------------------------------------------------------------ */     /* a */
-                                                                         /* n */
-      nobip = TRUE;                                                      /* g */
-                                                                         /* e */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"nobipmv") == 0 ) {                   /* M */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* c */
-  /*                           -nobipmv                           */     /* h */
-  /*       Do not allow buffer movement in the C generator        */     /* i */
-  /* ------------------------------------------------------------ */     /* n */
-                                                                         /* e */
-      bipmv = FALSE;                                                     /*   */
-                                                                         /* G */
-      break;                                                             /* e */
-    } else if ( strcmp(argv[idx]+1,"nobounds") == 0 ) {                  /* n */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /* r */
-  /*                          -nobounds                           */     /* a */
-  /*       Do not generate code to check for various errors       */     /* t */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /* d */
-      bounds = FALSE;                                                    /*   */
-                                                                         /* D */
-      break;                                                             /* o */
-    } else if ( strcmp(argv[idx]+1,"nobrec") == 0 ) {                    /*   */
-                                                                         /* N */
-  /* ------------------------------------------------------------ */     /* o */
-  /*                           -nobrec                            */     /* t */
-  /*              Disable basic record optimization               */     /*   */
-  /* ------------------------------------------------------------ */     /* C */
-                                                                         /* h */
-      nobrec = TRUE;                                                     /* a */
-                                                                         /* n */
-      break;                                                             /* g */
-    } else if ( strcmp(argv[idx]+1,"nocagg") == 0 ) {                    /* e */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* M */
-  /*                           -nocagg                            */     /* a */
-  /*     Do not mark constant aggregates for static building      */     /* c */
-  /* ------------------------------------------------------------ */     /* h */
-                                                                         /* i */
-      nocagg = TRUE;                                                     /* n */
-                                                                         /* e */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"nochains") == 0 ) {                  /* G */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /* n */
-  /*                          -nochains                           */     /* e */
-  /*                   Disable vector chaining                    */     /* r */
-  /* ------------------------------------------------------------ */     /* a */
-                                                                         /* t */
-      chains    = FALSE;                                                 /* e */
-      newchains = FALSE;                                                 /* d */
-                                                                         /*   */
-      break;                                                             /* D */
-    } else if ( strcmp(argv[idx]+1,"nocom") == 0 ) {                     /* o */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* N */
-  /*                            -nocom                            */     /* o */
-  /*          Disable Sequent code improvement migration          */     /* t */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* C */
-      nocom = TRUE;                                                      /* h */
-                                                                         /* a */
-      break;                                                             /* n */
-    } else if ( strcmp(argv[idx]+1,"noconcur") == 0 ) {                  /* g */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                          -noconcur                           */     /* M */
-  /*                Disable concurrent processing                 */     /* a */
-  /* ------------------------------------------------------------ */     /* c */
-                                                                         /* h */
-      concur = FALSE;                                                    /* i */
-                                                                         /* n */
-      break;                                                             /* e */
-    } else if ( strcmp(argv[idx]+1,"nocpp") == 0 ) {                     /*   */
-                                                                         /* G */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                            -nocpp                            */     /* n */
-  /*         Do not run the C preprocessor on SISAL files         */     /* e */
-  /* ------------------------------------------------------------ */     /* r */
-                                                                         /* a */
-      nocpp = TRUE;                                                      /* t */
-                                                                         /* e */
-      break;                                                             /* d */
-    } else if ( strcmp(argv[idx]+1,"nocse") == 0 ) {                     /*   */
-                                                                         /* D */
-  /* ------------------------------------------------------------ */     /* o */
-  /*                            -nocse                            */     /*   */
-  /*               Disable common subr. eliminator                */     /* N */
-  /* ------------------------------------------------------------ */     /* o */
-                                                                         /* t */
-      nocse = TRUE;                                                      /*   */
-                                                                         /* C */
-      break;                                                             /* h */
-    } else if ( strcmp(argv[idx]+1,"nodead") == 0 ) {                    /* a */
-                                                                         /* n */
-  /* ------------------------------------------------------------ */     /* g */
-  /*                           -nodead                            */     /* e */
-  /*              No dead code removal in optimizer               */     /*   */
-  /* ------------------------------------------------------------ */     /* M */
-                                                                         /* a */
-      dead = FALSE;                                                      /* c */
-                                                                         /* h */
-      break;                                                             /* i */
-    } else if ( strcmp(argv[idx]+1,"nodfuse") == 0 ) {                   /* n */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                           -nodfuse                           */     /* G */
-  /*                Disable dependent loop fusion                 */     /* e */
-  /* ------------------------------------------------------------ */     /* n */
-                                                                         /* e */
-      nodfuse = TRUE;                                                    /* r */
-                                                                         /* a */
-      break;                                                             /* t */
-    } else if ( strcmp(argv[idx]+1,"nodope") == 0 ) {                    /* e */
-                                                                         /* d */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                           -nodope                            */     /* D */
-  /*            Do not apply dope vector optimizations            */     /* o */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* N */
-      nodope = TRUE;                                                     /* o */
-                                                                         /* t */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"nofcopy") == 0 ) {                   /* C */
-                                                                         /* h */
-  /* ------------------------------------------------------------ */     /* a */
-  /*                           -nofcopy                           */     /* n */
-  /*                           Unknown?                           */     /* g */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /*   */
-      nofcopy = TRUE;                                                    /* M */
-                                                                         /* a */
-      break;                                                             /* c */
-    } else if ( strcmp(argv[idx]+1,"nofiss") == 0 ) {                    /* h */
+    } else if ( strncmp(argv[idx]+1,"front=",6) == 0 ) {                 /* h */
                                                                          /* i */
   /* ------------------------------------------------------------ */     /* n */
-  /*                           -nofiss                            */     /* e */
-  /*                Do not attempt record fission                 */     /*   */
+  /*                      -front=<frontend>                       */     /* e */
+  /*        Select SISAL1.2 or SISAL90 language definition        */     /*   */
+  /* ------------------------------------------------------------ */     /* G */
+    CorrectUsage = "Usage: -front=<frontend>";                           /* e */
+    if ( argv[idx][6] == '\0' ) goto OptionError;                        /* n */
+                                                                         /* e */
+      if (strcmp(&argv[idx][strlen("-front=")], "SISAL90")==0) {         /* r */
+        front_vers = 90;                                                 /* a */
+      }                                                                  /* t */
+                                                                         /* e */
+      break;                                                             /* d */
+    }                                                                    /*   */
+    goto OptionError;                                                    /* D */
+                                                                         /* o */
+   case 'g':                                                             /*   */
+    if ( strcmp(argv[idx]+1,"glue") == 0 ) {                             /* N */
+                                                                         /* o */
+  /* ------------------------------------------------------------ */     /* t */
+  /*                            -glue                             */     /*   */
+  /*    Disable the optimization of non-inlined function calls    */     /* C */
+  /* ------------------------------------------------------------ */     /* h */
+                                                                         /* a */
+      SISglue = TRUE;                                                    /* n */
+                                                                         /* g */
+      break;                                                             /* e */
+    }                                                                    /*   */
+    goto OptionError;                                                    /* M */
+                                                                         /* a */
+   case 'h':                                                             /* c */
+    if ( strcmp(argv[idx]+1,"help") == 0 ) {                             /* h */
+                                                                         /* i */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                            -help                             */     /* e */
+  /*                        Same as -usage                        */     /*   */
   /* ------------------------------------------------------------ */     /* G */
                                                                          /* e */
-      norecf = TRUE;                                                     /* n */
+      PrintUsageTable(argv,idx);                                         /* n */
                                                                          /* e */
       break;                                                             /* r */
-    } else if ( strcmp(argv[idx]+1,"nofold") == 0 ) {                    /* a */
+    } else if ( strcmp(argv[idx]+1,"hybrid") == 0 ) {                    /* a */
                                                                          /* t */
   /* ------------------------------------------------------------ */     /* e */
-  /*                           -nofold                            */     /* d */
-  /*            Do not attempt to fold constant values            */     /*   */
+  /*                           -hybrid                            */     /* d */
+  /*               Generate both C and FORTRAN code               */     /*   */
   /* ------------------------------------------------------------ */     /* D */
                                                                          /* o */
-      nofold = TRUE;                                                     /*   */
+      hybrid = TRUE;                                                     /*   */
                                                                          /* N */
       break;                                                             /* o */
-    } else if ( strcmp(argv[idx]+1,"nofuse") == 0 ) {                    /* t */
+    } else if ( isdigit(argv[idx][2]) ) {                                /* t */
                                                                          /*   */
   /* ------------------------------------------------------------ */     /* C */
-  /*                           -nofuse                            */     /* h */
-  /*                   Disable all loop fusion                    */     /* a */
+  /*                           -h<num>                            */     /* h */
+  /*        Slice loops only if cost is greater than <num>        */     /* a */
   /* ------------------------------------------------------------ */     /* n */
                                                                          /* g */
-      noifuse = TRUE;                                                    /* e */
-      nodfuse = TRUE;                                                    /*   */
-                                                                         /* M */
-      break;                                                             /* a */
-    } else if ( strcmp(argv[idx]+1,"nogcse") == 0 ) {                    /* c */
-                                                                         /* h */
-  /* ------------------------------------------------------------ */     /* i */
-  /*                           -nogcse                            */     /* n */
-  /*        Do not attempt global common subr. elimination        */     /* e */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* G */
-      nogcse = TRUE;                                                     /* e */
-                                                                         /* n */
-      break;                                                             /* e */
-    } else if ( strcmp(argv[idx]+1,"noif1opt") == 0 ) {                  /* r */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* t */
-  /*                          -noif1opt                           */     /* e */
-  /*                 Turn off IF1 code improvers                  */     /* d */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* D */
-      noif1opt = TRUE;                                                   /* o */
-                                                                         /*   */
-      break;                                                             /* N */
-    } else if ( strcmp(argv[idx]+1,"noifuse") == 0 ) {                   /* o */
-                                                                         /* t */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                           -noifuse                           */     /* C */
-  /*               Disable independent loop fusion                */     /* h */
-  /* ------------------------------------------------------------ */     /* a */
-                                                                         /* n */
-      noifuse = TRUE;                                                    /* g */
-                                                                         /* e */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"noimp") == 0 ) {                     /* M */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* c */
-  /*                            -noimp                            */     /* h */
-  /*           Set -nvnoopt loader option for the Crays           */     /* i */
-  /* ------------------------------------------------------------ */     /* n */
-                                                                         /* e */
-      noimp = TRUE;                                                      /*   */
-                                                                         /* G */
-      break;                                                             /* e */
-    } else if ( strcmp(argv[idx]+1,"noimp") == 0 ) {                     /* n */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /* r */
-  /*                            -noimp                            */     /* a */
-  /*      Compile with the C compiler's optimizers disabled       */     /* t */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /* d */
-      noimp = TRUE;                                                      /*   */
-                                                                         /* D */
-      break;                                                             /* o */
-    } else if ( strcmp(argv[idx]+1,"noinline") == 0 ) {                  /*   */
-                                                                         /* N */
-  /* ------------------------------------------------------------ */     /* o */
-  /*                          -noinline                           */     /* t */
-  /*                   Do not inline functions                    */     /*   */
-  /* ------------------------------------------------------------ */     /* C */
-                                                                         /* h */
-      noinline = TRUE;                                                   /* a */
-                                                                         /* n */
-      break;                                                             /* g */
-    } else if ( strcmp(argv[idx]+1,"noinvar") == 0 ) {                   /* e */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* M */
-  /*                           -noinvar                           */     /* a */
-  /*             Disable invariant removal optimizer              */     /* c */
-  /* ------------------------------------------------------------ */     /* h */
-                                                                         /* i */
-      noinvar = TRUE;                                                    /* n */
-                                                                         /* e */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"noinvert") == 0 ) {                  /* G */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /* n */
-  /*                          -noinvert                           */     /* e */
-  /*          Do not perform loop inversion optimization          */     /* r */
-  /* ------------------------------------------------------------ */     /* a */
-                                                                         /* t */
-      noinvert = TRUE;                                                   /* e */
-                                                                         /* d */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"noload") == 0 ) {                    /* D */
-                                                                         /* o */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                           -noload                            */     /* N */
-  /*      Do not create the executable, stop with a .o file       */     /* o */
-  /* ------------------------------------------------------------ */     /* t */
-                                                                         /*   */
-      stopc = TRUE;                                                      /* C */
-      TMPDIR="";                                                         /* h */
-                                                                         /* a */
-      break;                                                             /* n */
-    } else if ( strcmp(argv[idx]+1,"nomem") == 0 ) {                     /* g */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                            -nomem                            */     /* M */
-  /*               Disable build in place analysis                */     /* a */
-  /* ------------------------------------------------------------ */     /* c */
-                                                                         /* h */
-      noif2mem = TRUE;                                                   /* i */
-      preb     = "-Y0";                                                  /* n */
-                                                                         /* e */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"nomig") == 0 ) {                     /* G */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /* n */
-  /*                            -nomig                            */     /* e */
-  /*            Do not migrate operations toward users            */     /* r */
-  /* ------------------------------------------------------------ */     /* a */
-                                                                         /* t */
-      nomig = TRUE;                                                      /* e */
-                                                                         /* d */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"nomovereads") == 0 ) {               /* D */
-                                                                         /* o */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                         -nomovereads                         */     /* N */
-  /*                  Move array read operations                  */     /* o */
-  /* ------------------------------------------------------------ */     /* t */
-                                                                         /*   */
-      movereads = FALSE;                                                 /* C */
-                                                                         /* h */
-      break;                                                             /* a */
-    } else if ( strcmp(argv[idx]+1,"nonormidx") == 0 ) {                 /* n */
-                                                                         /* g */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                          -nonormidx                          */     /*   */
-  /*               Do not normalize array indexing                */     /* M */
-  /* ------------------------------------------------------------ */     /* a */
-                                                                         /* c */
-      nonormidx = TRUE;                                                  /* h */
-                                                                         /* i */
-      break;                                                             /* n */
-    } else if ( strcmp(argv[idx]+1,"noopt") == 0 ) {                     /* e */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* G */
-  /*                            -noopt                            */     /* e */
-  /*                   Disable all optimization                   */     /* n */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /* r */
-      noopt = TRUE;                                                      /* a */
-      noimp = TRUE;                                                      /* t */
-      bounds = FALSE;                                                    /* e */
-                                                                         /* d */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"nopreb") == 0 ) {                    /* D */
-                                                                         /* o */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                           -nopreb                            */     /* N */
-  /*                   Disable array prebuilds                    */     /* o */
-  /* ------------------------------------------------------------ */     /* t */
-                                                                         /*   */
-      preb = "-Y0";                                                      /* C */
-                                                                         /* h */
-      break;                                                             /* a */
-    } else if ( strcmp(argv[idx]+1,"norag") == 0 ) {                     /* n */
-                                                                         /* g */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                            -norag                            */     /*   */
-  /*               Generate code called by FORTRAN                */     /* M */
-  /* ------------------------------------------------------------ */     /* a */
-                                                                         /* c */
-      norag = TRUE;                                                      /* h */
-                                                                         /* i */
-      break;                                                             /* n */
-    } else if ( strcmp(argv[idx]+1,"noregs") == 0 ) {                    /* e */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* G */
-  /*                           -noregs                            */     /* e */
-  /*     Do not assign register prefixes to generated C code      */     /* n */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /* r */
-      noregs = TRUE;                                                     /* a */
-                                                                         /* t */
-      break;                                                             /* e */
-    } else if ( strcmp(argv[idx]+1,"noscalar") == 0 ) {                  /* d */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* D */
-  /*                          -noscalar                           */     /* o */
-  /*                 Disable scalar optimizations                 */     /*   */
-  /* ------------------------------------------------------------ */     /* N */
-                                                                         /* o */
-      noscalar = TRUE;                                                   /* t */
-                                                                         /*   */
-      break;                                                             /* C */
-    } else if ( strcmp(argv[idx]+1,"nosfuse") == 0 ) {                   /* h */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* n */
-  /*                           -nosfuse                           */     /* g */
-  /*                    Disable select fusion                     */     /* e */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* M */
-      nosfuse = TRUE;                                                    /* a */
-                                                                         /* c */
-      break;                                                             /* h */
-    } else if ( strcmp(argv[idx]+1,"nosplit") == 0 ) {                   /* i */
-                                                                         /* n */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                           -nosplit                           */     /*   */
-  /*                Do not preform loop splitting                 */     /* G */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /* n */
-      nosplit = TRUE;                                                    /* e */
-                                                                         /* r */
-      break;                                                             /* a */
-    } else if ( strcmp(argv[idx]+1,"nostr") == 0 ) {                     /* t */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /* d */
-  /*                            -nostr                            */     /*   */
-  /*      Do not attempt to identify single threaded streams      */     /* D */
-  /* ------------------------------------------------------------ */     /* o */
-                                                                         /*   */
-      nostr = TRUE;                                                      /* N */
-                                                                         /* o */
-      break;                                                             /* t */
-    } else if ( strcmp(argv[idx]+1,"nostrip") == 0 ) {                   /*   */
-                                                                         /* C */
-  /* ------------------------------------------------------------ */     /* h */
-  /*                           -nostrip                           */     /* a */
-  /*             Do not perform return node stripping             */     /* n */
-  /* ------------------------------------------------------------ */     /* g */
-                                                                         /* e */
-      nostrip = TRUE;                                                    /*   */
-                                                                         /* M */
-      break;                                                             /* a */
-    } else if ( strcmp(argv[idx]+1,"notgcse") == 0 ) {                   /* c */
-                                                                         /* h */
-  /* ------------------------------------------------------------ */     /* i */
-  /*                           -notgcse                           */     /* n */
-  /*         Do not force global common subr. elimination         */     /* e */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* G */
-      notgcse = TRUE;                                                    /* e */
-                                                                         /* n */
-      break;                                                             /* e */
-    } else if ( strcmp(argv[idx]+1,"nounroll") == 0 ) {                  /* r */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* t */
-  /*                          -nounroll                           */     /* e */
-  /*                    Disable loop unrolling                    */     /* d */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* D */
-      unroll = "-U0";                                                    /* o */
-                                                                         /*   */
-      break;                                                             /* N */
-    } else if ( strcmp(argv[idx]+1,"noup") == 0 ) {                      /* o */
-                                                                         /* t */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                            -noup                             */     /* C */
-  /*               Disable update in place analysis               */     /* h */
-  /* ------------------------------------------------------------ */     /* a */
-                                                                         /* n */
-      noif2up = TRUE;                                                    /* g */
-      preb  = "-Y0";                                                     /* e */
-                                                                         /*   */
-      break;                                                             /* M */
-    } else if ( strcmp(argv[idx]+1,"novector") == 0 ) {                  /* a */
-                                                                         /* c */
-  /* ------------------------------------------------------------ */     /* h */
-  /*                          -novector                           */     /* i */
-  /*                    Disable vectorization                     */     /* n */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /*   */
-      novec = TRUE;                                                      /* G */
-                                                                         /* e */
-      break;                                                             /* n */
-    } else if ( strcmp(argv[idx]+1,"nqs") == 0 ) {                       /* e */
-                                                                         /* r */
-  /* ------------------------------------------------------------ */     /* a */
-  /*                             -nqs                             */     /* t */
-  /*       ...options  Submit as NQS batch job (Cray only)        */     /* e */
-  /* ------------------------------------------------------------ */     /* d */
-                                                                         /*   */
-      SubmitNQS(argc,argv,idx);                                          /* D */
-                                                                         /* o */
-      break;                                                             /*   */
-    } else if ( isdigit(argv[idx][2]) ) {                                /* N */
-                                                                         /* o */
-  /* ------------------------------------------------------------ */     /* t */
-  /*                           -n<num>                            */     /*   */
-  /*    Consider only loops nested <num> deep for concurrency     */     /* C */
-  /* ------------------------------------------------------------ */     /* h */
-                                                                         /* a */
-      level = argv[idx];                                                 /* n */
-      level[1] = 'L';                                                    /* g */
-                                                                         /* e */
-      break;                                                             /*   */
-    }                                                                    /* M */
-    goto OptionError;                                                    /* a */
-                                                                         /* c */
-   case 'o':                                                             /* h */
-    if ( strcmp(argv[idx]+1,"o") == 0 ) {                                /* i */
-                                                                         /* n */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                        -o <absolute>                         */     /*   */
-  /*       Name the executable <absolute> instead of s.out        */     /* G */
-  /* ------------------------------------------------------------ */     /* e */
-    CorrectUsage = "Usage: -o <absolute>";                               /* n */
-    if ( (++idx) >= argc ) goto OptionError;                             /* e */
-                                                                         /* r */
-      aabs = argv[idx];                                                  /* a */
-                                                                         /* t */
-      break;                                                             /* e */
-    } else if ( strcmp(argv[idx]+1,"oo") == 0 ) {                        /* d */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* D */
-  /*                        -oo <absolute>                        */     /* o */
-  /*        Just like -o, but sisal extensions are legal.         */     /*   */
-  /* ------------------------------------------------------------ */     /* N */
-    CorrectUsage = "Usage: -oo <absolute>";                              /* o */
-    if ( (++idx) >= argc ) goto OptionError;                             /* t */
-                                                                         /*   */
-      NameSafety = FALSE;                                                /* C */
-      aabs = argv[idx];                                                  /* h */
-                                                                         /* a */
-      break;                                                             /* n */
-    }                                                                    /* g */
-    goto OptionError;                                                    /* e */
-                                                                         /*   */
-   case 'p':                                                             /* M */
-    if ( strcmp(argv[idx]+1,"prof") == 0 ) {                             /* a */
-                                                                         /* c */
-  /* ------------------------------------------------------------ */     /* h */
-  /*                            -prof                             */     /* i */
-  /*      Generate a time execution profile of the compiler       */     /* n */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /*   */
-      prof = TRUE;                                                       /* G */
-      verbose = TRUE;                                                    /* e */
-                                                                         /* n */
-      break;                                                             /* e */
-    } else if ( strcmp(argv[idx]+1,"progress") == 0 ) {                  /* r */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* t */
-  /*                          -progress                           */     /* e */
-  /*        Generate progress report in C code generation         */     /* d */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* D */
-      prog = TRUE;                                                       /* o */
-                                                                         /*   */
-      break;                                                             /* N */
-    } else if ( isdigit(argv[idx][2]) ) {                                /* o */
-                                                                         /* t */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                           -p<num>                            */     /* C */
-  /*            Assume <num> processors for partioning            */     /* h */
-  /* ------------------------------------------------------------ */     /* a */
-                                                                         /* n */
-      procs = argv[idx];                                                 /* g */
-      procs[1] = 'P';                                                    /* e */
-                                                                         /*   */
-      break;                                                             /* M */
-      } else if ( strncmp(argv[idx]+1,"patch=",6) == 0 && isdigit(argv[idx][7]) ) {
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* c */
-  /*                         -patch=<num>                         */     /* h */
-  /*   Apply a dynamic patch to one of the backend applications   */     /* i */
-  /* ------------------------------------------------------------ */     /* n */
-                                                                         /* e */
-      if ( PatchCount >= sizeof(Patches)/sizeof(Patches[0]) ) {          /*   */
-        Error2( argv[idx] , "-- Too many patches" );                     /* G */
-      }                                                                  /* e */
-                                                                         /* n */
-      Patches[PatchCount] = (char *) malloc(strlen(argv[idx]));          /* e */
-      sprintf(Patches[PatchCount],"-p%s",argv[idx]+7);                   /* r */
-      PatchCount++;                                                      /* a */
-                                                                         /* t */
-      break;                                                             /* e */
-    } else if ( argv[idx][2] == 'b' && isdigit(argv[idx][3]) ) {         /* d */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* D */
-  /*                           -pb<num>                           */     /* o */
-  /*            Set array prebuild dimension to <num>             */     /*   */
-  /* ------------------------------------------------------------ */     /* N */
-                                                                         /* o */
-      preb = &(argv[idx][1]);                                            /* t */
-      preb[0] = '-';                                                     /*   */
-      preb[1] = 'Y';                                                     /* C */
-                                                                         /* h */
-      break;                                                             /* a */
-    }                                                                    /* n */
-    goto OptionError;                                                    /* g */
-                                                                         /* e */
-   case 'r':                                                             /*   */
-    if ( strcmp(argv[idx]+1,"real") == 0 ) {                             /* M */
-                                                                         /* a */
-  /* ------------------------------------------------------------ */     /* c */
-  /*                            -real                             */     /* h */
-  /*        Treat all SISAL double_real data as real data.        */     /* i */
-  /* ------------------------------------------------------------ */     /* n */
-                                                                         /* e */
-      flt = TRUE;                                                        /*   */
-                                                                         /* G */
-      break;                                                             /* e */
-    }                                                                    /* n */
-    goto OptionError;                                                    /* e */
-                                                                         /* r */
-   case 's':                                                             /* a */
-    if ( strcmp(argv[idx]+1,"sdbx") == 0 ) {                             /* t */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /* d */
-  /*                            -sdbx                             */     /*   */
-  /*    Generate code to interface with the symbolic debugger     */     /* D */
-  /* ------------------------------------------------------------ */     /* o */
-                                                                         /*   */
-      sdbx = TRUE;                                                       /* N */
-      bounds = FALSE;   /* The TRUE default was interfering with other checks */
-                                                                         /* o */
-      break;                                                             /* t */
-    } else if ( strcmp(argv[idx]+1,"seq") == 0 ) {                       /*   */
-                                                                         /* C */
-  /* ------------------------------------------------------------ */     /* h */
-  /*                             -seq                             */     /* a */
-  /*               Compile for sequential execution               */     /* n */
-  /* ------------------------------------------------------------ */     /* g */
-                                                                         /* e */
-      concur = FALSE;                                                    /*   */
-      novec = TRUE;                                                      /* M */
-                                                                         /* a */
-      break;                                                             /* c */
-    }                                                                    /* h */
-    goto OptionError;                                                    /* i */
-                                                                         /* n */
-   case 't':                                                             /* e */
-    if ( strcmp(argv[idx]+1,"tgcse") == 0 ) {                            /*   */
-                                                                         /* G */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                            -tgcse                            */     /* n */
-  /*            Force global Common Subr. Elimination             */     /* e */
-  /* ------------------------------------------------------------ */     /* r */
-                                                                         /* a */
-      notgcse = FALSE;                                                   /* t */
-                                                                         /* e */
-      break;                                                             /* d */
-    } else if ( strcmp(argv[idx]+1,"time") == 0 ) {                      /*   */
-                                                                         /* D */
-  /* ------------------------------------------------------------ */     /* o */
-  /*                        -time <funct>                         */     /*   */
-  /*           Generating timing code for this function           */     /* N */
-  /* ------------------------------------------------------------ */     /* o */
-    CorrectUsage = "Usage: -time <funct>";                               /* t */
-    if ( (++idx) >= argc ) goto OptionError;                             /*   */
-                                                                         /* C */
-      calloptions[++calloptioncnt] = argv[idx];                          /* h */
-      timeoptions[++timeoptioncnt] = argv[idx];                          /* a */
-                                                                         /* n */
-      break;                                                             /* g */
-    } else if ( strcmp(argv[idx]+1,"timeall") == 0 ) {                   /* e */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* M */
-  /*                           -timeall                           */     /* a */
-  /*            Generate timing code for all functions            */     /* c */
-  /* ------------------------------------------------------------ */     /* h */
-                                                                         /* i */
-      timeall = TRUE;                                                    /* n */
-      noinline = TRUE;                                                   /* e */
-                                                                         /*   */
-      break;                                                             /* G */
-    } else if ( strcmp(argv[idx]+1,"tmpdir") == 0 ) {                    /* e */
-                                                                         /* n */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                      -tmpdir <dirname>                       */     /* r */
-  /*           Put intermediate temp files in <dirname>           */     /* a */
-  /* ------------------------------------------------------------ */     /* t */
-    CorrectUsage = "Usage: -tmpdir <dirname>";                           /* e */
-    if ( (++idx) >= argc ) goto OptionError;                             /* d */
-                                                                         /*   */
-      TMPDIR = argv[idx];                                                /* D */
-                                                                         /* o */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"trace") == 0 ) {                     /* N */
-                                                                         /* o */
-  /* ------------------------------------------------------------ */     /* t */
-  /*                        -trace <funct>                        */     /*   */
-  /*          Generating tracing code for this function           */     /* C */
-  /* ------------------------------------------------------------ */     /* h */
-    CorrectUsage = "Usage: -trace <funct>";                              /* a */
-    if ( (++idx) >= argc ) goto OptionError;                             /* n */
-                                                                         /* g */
-      calloptions[++calloptioncnt] = argv[idx];                          /* e */
-      traceoptions[++traceoptioncnt] = argv[idx];                        /*   */
-                                                                         /* M */
-      break;                                                             /* a */
-    } else if ( strcmp(argv[idx]+1,"traceall") == 0 ) {                  /* c */
-                                                                         /* h */
-  /* ------------------------------------------------------------ */     /* i */
-  /*                          -traceall                           */     /* n */
-  /*           Generate tracing code for all functions            */     /* e */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* G */
-      traceall = TRUE;                                                   /* e */
-      noinline = TRUE;                                                   /* n */
-                                                                         /* e */
-      break;                                                             /* r */
-    }                                                                    /* a */
-    goto OptionError;                                                    /* t */
-                                                                         /* e */
-   case 'u':                                                             /* d */
-    if ( strcmp(argv[idx]+1,"usage") == 0 ) {                            /*   */
-                                                                         /* D */
-  /* ------------------------------------------------------------ */     /* o */
-  /*                            -usage                            */     /*   */
-  /*                      Produce this list                       */     /* N */
-  /* ------------------------------------------------------------ */     /* o */
-    PrintUsageTable(argv,idx);                                           /* t */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"useloopreport") == 0 ) {             /* C */
-                                                                         /* h */
-  /* ------------------------------------------------------------ */     /* a */
-  /*                    -useloopreport <file>                     */     /* n */
-  /*          Use loopreport from a previous compilation          */     /* g */
-  /* ------------------------------------------------------------ */     /* e */
-    CorrectUsage = "Usage: -useloopreport <file>";                       /*   */
-    if ( (++idx) >= argc ) goto OptionError;                             /* M */
-                                                                         /* a */
-      LoopReportIn = argv[idx];                                          /* c */
-                                                                         /* h */
-      break;                                                             /* i */
-    } else if ( isdigit(argv[idx][2]) ) {                                /* n */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                           -u<num>                            */     /* G */
-  /*         Unroll loops with less than <num> iterations         */     /* e */
-  /* ------------------------------------------------------------ */     /* n */
-                                                                         /* e */
-      unroll = argv[idx];                                                /* r */
-      unroll[1] = 'U';                                                   /* a */
-                                                                         /* t */
-      break;                                                             /* e */
-    }                                                                    /* d */
-    goto OptionError;                                                    /*   */
-                                                                         /* D */
-   case 'v':                                                             /* o */
-    if ( strcmp(argv[idx]+1,"v") == 0 ) {                                /*   */
-                                                                         /* N */
-  /* ------------------------------------------------------------ */     /* o */
-  /*                              -v                              */     /* t */
-  /*                         Verbose mode                         */     /*   */
-  /* ------------------------------------------------------------ */     /* C */
-                                                                         /* h */
-      verbose = TRUE;                                                    /* a */
-                                                                         /* n */
-      break;                                                             /* g */
-    } else if ( strcmp(argv[idx]+1,"vector") == 0 ) {                    /* e */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* M */
-  /*                           -vector                            */     /* a */
-  /*                     Enable vectorization                     */     /* c */
-  /* ------------------------------------------------------------ */     /* h */
-                                                                         /* i */
-      novec = FALSE;                                                     /* n */
-#ifndef CRAY                                                             /* e */
-#ifndef ALLIANT                                                          /*   */
-      cvector   = TRUE;             /* RIGHT NOW, THE CRAY IS THE DEFAULT */
-      movereads = TRUE;                                                  /* G */
-      chains    = TRUE;                                                  /* e */
-      newchains = TRUE;                                                  /* n */
-#endif                                                                   /* e */
-#endif                                                                   /* r */
-                                                                         /* a */
-      break;                                                             /* t */
-    } else if ( strcmp(argv[idx]+1,"vinfo") == 0 ) {                     /* e */
-                                                                         /* d */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                            -vinfo                            */     /* D */
-  /*              Produce vectorization information               */     /* o */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* N */
-      vinfo = TRUE;                                                      /* o */
-                                                                         /* t */
-      break;                                                             /*   */
-      } else if ( strncmp(argv[idx]+1,"vinfo",5) == 0 && isdigit(argv[idx][6]) ) {
-                                                                         /* C */
-  /* ------------------------------------------------------------ */     /* h */
-  /*                         -vinfo<num>                          */     /* a */
-  /*            Produce more vectorization information            */     /* n */
-  /* ------------------------------------------------------------ */     /* g */
-                                                                         /* e */
-      vinfo = atoi(argv[idx]+6);                                         /*   */
+      huge = argv[idx];                                                  /* e */
+      huge[1] = 'H';                                                     /*   */
                                                                          /* M */
       break;                                                             /* a */
     }                                                                    /* c */
     goto OptionError;                                                    /* h */
                                                                          /* i */
-   case 'w':                                                             /* n */
-    if ( strcmp(argv[idx]+1,"w") == 0 ) {                                /* e */
+   case 'i':                                                             /* n */
+    if ( strcmp(argv[idx]+1,"icse") == 0 ) {                             /* e */
                                                                          /*   */
   /* ------------------------------------------------------------ */     /* G */
-  /*                              -w                              */     /* e */
-  /*                   Disable warning messages                   */     /* n */
+  /*                            -icse                             */     /* e */
+  /*        Push identical operations out of conditionals         */     /* n */
   /* ------------------------------------------------------------ */     /* e */
                                                                          /* r */
-      Warnings = FALSE;                                                  /* a */
+      noaggressive = FALSE;                                              /* a */
                                                                          /* t */
       break;                                                             /* e */
-    }                                                                    /* d */
+    } else if ( strcmp(argv[idx]+1,"info") == 0 ) {                      /* d */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* D */
+  /*                            -info                             */     /* o */
+  /*                Produce an information listing                */     /*   */
+  /* ------------------------------------------------------------ */     /* N */
+                                                                         /* o */
+      info |= ParseMap("1");                                             /* t */
+                                                                         /*   */
+      break;                                                             /* C */
+    } else if ( strcmp(argv[idx]+1,"inlineall") == 0 ) {                 /* h */
+                                                                         /* a */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                          -inlineall                          */     /* g */
+  /*                     Inline all functions                     */     /* e */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* M */
+      inlineall = TRUE;                                                  /* a */
+                                                                         /* c */
+      break;                                                             /* h */
+    } else if ( strcmp(argv[idx]+1,"inter") == 0 ) {                     /* i */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                            -inter                            */     /*   */
+  /*         Interactively select functions for inlining          */     /* G */
+  /* ------------------------------------------------------------ */     /* e */
+                                                                         /* n */
+      inter = TRUE;                                                      /* e */
+                                                                         /* r */
+      break;                                                             /* a */
+    } else if ( isdigit(argv[idx][2]) ) {                                /* t */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /* d */
+  /*                           -i<num>                            */     /*   */
+  /*            Set assumed iteration count for loops             */     /* D */
+  /* ------------------------------------------------------------ */     /* o */
+                                                                         /*   */
+      iter = argv[idx];                                                  /* N */
+      iter[1] = '@';                                                     /* o */
+                                                                         /* t */
+      break;                                                             /*   */
+    } else if ( strncmp(argv[idx]+1,"info=",5) == 0 ) {                  /* C */
+                                                                         /* h */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                      -info=<rangelist>                       */     /* n */
+  /*                     Get more information                     */     /* g */
+  /* ------------------------------------------------------------ */     /* e */
+    CorrectUsage = "Usage: -info=<rangelist>";                           /*   */
+    if ( argv[idx][5] == '\0' ) goto OptionError;                        /* M */
+                                                                         /* a */
+      info |= ParseMap(argv[idx]+6);                                     /* c */
+      infos = argv[idx]+6;                                               /* h */
+                                                                         /* i */
+      break;                                                             /* n */
+    }                                                                    /* e */
     goto OptionError;                                                    /*   */
+                                                                         /* G */
+   case 'l':                                                             /* e */
+    if ( strcmp(argv[idx]+1,"listing") == 0 ) {                          /* n */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /* r */
+  /*                           -listing                           */     /* a */
+  /*        Produce a root.lst file for each root.sis file        */     /* t */
+  /* ------------------------------------------------------------ */     /* e */
+                                                                         /* d */
+      list = TRUE;                                                       /*   */
                                                                          /* D */
-   case 'x':                                                             /* o */
-    if ( strcmp(argv[idx]+1,"xchains") == 0 ) {                          /*   */
+      break;                                                             /* o */
+    } else {                                                             /*   */
                                                                          /* N */
   /* ------------------------------------------------------------ */     /* o */
-  /*                           -xchains                           */     /* t */
-  /*                    Allow vector chaining                     */     /*   */
+  /*                         -l<library>                          */     /* t */
+  /*                     Add a loader library                     */     /*   */
+  /* ------------------------------------------------------------ */     /* C */
+    CorrectUsage = "Usage: -l<library>";                                 /* h */
+    if ( argv[idx][1] == '\0' ) goto OptionError;                        /* a */
+                                                                         /* n */
+      file_ld[++ldcnt] = argv[idx];                                      /* g */
+                                                                         /* e */
+      break;                                                             /*   */
+    }                                                                    /* M */
+                                                                         /* a */
+   case 'm':                                                             /* c */
+    if ( strcmp(argv[idx]+1,"main") == 0 ) {                             /* h */
+                                                                         /* i */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                        -main <funct>                         */     /* e */
+  /*               Use <funct> as main entry point                */     /*   */
+  /* ------------------------------------------------------------ */     /* G */
+    CorrectUsage = "Usage: -main <funct>";                               /* e */
+    if ( (++idx) >= argc ) goto OptionError;                             /* n */
+                                                                         /* e */
+      eoptions[++eoptioncnt] = argv[idx];                                /* r */
+                                                                         /* a */
+      break;                                                             /* t */
+    } else if ( strcmp(argv[idx]+1,"makeloopreport") == 0 ) {            /* e */
+                                                                         /* d */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                    -makeloopreport <file>                    */     /* D */
+  /*   Create a loop report showing the partitioner's decisions   */     /* o */
+  /* ------------------------------------------------------------ */     /*   */
+    CorrectUsage = "Usage: -makeloopreport <file>";                      /* N */
+    if ( (++idx) >= argc ) goto OptionError;                             /* o */
+                                                                         /* t */
+      LoopReportOut = argv[idx];                                         /*   */
+                                                                         /* C */
+      break;                                                             /* h */
+    } else if ( strcmp(argv[idx]+1,"maxconcur") == 0 ) {                 /* a */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* g */
+  /*                          -maxconcur                          */     /* e */
+  /*    Disable cost estimate.  Parallelize all eligible loops    */     /*   */
+  /* ------------------------------------------------------------ */     /* M */
+                                                                         /* a */
+      concur = TRUE;                                                     /* c */
+      huge  = "-H1.0";                                                   /* h */
+      procs = "-P4000000";                                               /* i */
+                                                                         /* n */
+      break;                                                             /* e */
+    } else if ( strcmp(argv[idx]+1,"module") == 0 ) {                    /*   */
+                                                                         /* G */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                           -module                            */     /* n */
+  /*             Compile files into a callable module             */     /* e */
+  /* ------------------------------------------------------------ */     /* r */
+                                                                         /* a */
+      smodule = TRUE;                                                    /* t */
+                                                                         /* e */
+      break;                                                             /* d */
+    } else if ( strcmp(argv[idx]+1,"movereads") == 0 ) {                 /*   */
+                                                                         /* D */
+  /* ------------------------------------------------------------ */     /* o */
+  /*                          -movereads                          */     /*   */
+  /*                 Move read operations (Cray)                  */     /* N */
+  /* ------------------------------------------------------------ */     /* o */
+                                                                         /* t */
+      movereads = TRUE;                                                  /*   */
+                                                                         /* C */
+      break;                                                             /* h */
+    }                                                                    /* a */
+    goto OptionError;                                                    /* n */
+                                                                         /* g */
+   case 'n':                                                             /* e */
+    if ( strcmp(argv[idx]+1,"nancy") == 0 ) {                            /*   */
+                                                                         /* M */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                            -nancy                            */     /* c */
+  /*        Do not use original Cray microtasking software        */     /* h */
+  /* ------------------------------------------------------------ */     /* i */
+                                                                         /* n */
+      useORTS = FALSE;                                                   /* e */
+                                                                         /*   */
+      break;                                                             /* G */
+    } else if ( strcmp(argv[idx]+1,"newchains") == 0 ) {                 /* e */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                          -newchains                          */     /* r */
+  /*                    Form Cray X-MP Chains                     */     /* a */
+  /* ------------------------------------------------------------ */     /* t */
+                                                                         /* e */
+      newchains = TRUE;                                                  /* d */
+                                                                         /*   */
+      break;                                                             /* D */
+    } else if ( strcmp(argv[idx]+1,"nltss") == 0 ) {                     /* o */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* N */
+  /*                            -nltss                            */     /* o */
+  /*            Use NLTSS pragmas to generate vectors             */     /* t */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* C */
+      nltss = TRUE;                                                      /* h */
+                                                                         /* a */
+      break;                                                             /* n */
+    } else if ( strcmp(argv[idx]+1,"noOinvar") == 0 ) {                  /* g */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                          -noOinvar                           */     /* M */
+  /*          Do not remove invariants from inner loops           */     /* a */
+  /* ------------------------------------------------------------ */     /* c */
+                                                                         /* h */
+      noOinvar = TRUE;                                                   /* i */
+                                                                         /* n */
+      break;                                                             /* e */
+    } else if ( strcmp(argv[idx]+1,"noaimp") == 0 ) {                    /*   */
+                                                                         /* G */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                           -noaimp                            */     /* n */
+  /*              Do not optimize array dereferences              */     /* e */
+  /* ------------------------------------------------------------ */     /* r */
+                                                                         /* a */
+      noaimp = TRUE;                                                     /* t */
+                                                                         /* e */
+      break;                                                             /* d */
+    } else if ( strcmp(argv[idx]+1,"noamove") == 0 ) {                   /*   */
+                                                                         /* D */
+  /* ------------------------------------------------------------ */     /* o */
+  /*                           -noamove                           */     /*   */
+  /*   Do not apply anti-movement optimization (from compounds)   */     /* N */
+  /* ------------------------------------------------------------ */     /* o */
+                                                                         /* t */
+      noamove = TRUE;                                                    /*   */
+                                                                         /* C */
+      break;                                                             /* h */
+    } else if ( strcmp(argv[idx]+1,"noassoc") == 0 ) {                   /* a */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* g */
+  /*                           -noassoc                           */     /* e */
+  /*     Disable parallel reduction of associative operations     */     /*   */
+  /* ------------------------------------------------------------ */     /* M */
+                                                                         /* a */
+      noassoc = TRUE;                                                    /* c */
+                                                                         /* h */
+      break;                                                             /* i */
+    } else if ( strcmp(argv[idx]+1,"nobip") == 0 ) {                     /* n */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                            -nobip                            */     /* G */
+  /*                         Disable BIP                          */     /* e */
+  /* ------------------------------------------------------------ */     /* n */
+                                                                         /* e */
+      nobip = TRUE;                                                      /* r */
+                                                                         /* a */
+      break;                                                             /* t */
+    } else if ( strcmp(argv[idx]+1,"nobipmv") == 0 ) {                   /* e */
+                                                                         /* d */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                           -nobipmv                           */     /* D */
+  /*       Do not allow buffer movement in the C generator        */     /* o */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* N */
+      bipmv = FALSE;                                                     /* o */
+                                                                         /* t */
+      break;                                                             /*   */
+    } else if ( strcmp(argv[idx]+1,"nobounds") == 0 ) {                  /* C */
+                                                                         /* h */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                          -nobounds                           */     /* n */
+  /*       Do not generate code to check for various errors       */     /* g */
+  /* ------------------------------------------------------------ */     /* e */
+                                                                         /*   */
+      bounds = FALSE;                                                    /* M */
+                                                                         /* a */
+      break;                                                             /* c */
+    } else if ( strcmp(argv[idx]+1,"nobrec") == 0 ) {                    /* h */
+                                                                         /* i */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                           -nobrec                            */     /* e */
+  /*              Disable basic record optimization               */     /*   */
+  /* ------------------------------------------------------------ */     /* G */
+                                                                         /* e */
+      nobrec = TRUE;                                                     /* n */
+                                                                         /* e */
+      break;                                                             /* r */
+    } else if ( strcmp(argv[idx]+1,"nocagg") == 0 ) {                    /* a */
+                                                                         /* t */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                           -nocagg                            */     /* d */
+  /*     Do not mark constant aggregates for static building      */     /*   */
+  /* ------------------------------------------------------------ */     /* D */
+                                                                         /* o */
+      nocagg = TRUE;                                                     /*   */
+                                                                         /* N */
+      break;                                                             /* o */
+    } else if ( strcmp(argv[idx]+1,"nochains") == 0 ) {                  /* t */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* C */
+  /*                          -nochains                           */     /* h */
+  /*                   Disable vector chaining                    */     /* a */
+  /* ------------------------------------------------------------ */     /* n */
+                                                                         /* g */
+      chains    = FALSE;                                                 /* e */
+      newchains = FALSE;                                                 /*   */
+                                                                         /* M */
+      break;                                                             /* a */
+    } else if ( strcmp(argv[idx]+1,"nocom") == 0 ) {                     /* c */
+                                                                         /* h */
+  /* ------------------------------------------------------------ */     /* i */
+  /*                            -nocom                            */     /* n */
+  /*          Disable Sequent code improvement migration          */     /* e */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* G */
+      nocom = TRUE;                                                      /* e */
+                                                                         /* n */
+      break;                                                             /* e */
+    } else if ( strcmp(argv[idx]+1,"noconcur") == 0 ) {                  /* r */
+                                                                         /* a */
+  /* ------------------------------------------------------------ */     /* t */
+  /*                          -noconcur                           */     /* e */
+  /*                Disable concurrent processing                 */     /* d */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* D */
+      concur = FALSE;                                                    /* o */
+                                                                         /*   */
+      break;                                                             /* N */
+    } else if ( strcmp(argv[idx]+1,"nocpp") == 0 ) {                     /* o */
+                                                                         /* t */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                            -nocpp                            */     /* C */
+  /*         Do not run the C preprocessor on SISAL files         */     /* h */
+  /* ------------------------------------------------------------ */     /* a */
+                                                                         /* n */
+      nocpp = TRUE;                                                      /* g */
+                                                                         /* e */
+      break;                                                             /*   */
+    } else if ( strcmp(argv[idx]+1,"nocse") == 0 ) {                     /* M */
+                                                                         /* a */
+  /* ------------------------------------------------------------ */     /* c */
+  /*                            -nocse                            */     /* h */
+  /*               Disable common subr. eliminator                */     /* i */
+  /* ------------------------------------------------------------ */     /* n */
+                                                                         /* e */
+      nocse = TRUE;                                                      /*   */
+                                                                         /* G */
+      break;                                                             /* e */
+    } else if ( strcmp(argv[idx]+1,"nodead") == 0 ) {                    /* n */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /* r */
+  /*                           -nodead                            */     /* a */
+  /*              No dead code removal in optimizer               */     /* t */
+  /* ------------------------------------------------------------ */     /* e */
+                                                                         /* d */
+      dead = FALSE;                                                      /*   */
+                                                                         /* D */
+      break;                                                             /* o */
+    } else if ( strcmp(argv[idx]+1,"nodfuse") == 0 ) {                   /*   */
+                                                                         /* N */
+  /* ------------------------------------------------------------ */     /* o */
+  /*                           -nodfuse                           */     /* t */
+  /*                Disable dependent loop fusion                 */     /*   */
   /* ------------------------------------------------------------ */     /* C */
                                                                          /* h */
-      chains = TRUE;                                                     /* a */
+      nodfuse = TRUE;                                                    /* a */
+                                                                         /* n */
+      break;                                                             /* g */
+    } else if ( strcmp(argv[idx]+1,"nodope") == 0 ) {                    /* e */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* M */
+  /*                           -nodope                            */     /* a */
+  /*            Do not apply dope vector optimizations            */     /* c */
+  /* ------------------------------------------------------------ */     /* h */
+                                                                         /* i */
+      nodope = TRUE;                                                     /* n */
+                                                                         /* e */
+      break;                                                             /*   */
+    } else if ( strcmp(argv[idx]+1,"nofcopy") == 0 ) {                   /* G */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                           -nofcopy                           */     /* e */
+  /*                           Unknown?                           */     /* r */
+  /* ------------------------------------------------------------ */     /* a */
+                                                                         /* t */
+      nofcopy = TRUE;                                                    /* e */
+                                                                         /* d */
+      break;                                                             /*   */
+    } else if ( strcmp(argv[idx]+1,"nofiss") == 0 ) {                    /* D */
+                                                                         /* o */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                           -nofiss                            */     /* N */
+  /*                Do not attempt record fission                 */     /* o */
+  /* ------------------------------------------------------------ */     /* t */
+                                                                         /*   */
+      norecf = TRUE;                                                     /* C */
+                                                                         /* h */
+      break;                                                             /* a */
+    } else if ( strcmp(argv[idx]+1,"nofold") == 0 ) {                    /* n */
+                                                                         /* g */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                           -nofold                            */     /*   */
+  /*            Do not attempt to fold constant values            */     /* M */
+  /* ------------------------------------------------------------ */     /* a */
+                                                                         /* c */
+      nofold = TRUE;                                                     /* h */
+                                                                         /* i */
+      break;                                                             /* n */
+    } else if ( strcmp(argv[idx]+1,"nofuse") == 0 ) {                    /* e */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* G */
+  /*                           -nofuse                            */     /* e */
+  /*                   Disable all loop fusion                    */     /* n */
+  /* ------------------------------------------------------------ */     /* e */
+                                                                         /* r */
+      noifuse = TRUE;                                                    /* a */
+      nodfuse = TRUE;                                                    /* t */
+                                                                         /* e */
+      break;                                                             /* d */
+    } else if ( strcmp(argv[idx]+1,"nogcse") == 0 ) {                    /*   */
+                                                                         /* D */
+  /* ------------------------------------------------------------ */     /* o */
+  /*                           -nogcse                            */     /*   */
+  /*        Do not attempt global common subr. elimination        */     /* N */
+  /* ------------------------------------------------------------ */     /* o */
+                                                                         /* t */
+      nogcse = TRUE;                                                     /*   */
+                                                                         /* C */
+      break;                                                             /* h */
+    } else if ( strcmp(argv[idx]+1,"noif1opt") == 0 ) {                  /* a */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* g */
+  /*                          -noif1opt                           */     /* e */
+  /*                 Turn off IF1 code improvers                  */     /*   */
+  /* ------------------------------------------------------------ */     /* M */
+                                                                         /* a */
+      noif1opt = TRUE;                                                   /* c */
+                                                                         /* h */
+      break;                                                             /* i */
+    } else if ( strcmp(argv[idx]+1,"noifuse") == 0 ) {                   /* n */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                           -noifuse                           */     /* G */
+  /*               Disable independent loop fusion                */     /* e */
+  /* ------------------------------------------------------------ */     /* n */
+                                                                         /* e */
+      noifuse = TRUE;                                                    /* r */
+                                                                         /* a */
+      break;                                                             /* t */
+    } else if ( strcmp(argv[idx]+1,"noimp") == 0 ) {                     /* e */
+                                                                         /* d */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                            -noimp                            */     /* D */
+  /*      Compile with the C compiler's optimizers disabled       */     /* o */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* N */
+      noimp = TRUE;                                                      /* o */
+                                                                         /* t */
+      break;                                                             /*   */
+    } else if ( strcmp(argv[idx]+1,"noimp") == 0 ) {                     /* C */
+                                                                         /* h */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                            -noimp                            */     /* n */
+  /*           Set -nvnoopt loader option for the Crays           */     /* g */
+  /* ------------------------------------------------------------ */     /* e */
+                                                                         /*   */
+      noimp = TRUE;                                                      /* M */
+                                                                         /* a */
+      break;                                                             /* c */
+    } else if ( strcmp(argv[idx]+1,"noinline") == 0 ) {                  /* h */
+                                                                         /* i */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                          -noinline                           */     /* e */
+  /*                   Do not inline functions                    */     /*   */
+  /* ------------------------------------------------------------ */     /* G */
+                                                                         /* e */
+      noinline = TRUE;                                                   /* n */
+                                                                         /* e */
+      break;                                                             /* r */
+    } else if ( strcmp(argv[idx]+1,"noinvar") == 0 ) {                   /* a */
+                                                                         /* t */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                           -noinvar                           */     /* d */
+  /*             Disable invariant removal optimizer              */     /*   */
+  /* ------------------------------------------------------------ */     /* D */
+                                                                         /* o */
+      noinvar = TRUE;                                                    /*   */
+                                                                         /* N */
+      break;                                                             /* o */
+    } else if ( strcmp(argv[idx]+1,"noinvert") == 0 ) {                  /* t */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* C */
+  /*                          -noinvert                           */     /* h */
+  /*          Do not perform loop inversion optimization          */     /* a */
+  /* ------------------------------------------------------------ */     /* n */
+                                                                         /* g */
+      noinvert = TRUE;                                                   /* e */
+                                                                         /*   */
+      break;                                                             /* M */
+    } else if ( strcmp(argv[idx]+1,"noload") == 0 ) {                    /* a */
+                                                                         /* c */
+  /* ------------------------------------------------------------ */     /* h */
+  /*                           -noload                            */     /* i */
+  /*      Do not create the executable, stop with a .o file       */     /* n */
+  /* ------------------------------------------------------------ */     /* e */
+                                                                         /*   */
+      stopc = TRUE;                                                      /* G */
+      TMPDIR="";                                                         /* e */
+                                                                         /* n */
+      break;                                                             /* e */
+    } else if ( strcmp(argv[idx]+1,"nomem") == 0 ) {                     /* r */
+                                                                         /* a */
+  /* ------------------------------------------------------------ */     /* t */
+  /*                            -nomem                            */     /* e */
+  /*               Disable build in place analysis                */     /* d */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* D */
+      noif2mem = TRUE;                                                   /* o */
+      preb     = "-Y0";                                                  /*   */
+                                                                         /* N */
+      break;                                                             /* o */
+    } else if ( strcmp(argv[idx]+1,"nomig") == 0 ) {                     /* t */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* C */
+  /*                            -nomig                            */     /* h */
+  /*            Do not migrate operations toward users            */     /* a */
+  /* ------------------------------------------------------------ */     /* n */
+                                                                         /* g */
+      nomig = TRUE;                                                      /* e */
+                                                                         /*   */
+      break;                                                             /* M */
+    } else if ( strcmp(argv[idx]+1,"nomovereads") == 0 ) {               /* a */
+                                                                         /* c */
+  /* ------------------------------------------------------------ */     /* h */
+  /*                         -nomovereads                         */     /* i */
+  /*                  Move array read operations                  */     /* n */
+  /* ------------------------------------------------------------ */     /* e */
+                                                                         /*   */
+      movereads = FALSE;                                                 /* G */
+                                                                         /* e */
+      break;                                                             /* n */
+    } else if ( strcmp(argv[idx]+1,"nonormidx") == 0 ) {                 /* e */
+                                                                         /* r */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                          -nonormidx                          */     /* t */
+  /*               Do not normalize array indexing                */     /* e */
+  /* ------------------------------------------------------------ */     /* d */
+                                                                         /*   */
+      nonormidx = TRUE;                                                  /* D */
+                                                                         /* o */
+      break;                                                             /*   */
+    } else if ( strcmp(argv[idx]+1,"noopt") == 0 ) {                     /* N */
+                                                                         /* o */
+  /* ------------------------------------------------------------ */     /* t */
+  /*                            -noopt                            */     /*   */
+  /*                   Disable all optimization                   */     /* C */
+  /* ------------------------------------------------------------ */     /* h */
+                                                                         /* a */
+      noopt = TRUE;                                                      /* n */
+      noimp = TRUE;                                                      /* g */
+      bounds = FALSE;                                                    /* e */
+                                                                         /*   */
+      break;                                                             /* M */
+    } else if ( strcmp(argv[idx]+1,"nopreb") == 0 ) {                    /* a */
+                                                                         /* c */
+  /* ------------------------------------------------------------ */     /* h */
+  /*                           -nopreb                            */     /* i */
+  /*                   Disable array prebuilds                    */     /* n */
+  /* ------------------------------------------------------------ */     /* e */
+                                                                         /*   */
+      preb = "-Y0";                                                      /* G */
+                                                                         /* e */
+      break;                                                             /* n */
+    } else if ( strcmp(argv[idx]+1,"norag") == 0 ) {                     /* e */
+                                                                         /* r */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                            -norag                            */     /* t */
+  /*               Generate code called by FORTRAN                */     /* e */
+  /* ------------------------------------------------------------ */     /* d */
+                                                                         /*   */
+      norag = TRUE;                                                      /* D */
+                                                                         /* o */
+      break;                                                             /*   */
+    } else if ( strcmp(argv[idx]+1,"noregs") == 0 ) {                    /* N */
+                                                                         /* o */
+  /* ------------------------------------------------------------ */     /* t */
+  /*                           -noregs                            */     /*   */
+  /*     Do not assign register prefixes to generated C code      */     /* C */
+  /* ------------------------------------------------------------ */     /* h */
+                                                                         /* a */
+      noregs = TRUE;                                                     /* n */
+                                                                         /* g */
+      break;                                                             /* e */
+    } else if ( strcmp(argv[idx]+1,"noscalar") == 0 ) {                  /*   */
+                                                                         /* M */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                          -noscalar                           */     /* c */
+  /*                 Disable scalar optimizations                 */     /* h */
+  /* ------------------------------------------------------------ */     /* i */
+                                                                         /* n */
+      noscalar = TRUE;                                                   /* e */
+                                                                         /*   */
+      break;                                                             /* G */
+    } else if ( strcmp(argv[idx]+1,"nosfuse") == 0 ) {                   /* e */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                           -nosfuse                           */     /* r */
+  /*                    Disable select fusion                     */     /* a */
+  /* ------------------------------------------------------------ */     /* t */
+                                                                         /* e */
+      nosfuse = TRUE;                                                    /* d */
+                                                                         /*   */
+      break;                                                             /* D */
+    } else if ( strcmp(argv[idx]+1,"nosplit") == 0 ) {                   /* o */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* N */
+  /*                           -nosplit                           */     /* o */
+  /*                Do not preform loop splitting                 */     /* t */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* C */
+      nosplit = TRUE;                                                    /* h */
+                                                                         /* a */
+      break;                                                             /* n */
+    } else if ( strcmp(argv[idx]+1,"nostr") == 0 ) {                     /* g */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                            -nostr                            */     /* M */
+  /*      Do not attempt to identify single threaded streams      */     /* a */
+  /* ------------------------------------------------------------ */     /* c */
+                                                                         /* h */
+      nostr = TRUE;                                                      /* i */
+                                                                         /* n */
+      break;                                                             /* e */
+    } else if ( strcmp(argv[idx]+1,"nostrip") == 0 ) {                   /*   */
+                                                                         /* G */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                           -nostrip                           */     /* n */
+  /*             Do not perform return node stripping             */     /* e */
+  /* ------------------------------------------------------------ */     /* r */
+                                                                         /* a */
+      nostrip = TRUE;                                                    /* t */
+                                                                         /* e */
+      break;                                                             /* d */
+    } else if ( strcmp(argv[idx]+1,"notgcse") == 0 ) {                   /*   */
+                                                                         /* D */
+  /* ------------------------------------------------------------ */     /* o */
+  /*                           -notgcse                           */     /*   */
+  /*         Do not force global common subr. elimination         */     /* N */
+  /* ------------------------------------------------------------ */     /* o */
+                                                                         /* t */
+      notgcse = TRUE;                                                    /*   */
+                                                                         /* C */
+      break;                                                             /* h */
+    } else if ( strcmp(argv[idx]+1,"nounroll") == 0 ) {                  /* a */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* g */
+  /*                          -nounroll                           */     /* e */
+  /*                    Disable loop unrolling                    */     /*   */
+  /* ------------------------------------------------------------ */     /* M */
+                                                                         /* a */
+      unroll = "-U0";                                                    /* c */
+                                                                         /* h */
+      break;                                                             /* i */
+    } else if ( strcmp(argv[idx]+1,"noup") == 0 ) {                      /* n */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                            -noup                             */     /* G */
+  /*               Disable update in place analysis               */     /* e */
+  /* ------------------------------------------------------------ */     /* n */
+                                                                         /* e */
+      noif2up = TRUE;                                                    /* r */
+      preb  = "-Y0";                                                     /* a */
+                                                                         /* t */
+      break;                                                             /* e */
+    } else if ( strcmp(argv[idx]+1,"novector") == 0 ) {                  /* d */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* D */
+  /*                          -novector                           */     /* o */
+  /*                    Disable vectorization                     */     /*   */
+  /* ------------------------------------------------------------ */     /* N */
+                                                                         /* o */
+      novec = TRUE;                                                      /* t */
+                                                                         /*   */
+      break;                                                             /* C */
+    } else if ( isdigit(argv[idx][2]) ) {                                /* h */
+                                                                         /* a */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                           -n<num>                            */     /* g */
+  /*    Consider only loops nested <num> deep for concurrency     */     /* e */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* M */
+      level = argv[idx];                                                 /* a */
+      level[1] = 'L';                                                    /* c */
+                                                                         /* h */
+      break;                                                             /* i */
+    }                                                                    /* n */
+    goto OptionError;                                                    /* e */
+                                                                         /*   */
+   case 'o':                                                             /* G */
+    if ( strcmp(argv[idx]+1,"o") == 0 ) {                                /* e */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                         -o <target>                          */     /* r */
+  /*   Name the output <target> not s.out or <source_prefix>.o    */     /* a */
+  /* ------------------------------------------------------------ */     /* t */
+    CorrectUsage = "Usage: -o <target>";                                 /* e */
+    if ( (++idx) >= argc ) goto OptionError;                             /* d */
+                                                                         /*   */
+      aabs = argv[idx];                                                  /* D */
+                                                                         /* o */
+      break;                                                             /*   */
+    } else if ( strcmp(argv[idx]+1,"oo") == 0 ) {                        /* N */
+                                                                         /* o */
+  /* ------------------------------------------------------------ */     /* t */
+  /*                         -oo <target>                         */     /*   */
+  /*        Just like -o, but sisal extensions are legal.         */     /* C */
+  /* ------------------------------------------------------------ */     /* h */
+    CorrectUsage = "Usage: -oo <target>";                                /* a */
+    if ( (++idx) >= argc ) goto OptionError;                             /* n */
+                                                                         /* g */
+      NameSafety = FALSE;                                                /* e */
+      aabs = argv[idx];                                                  /*   */
+                                                                         /* M */
+      break;                                                             /* a */
+    }                                                                    /* c */
+    goto OptionError;                                                    /* h */
+                                                                         /* i */
+   case 'p':                                                             /* n */
+    if ( strcmp(argv[idx]+1,"prof") == 0 ) {                             /* e */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* G */
+  /*                            -prof                             */     /* e */
+  /*      Generate a time execution profile of the compiler       */     /* n */
+  /* ------------------------------------------------------------ */     /* e */
+                                                                         /* r */
+      prof = TRUE;                                                       /* a */
+      verbose = TRUE;                                                    /* t */
+                                                                         /* e */
+      break;                                                             /* d */
+    } else if ( strcmp(argv[idx]+1,"progress") == 0 ) {                  /*   */
+                                                                         /* D */
+  /* ------------------------------------------------------------ */     /* o */
+  /*                          -progress                           */     /*   */
+  /*        Generate progress report in C code generation         */     /* N */
+  /* ------------------------------------------------------------ */     /* o */
+                                                                         /* t */
+      prog = TRUE;                                                       /*   */
+                                                                         /* C */
+      break;                                                             /* h */
+    } else if ( isdigit(argv[idx][2]) ) {                                /* a */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* g */
+  /*                           -p<num>                            */     /* e */
+  /*            Assume <num> processors for partioning            */     /*   */
+  /* ------------------------------------------------------------ */     /* M */
+                                                                         /* a */
+      procs = argv[idx];                                                 /* c */
+      procs[1] = 'P';                                                    /* h */
+                                                                         /* i */
+      break;                                                             /* n */
+      } else if ( strncmp(argv[idx]+1,"patch=",6) == 0 && isdigit(argv[idx][7]) ) {
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                         -patch=<num>                         */     /* G */
+  /*   Apply a dynamic patch to one of the backend applications   */     /* e */
+  /* ------------------------------------------------------------ */     /* n */
+                                                                         /* e */
+      if ( PatchCount >= sizeof(Patches)/sizeof(Patches[0]) ) {          /* r */
+        Error2( argv[idx] , "-- Too many patches" );                     /* a */
+      }                                                                  /* t */
+                                                                         /* e */
+      Patches[PatchCount] = (char *) malloc(strlen(argv[idx]));          /* d */
+      sprintf(Patches[PatchCount],"-p%s",argv[idx]+7);                   /*   */
+      PatchCount++;                                                      /* D */
+                                                                         /* o */
+      break;                                                             /*   */
+    } else if ( argv[idx][2] == 'b' && isdigit(argv[idx][3]) ) {         /* N */
+                                                                         /* o */
+  /* ------------------------------------------------------------ */     /* t */
+  /*                           -pb<num>                           */     /*   */
+  /*            Set array prebuild dimension to <num>             */     /* C */
+  /* ------------------------------------------------------------ */     /* h */
+                                                                         /* a */
+      preb = &(argv[idx][1]);                                            /* n */
+      preb[0] = '-';                                                     /* g */
+      preb[1] = 'Y';                                                     /* e */
+                                                                         /*   */
+      break;                                                             /* M */
+    }                                                                    /* a */
+    goto OptionError;                                                    /* c */
+                                                                         /* h */
+   case 'r':                                                             /* i */
+    if ( strcmp(argv[idx]+1,"r") == 0 ) {                                /* n */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                          -r <funct>                          */     /* G */
+  /*          Consider <funct> available as a reduction           */     /* e */
+  /* ------------------------------------------------------------ */     /* n */
+    CorrectUsage = "Usage: -r <funct>";                                  /* e */
+    if ( (++idx) >= argc ) goto OptionError;                             /* r */
+                                                                         /* a */
+      roptions[++roptioncnt] = argv[idx];         /* reduction function */
+      /* calloptions[++calloptioncnt] = argv[idx];*//* inline off */     /* t */
+                                                                         /* e */
+      break;                                                             /* d */
+    } else if ( strcmp(argv[idx]+1,"real") == 0 ) {                      /*   */
+                                                                         /* D */
+  /* ------------------------------------------------------------ */     /* o */
+  /*                            -real                             */     /*   */
+  /*        Treat all SISAL double_real data as real data.        */     /* N */
+  /* ------------------------------------------------------------ */     /* o */
+                                                                         /* t */
+      flt = TRUE;                                                        /*   */
+                                                                         /* C */
+      break;                                                             /* h */
+    }                                                                    /* a */
+    goto OptionError;                                                    /* n */
+                                                                         /* g */
+   case 's':                                                             /* e */
+    if ( strcmp(argv[idx]+1,"sdbx") == 0 ) {                             /*   */
+                                                                         /* M */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                            -sdbx                             */     /* c */
+  /*    Generate code to interface with the symbolic debugger     */     /* h */
+  /* ------------------------------------------------------------ */     /* i */
+                                                                         /* n */
+      sdbx = TRUE;                                                       /* e */
+      bounds = FALSE;   /* The TRUE default was interfering with other checks */
+                                                                         /*   */
+      break;                                                             /* G */
+    } else if ( strcmp(argv[idx]+1,"seq") == 0 ) {                       /* e */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                             -seq                             */     /* r */
+  /*               Compile for sequential execution               */     /* a */
+  /* ------------------------------------------------------------ */     /* t */
+                                                                         /* e */
+      concur = FALSE;                                                    /* d */
+      novec = TRUE;                                                      /*   */
+                                                                         /* D */
+      break;                                                             /* o */
+    }                                                                    /*   */
+    goto OptionError;                                                    /* N */
+                                                                         /* o */
+   case 't':                                                             /* t */
+    if ( strcmp(argv[idx]+1,"tgcse") == 0 ) {                            /*   */
+                                                                         /* C */
+  /* ------------------------------------------------------------ */     /* h */
+  /*                            -tgcse                            */     /* a */
+  /*            Force global Common Subr. Elimination             */     /* n */
+  /* ------------------------------------------------------------ */     /* g */
+                                                                         /* e */
+      notgcse = FALSE;                                                   /*   */
+                                                                         /* M */
+      break;                                                             /* a */
+    } else if ( strcmp(argv[idx]+1,"time") == 0 ) {                      /* c */
+                                                                         /* h */
+  /* ------------------------------------------------------------ */     /* i */
+  /*                        -time <funct>                         */     /* n */
+  /*           Generating timing code for this function           */     /* e */
+  /* ------------------------------------------------------------ */     /*   */
+    CorrectUsage = "Usage: -time <funct>";                               /* G */
+    if ( (++idx) >= argc ) goto OptionError;                             /* e */
+                                                                         /* n */
+      calloptions[++calloptioncnt] = argv[idx];                          /* e */
+      timeoptions[++timeoptioncnt] = argv[idx];                          /* r */
+                                                                         /* a */
+      break;                                                             /* t */
+    } else if ( strcmp(argv[idx]+1,"timeall") == 0 ) {                   /* e */
+                                                                         /* d */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                           -timeall                           */     /* D */
+  /*            Generate timing code for all functions            */     /* o */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* N */
+      timeall = TRUE;                                                    /* o */
+      noinline = TRUE;                                                   /* t */
+                                                                         /*   */
+      break;                                                             /* C */
+    } else if ( strcmp(argv[idx]+1,"tmpdir") == 0 ) {                    /* h */
+                                                                         /* a */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                      -tmpdir <dirname>                       */     /* g */
+  /*           Put intermediate temp files in <dirname>           */     /* e */
+  /* ------------------------------------------------------------ */     /*   */
+    CorrectUsage = "Usage: -tmpdir <dirname>";                           /* M */
+    if ( (++idx) >= argc ) goto OptionError;                             /* a */
+                                                                         /* c */
+      TMPDIR = argv[idx];                                                /* h */
+                                                                         /* i */
+      break;                                                             /* n */
+    } else if ( strcmp(argv[idx]+1,"trace") == 0 ) {                     /* e */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* G */
+  /*                        -trace <funct>                        */     /* e */
+  /*          Generating tracing code for this function           */     /* n */
+  /* ------------------------------------------------------------ */     /* e */
+    CorrectUsage = "Usage: -trace <funct>";                              /* r */
+    if ( (++idx) >= argc ) goto OptionError;                             /* a */
+                                                                         /* t */
+      calloptions[++calloptioncnt] = argv[idx];                          /* e */
+      traceoptions[++traceoptioncnt] = argv[idx];                        /* d */
+                                                                         /*   */
+      break;                                                             /* D */
+    } else if ( strcmp(argv[idx]+1,"traceall") == 0 ) {                  /* o */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* N */
+  /*                          -traceall                           */     /* o */
+  /*           Generate tracing code for all functions            */     /* t */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* C */
+      traceall = TRUE;                                                   /* h */
+      noinline = TRUE;                                                   /* a */
                                                                          /* n */
       break;                                                             /* g */
     }                                                                    /* e */
     goto OptionError;                                                    /*   */
-   default: goto OptionError;                                            /* M */
-  }                                                                      /* a */
-}                                                                        /* c */
+                                                                         /* M */
+   case 'u':                                                             /* a */
+    if ( strcmp(argv[idx]+1,"usage") == 0 ) {                            /* c */
+                                                                         /* h */
+  /* ------------------------------------------------------------ */     /* i */
+  /*                            -usage                            */     /* n */
+  /*                      Produce this list                       */     /* e */
+  /* ------------------------------------------------------------ */     /*   */
+    PrintUsageTable(argv,idx);                                           /* G */
+      break;                                                             /* e */
+    } else if ( strcmp(argv[idx]+1,"useloopreport") == 0 ) {             /* n */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /* r */
+  /*                    -useloopreport <file>                     */     /* a */
+  /*          Use loopreport from a previous compilation          */     /* t */
+  /* ------------------------------------------------------------ */     /* e */
+    CorrectUsage = "Usage: -useloopreport <file>";                       /* d */
+    if ( (++idx) >= argc ) goto OptionError;                             /*   */
+                                                                         /* D */
+      LoopReportIn = argv[idx];                                          /* o */
+                                                                         /*   */
+      break;                                                             /* N */
+    } else if ( isdigit(argv[idx][2]) ) {                                /* o */
+                                                                         /* t */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                           -u<num>                            */     /* C */
+  /*         Unroll loops with less than <num> iterations         */     /* h */
+  /* ------------------------------------------------------------ */     /* a */
+                                                                         /* n */
+      unroll = argv[idx];                                                /* g */
+      unroll[1] = 'U';                                                   /* e */
+                                                                         /*   */
+      break;                                                             /* M */
+    }                                                                    /* a */
+    goto OptionError;                                                    /* c */
+                                                                         /* h */
+   case 'v':                                                             /* i */
+    if ( strcmp(argv[idx]+1,"v") == 0 ) {                                /* n */
+                                                                         /* e */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                              -v                              */     /* G */
+  /*                         Verbose mode                         */     /* e */
+  /* ------------------------------------------------------------ */     /* n */
+                                                                         /* e */
+      verbose = TRUE;                                                    /* r */
+                                                                         /* a */
+      break;                                                             /* t */
+    } else if ( strcmp(argv[idx]+1,"vector") == 0 ) {                    /* e */
+                                                                         /* d */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                           -vector                            */     /* D */
+  /*                     Enable vectorization                     */     /* o */
+  /* ------------------------------------------------------------ */     /*   */
+                                                                         /* N */
+      novec = FALSE;                                                     /* o */
+#ifndef CRAY                                                             /* t */
+#ifndef ALLIANT                                                          /*   */
+      cvector   = TRUE;             /* RIGHT NOW, THE CRAY IS THE DEFAULT */
+      movereads = TRUE;                                                  /* C */
+      chains    = TRUE;                                                  /* h */
+      newchains = TRUE;                                                  /* a */
+#endif                                                                   /* n */
+#endif                                                                   /* g */
+                                                                         /* e */
+      break;                                                             /*   */
+    }                                                                    /* M */
+    goto OptionError;                                                    /* a */
+                                                                         /* c */
+   case 'w':                                                             /* h */
+    if ( strcmp(argv[idx]+1,"w") == 0 ) {                                /* i */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                              -w                              */     /*   */
+  /*                   Disable warning messages                   */     /* G */
+  /* ------------------------------------------------------------ */     /* e */
+                                                                         /* n */
+      Warnings = FALSE;                                                  /* e */
+                                                                         /* r */
+      break;                                                             /* a */
+    }                                                                    /* t */
+    goto OptionError;                                                    /* e */
+                                                                         /* d */
+   case 'x':                                                             /*   */
+    if ( strcmp(argv[idx]+1,"xchains") == 0 ) {                          /* D */
+                                                                         /* o */
+  /* ------------------------------------------------------------ */     /*   */
+  /*                           -xchains                           */     /* N */
+  /*                    Allow vector chaining                     */     /* o */
+  /* ------------------------------------------------------------ */     /* t */
+                                                                         /*   */
+      chains = TRUE;                                                     /* C */
+                                                                         /* h */
+      break;                                                             /* a */
+    }                                                                    /* n */
+    goto OptionError;                                                    /* g */
+   default: goto OptionError;                                            /* e */
+  }                                                                      /*   */
+}                                                                        /* M */

@@ -4,6 +4,7 @@
 static void DoDependentWork()
 {
   register struct ActRec *NewAR;
+  register int local_flush;
 
   if ( (NewAR = RListDeQ()) != (struct ActRec *) NULL ) {
     (*(NewAR->ChildCode))( NewAR->ArgPointer, 
@@ -13,7 +14,25 @@ static void DoDependentWork()
 			  );
 
     NewAR->Done = TRUE;
+    /*
+     * do it this way so that if we don't flush, we don't
+     * have an invalid copy of NewAR in the cache
+     */
+    local_flush = NewAR->Flush;
+    /*
+     * must flush the done flag so that the master can see it
+     */
+    FLUSHLINE(&(NewAR->Done));
+    /*
+     * if we need to invalidate the caches
+     */
+    if(local_flush == TRUE)
+    {
+	CACHESYNC;
+    	FLUSHALL;
     }
+  }
+
 }
 
 
@@ -28,7 +47,10 @@ int Event;
 
     case FOR_SHUTDOWN:
       while ( !(*SisalShutDown) )
+      {
           DoDependentWork();
+          FLUSHLINE(SisalShutDown);
+      }
 
       break;
 
@@ -47,11 +69,14 @@ register struct ActRec *LastPlusOne;
   for ( ; ; ) {
     while ( First->Done ) {
       First->Done = FALSE;
+      FLUSHLINE(&(First->Done));
       First++;
 
       if ( First == LastPlusOne )
 	return;
       }
+
+    FLUSHLINE(&(First->Done));
 
     Wait( FOR_NOTHING );
     }

@@ -12,11 +12,16 @@
 #define MAX_SCOPE 200
 
 static int dcnt = 0;                   /* COUNT OF ALLOCATED DOPE VECTORS */
+static int Tdcnt = 0;                   /* COUNT OF VECTORS */
 static int liml  = 0;                  /* COUNT OF OPTIMIZED limlS        */
+static int Tliml  = 0;                  /* COUNT OF limlS        */
 static int limh  = 0;                  /* COUNT OF OPTIMIZED limhS        */
+static int Tlimh  = 0;                  /* COUNT OF limhS        */
 static int size  = 0;                  /* COUNT OF OPTIMIZED sizeS        */
+static int Tsize  = 0;                  /* COUNT OF sizeS        */
 static int aelmc = 0;                  /* COUNT OF AELEMENT INSERTIONS    */
 static int pcyc  = 0;                  /* COUNT OF CARRIED PROPAGATIONS   */
+static int Tpcyc  = 0;                  /* COUNT OF PROPAGATIONS   */
 
 static PNODE scope[MAX_SCOPE];         /* SCOPE STACK FOR THREADING EDGES */
 
@@ -267,6 +272,8 @@ PNODE sg;
     if ( i->dope == NULL )
       continue;
 
+    ++Tdcnt;
+
     if ( !IsExport( sg, i->iport ) )
       continue;
 
@@ -293,6 +300,7 @@ PNODE sg;
 
 static int ObviateNode( n, lvl, i, v )
 PNODE  n;
+int    lvl;
 PEDGE  i;
 int    v;
 {
@@ -409,8 +417,16 @@ int   lvl;
 	  PropagateDopeInfo( n, n->L_BODY );
 	  break;
 
+        case IFTagCase:
+          break;
+
+        case IFUReduce:		/* TBD: how is this used? */
+	  PropagateDopeInfo( n, n->R_INIT );
+	  PropagateDopeInfo( n, n->R_BODY );
+          break;
+
 	default:
-	  break;
+          UNEXPECTED("Unknown compound");
         }
 
       for ( sg = n->C_SUBS; sg != NULL; sg = sg->gsucc ) {
@@ -424,6 +440,8 @@ int   lvl;
 	  for ( c = FALSE, i = n->L_INIT->imp; i != NULL; i = i->isucc ) {
 	    if ( (ii = FindImport( n->L_BODY, i->iport )) == NULL )
 	      continue;
+
+            ++Tpcyc;
 
 	    switch ( AreDopesEqual( i, ii ) ) {
 	      case 0:
@@ -587,12 +605,15 @@ int   lvl;
 	break;
 
       case IFALimL:
+
+	++Tliml;
+
 	if ( (d = n->imp->dope) == NULL )
 	  break;
 
 	if ( d->lo == NULL )
 	  break;
-
+    
 	if ( ObviateNode( n, lvl, d->lo, -(d->dec) ) ) {
 	  liml++;
 	  }
@@ -600,6 +621,9 @@ int   lvl;
 	break;
 
       case IFALimH:
+
+	++Tlimh;
+
 	if ( (d = n->imp->dope) == NULL )
 	  break;
 
@@ -626,6 +650,8 @@ int   lvl;
 	break;
 
       case IFASize:
+        ++Tsize;
+
 	if ( (d = n->imp->dope) == NULL )
 	  break;
 
@@ -772,12 +798,12 @@ void If1Dope()
 
 void WriteDopeInfo()
 {
-    FPRINTF( stderr, "\n   * DOPE VECTOR OPTIMIZATIONS\n\n" );
+    FPRINTF( infoptr, "\n **** DOPE VECTOR OPTIMIZATIONS\n\n" );
 
-    FPRINTF( stderr, " Allocated Dope Vectors:  %d\n", dcnt );
-    FPRINTF( stderr, " Optimized ALimL Nodes:   %d\n", liml );
-    FPRINTF( stderr, " Optimized ALimH Nodes:   %d\n", limh );
-    FPRINTF( stderr, " Optimized ASize Nodes:   %d\n", size );
-    FPRINTF( stderr, " Inserted AElement Nodes: %d\n", aelmc);
-    FPRINTF( stderr, " Carried Propagations:    %d\n", pcyc );
+    FPRINTF( infoptr, " Allocated Dope Vectors:  %d of %d\n", dcnt,Tdcnt );
+    FPRINTF( infoptr, " Optimized ALimL Nodes:   %d of %d\n", liml,Tliml );
+    FPRINTF( infoptr, " Optimized ALimH Nodes:   %d of %d\n", limh,Tlimh );
+    FPRINTF( infoptr, " Optimized ASize Nodes:   %d of %d\n", size,Tsize );
+    FPRINTF( infoptr, " Inserted AElement Nodes: %d\n", aelmc);
+    FPRINTF( infoptr, " Carried Propagations:    %d of %d\n", pcyc,Tpcyc );
 }

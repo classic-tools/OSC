@@ -625,15 +625,6 @@ PNODE n;
 {
   register PEDGE  i2;
   register PEDGE  i1;
-  register PNODE  pr;
-  register PNODE  m;
-  register PEDGE  ExpNode;
-  register PEDGE  e;
-  register PNODE  n0;
-  register PNODE  n1;
-  register PNODE  n2;
-  register PNODE  n3;
-  register int    v;
   register double vf;
 
   i1 = n->imp;
@@ -695,7 +686,7 @@ PEDGE  e;
       break;
 
     default:
-    FPRINTF( stderr, "type=%d if1line=%d\n", e->info->type, e->if1line );
+    FPRINTF( infoptr, "type=%d if1line=%d\n", e->info->type, e->if1line );
       Error2( "GetSpecialOperand", "EDGE TYPE ERROR" );
     }
 
@@ -1081,7 +1072,8 @@ PNODE g;
 /* PURPOSE: HANDLES ARITHMETIC EXCEPTIONS FOR CONSTANT FOLDER.            */
 /**************************************************************************/
 
-static int FoldExceptionHandler()
+static void FoldExceptionHandler( sig )
+  int   sig;
 {
   char	ebuf[256];
 
@@ -1259,7 +1251,7 @@ char *d;
 /*          IT IS ASSUMED THAT if1write WILL CORRECT THIS.                */
 /**************************************************************************/
 static int  GetConstantEdge(ival,dval,E)
-     int	*ival;
+     long	*ival;
      double	*dval;
      PEDGE	E;
 {
@@ -1435,7 +1427,7 @@ PNODE n;
 
 	case IFExp:
 	    if ( IsInteger( n->imp->info ) )
-		SPRINTF( a, "%d", (int) pow(((double) iop1), ((double) iop2)) );
+		SPRINTF( a, "%d", IntegerPower(iop1,iop2) );
             else if ( IsInteger( n->imp->isucc->info ) )
 		SPRINTF( a, "%.16e", pow( dop1, ((double) iop2) ) );
 	    else
@@ -1812,22 +1804,22 @@ PNODE g;
 
 void WriteFoldInfo()
 {
-    FPRINTF( stderr, "\n   * CONSTANT NODE FOLDING\n\n"   );
-    FPRINTF( stderr, " Folded Simple Nodes:          %d\n", fcnt  );
-    FPRINTF( stderr, " Folded Logical Nodes:         %d\n", lfcnt );
-    FPRINTF( stderr, " Folded Select Nodes:          %d\n", sfcnt );
-    FPRINTF( stderr, " Propagated Constants:         %d\n", pcnt  );
-    FPRINTF( stderr, " Exported Select Constants:    %d\n", esccnt);
-    FPRINTF( stderr, " EXP Strength Reductions:      %d\n", expcnt);
-    FPRINTF( stderr, "\n   * SPECIAL CONSTANT FOLDING\n\n" );
-    FPRINTF( stderr, " A * 0 OR 0 * A Nodes Folded:  %d\n", zero_cnt  );
-    FPRINTF( stderr, " Identity Nodes Folded:        %d\n", ident_cnt );
-    FPRINTF( stderr, " +/- Chains Folded:            %d\n", chain_cnt );
-    FPRINTF( stderr, " DIV-TO-NEG Conversions        %d\n", dncnt     );
-    FPRINTF( stderr, " Propagated Negations          %d\n", pncnt     );
-    FPRINTF( stderr, " Array Indexing Modifications: %d\n", idxm      );
-    FPRINTF( stderr, " Negation Reductions:          %d\n", negcnt    );
-    FPRINTF( stderr, " Array SetL Reductions:        %d\n", setlcnt   );
+    FPRINTF( infoptr, "\n **** CONSTANT NODE FOLDING\n\n"   );
+    FPRINTF( infoptr, " Folded Simple Nodes:          %d\n", fcnt  );
+    FPRINTF( infoptr, " Folded Logical Nodes:         %d\n", lfcnt );
+    FPRINTF( infoptr, " Folded Select Nodes:          %d\n", sfcnt );
+    FPRINTF( infoptr, " Propagated Constants:         %d\n", pcnt  );
+    FPRINTF( infoptr, " Exported Select Constants:    %d\n", esccnt);
+    FPRINTF( infoptr, " EXP Strength Reductions:      %d\n", expcnt);
+    FPRINTF( infoptr, "\n **** SPECIAL CONSTANT FOLDING\n\n" );
+    FPRINTF( infoptr, " A * 0 OR 0 * A Nodes Folded:  %d\n", zero_cnt  );
+    FPRINTF( infoptr, " Identity Nodes Folded:        %d\n", ident_cnt );
+    FPRINTF( infoptr, " +/- Chains Folded:            %d\n", chain_cnt );
+    FPRINTF( infoptr, " DIV-TO-NEG Conversions        %d\n", dncnt     );
+    FPRINTF( infoptr, " Propagated Negations          %d\n", pncnt     );
+    FPRINTF( infoptr, " Array Indexing Modifications: %d\n", idxm      );
+    FPRINTF( infoptr, " Negation Reductions:          %d\n", negcnt    );
+    FPRINTF( infoptr, " Array SetL Reductions:        %d\n", setlcnt   );
 }
 
 
@@ -1855,6 +1847,25 @@ void If1Fold()
   signal( SIGFPE, SIG_DFL );
 }
 /* $Log: if1fold.c,v $
+ * Revision 1.14  1994/07/01  23:30:10  denton
+ * int -> long argument as referenced.
+ *
+ * Revision 1.13  1994/06/16  21:29:23  mivory
+ * info format and option changes M. Y. I.
+ *
+ * Revision 1.12  1994/04/15  15:50:32  denton
+ * Added config.h to centralize machine specific header files.
+ *
+ * Revision 1.11  1994/04/05  21:10:01  denton
+ * Remove signal warning.
+ *
+ * Revision 1.10  1994/03/22  00:40:11  miller
+ * Now uses new integer power routine (in Backend/Library) to fold integer
+ * powers.
+ *
+ * Revision 1.9  1994/02/02  20:09:01  miller
+ * Better fix for constant folded integer powers.
+ *
  * Revision 1.8  1993/11/30  00:26:04  miller
  * Constant folding for intrinsics.
  *

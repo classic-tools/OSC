@@ -13,10 +13,15 @@
 
 
 static int fldcnt = 0;		/* COUNT OF REMOVED FIELD REFERENCES */
+static int Tfldcnt = 0;		/* COUNT OF FIELD REFERENCES */
 static int recnt = 0;            /* COUNT OF REMOVED RECORD ELEMENT NODES */
+static int Trecnt = 0;            /* COUNT OF RECORD ELEMENT NODES */
 static int aecnt = 0;                /* COUNT OF REMOVED AElement EXPORTS */
+static int Taecnt = 0;                /* COUNT OF AElement EXPORTS */
 static int acnt  = 0;                  /* COUNT OF REMOVED AElement NODES */
+static int Tacnt  = 0;                  /* COUNT OF AElement NODES */
 static int rcnt  = 0;                   /* COUNT OF PUSHED RElement NODES */
+static int Trcnt  = 0;                   /* COUNT OF RElement NODES */
 
 
 static int FindElementSource( c, iport, e, idx )
@@ -107,6 +112,7 @@ PNODE g;
 
     for ( n = g->G_NODES; n != NULL; n = sn ) {
 	sn = n->nsucc;
+        ++Tacnt;
 
 	if ( IsCompound( n ) )
 	    for ( g = n->C_SUBS; g != NULL; g = g->gsucc )
@@ -132,6 +138,7 @@ PNODE g;
 	    se = e->esucc;
 
 	    i = n->imp;
+           ++Taecnt;
 
 	    b = i->src;
 
@@ -402,12 +409,15 @@ PNODE g;
     for ( n = g->G_NODES; n != NULL; n = sn ) {
 	sn = n->nsucc;
 
-	if ( IsRElements( n ) )
+	if ( IsRElements( n ) ) {
+          ++Trcnt;
 	  PushRElements( n );
+        }
 	}
 
     for ( n = g->G_NODES; n != NULL; n = sn ) {
 	sn = n->nsucc;
+        ++Trecnt;
 
 	if ( IsCompound( n ) )
 	    for ( g = n->C_SUBS; g != NULL; g = g->gsucc )
@@ -419,6 +429,7 @@ PNODE g;
         for ( e = n->exp; e != NULL; e = se ) {
 	    se = e->esucc;
 	    i = n->imp;
+            ++Tfldcnt;
 
 	    /* PSA OPTIMIZATION FIX 4/25/90 8 LINES */
 	    switch ( e->dst->type ) {
@@ -502,14 +513,14 @@ Start:
 
 void WriteFissionInfo()
 {
-    FPRINTF( stderr, "\n   * RECORD FISSION\n\n" );
-    FPRINTF( stderr, " Removed Field References:     %d\n", fldcnt );
-    FPRINTF( stderr, " Removed Record Element Nodes: %d\n", recnt );
-    FPRINTF( stderr, " Pushed RElement Nodes:        %d\n", rcnt  );
+    FPRINTF( infoptr, "\n **** RECORD FISSION\n\n" );
+    FPRINTF( infoptr, " Removed Field References:     %d of %d\n", fldcnt,Tfldcnt );
+    FPRINTF( infoptr, " Removed Record Element Nodes: %d of %d\n", recnt,Trecnt );
+    FPRINTF( infoptr, " Pushed RElement Nodes:        %d of %d\n", rcnt,Trcnt  );
 
-    FPRINTF( stderr, "\n   * ARRAY FISSION\n\n" );
-    FPRINTF( stderr, " Removed AElement Nodes:   %d\n", acnt  );
-    FPRINTF( stderr, " Removed AElement Exports: %d\n", aecnt );
+    FPRINTF( infoptr, "\n **** ARRAY FISSION\n\n" );
+    FPRINTF( infoptr, " Removed AElement Nodes:   %d of %d\n", acnt,Tacnt  );
+    FPRINTF( infoptr, " Removed AElement Exports: %d of %d\n", aecnt,Taecnt );
 }
 
 

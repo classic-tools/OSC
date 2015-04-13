@@ -10,7 +10,8 @@
 
 
 static int invcnt = 0;                         /* COUNT OF INVERTED LOOPS */
-
+static int Tcnt = 0;                         /* COUNT OF LOOPS */
+DYNDECLARE(printinfo,printbuf,printlen,printcount,char,2000);
 
 /**************************************************************************/
 /* GLOBAL **************     WriteInvertInfo       ************************/
@@ -20,8 +21,8 @@ static int invcnt = 0;                         /* COUNT OF INVERTED LOOPS */
 
 void WriteInvertInfo()
 {
-  FPRINTF( stderr, "\n   * LOOP INVERSION\n\n" );
-  FPRINTF( stderr, " Inverted Loops: %d\n", invcnt  );
+  FPRINTF( infoptr, "\n\n **** LOOP INVERSION\n\n%s\n", printinfo);
+  FPRINTF( infoptr, " Inverted Loops: %d of %d\n", invcnt,Tcnt  );
 }
 
 
@@ -248,33 +249,24 @@ PNODE g;
     if ( !IsForall( n ) )
       continue;
 
+    ++Tcnt;
+
     /* IS nn A RangeGenerate NODE AND THE ONLY NODE IN THE GENERATOR */
     nn = n->F_GEN->G_NODES;
-    if ( nn == NULL )
-      continue;
-    if ( nn->nsucc != NULL )
-      continue;
-    if ( nn->type != IFRangeGenerate )
+    if ( nn == NULL || nn->nsucc != NULL ||
+       nn->type != IFRangeGenerate ) 
       continue;
 
     /* FIND THE FIRST SELECT HAVING AN INVARIANT TEST */
     for ( nn = n->F_BODY->G_NODES; nn != NULL; nn = nn->nsucc ) {
-      if ( !IsSelect( nn ) )
+      if ( !IsSelect( nn ) ) 
         continue;
 
       /* IS THE SELECT TEST INVARIANT TO n */
       i = nn->S_TEST->imp;
-      if ( IsConst( i ) )
-        continue;
-      if ( !IsSGraph( i->src ) )
-        continue;
-      if ( (i = FindImport( nn, i->eport )) == NULL )
-        continue;
-      if ( IsConst( i ) )
-        continue;
-      if ( !IsSGraph( i->src ) )
-        continue;
-      if ( !IsImport( n, i->eport ) )
+      if ( IsConst( i ) || !IsSGraph( i->src ) ||
+	(i = FindImport( nn, i->eport )) == NULL || IsConst( i ) ||
+        !IsSGraph( i->src ) || !IsImport( n, i->eport ) ) 
         continue;
 
       break;
@@ -288,7 +280,7 @@ PNODE g;
       if ( i->esucc != NULL )
 	break;
 
-    if ( i != NULL )
+    if ( i != NULL ) 
       continue;
 
     /* MAKE SURE INVERSION WILL NOT BLOCK BUILD-IN-PLACE ANALYSIS AND   */
@@ -337,16 +329,26 @@ MoveOn:
 	break;
       }
 
-    if ( i != NULL )
+    if ( i != NULL ) 
       continue;
 
     /* IS n AN INNER LOOP? */
-    if ( !IsInnerLoop( n->F_BODY ) )
+    if ( !IsInnerLoop( n->F_BODY ) ) 
       continue;
 
     /* OK, DO IT! */
+    if (RequestInfo(I_Info1, info)) {
+    DYNEXPAND(printinfo,printbuf,printlen,printcount,char,printlen+300);
+    printlen += (SPRINTF(printinfo + printlen,
+      " Inverting loop %d at line %d, funct %s, file %s\n",
+       n->ID, n->line, n->funct, n->file), strlen(printinfo + printlen));
+    printlen += (SPRINTF(printinfo + printlen,
+      " with loop %d at line %d, funct %s, file %s\n\n",
+       nn->ID, nn->line, nn->funct, nn->file), strlen(printinfo + printlen));
+  }
     DoTheInversion( n, nn );
     invcnt++;
+    Tcnt++;
     }
 }
 

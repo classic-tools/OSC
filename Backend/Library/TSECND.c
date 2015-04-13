@@ -18,11 +18,7 @@ double TSECND()
 
   (void)times(&StopTimeNow);
   CurrentCpuTime  = ((double) (StopTimeNow.tms_utime + StopTimeNow.tms_stime));
-#ifdef SGI
-  CurrentCpuTime /= ((double) HZ);
-#else
-  CurrentCpuTime /= 60.0;	/* SYSTEM DEPENDENT!!! */
-#endif
+  CurrentCpuTime /= CLK_TCK;
 
 #else
   struct rusage StartTimerInfo;
@@ -45,6 +41,9 @@ double TSECND()
 #endif
 
 /* $Log: TSECND.c,v $
+ * Revision 1.2  1994/06/20  21:50:52  denton
+ * Added CLK_TCK.
+ *
  * Revision 1.1  1993/01/21  23:30:28  miller
  * Initial version of the IFX library.  It replaces the if[12]build.c
  * read.c timer.c util.c and write.c and if[12].h files from the

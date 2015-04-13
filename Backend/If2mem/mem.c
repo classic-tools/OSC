@@ -11,6 +11,8 @@
 
 FILE *input  = stdin;                  /* IF1 INPUT  FILE POINTER         */
 FILE *output = stdout;                 /* IF1 OUTPUT FILE POINTER         */
+FILE *infoptr;                 		/* IF1 INFO OUTPUT FILE POINTER    */
+char infofile[200];
 
 char *program    = "if2mem";           /* PROGRAM NAME                    */
 
@@ -185,6 +187,10 @@ char **argv;
 	  if ( isdigit((int)(c[1])) ) info=atoi(c+1);
 	  break;
 
+        case 'F' :
+          strcpy (infofile, c+1);
+          break;
+
 	default:
 	  Error2( "ILLEGAL ARGUMENT", --c );
 	}
@@ -209,8 +215,16 @@ int    argc;
 char **argv;
 {
     register FILE *fd;
+    int i2 = I_Info2;
 
     ParseCommandLine( argc, argv );
+
+    if (RequestInfo(I_Info2, info)) 
+	if ((infoptr = fopen(infofile, "a")) == NULL)
+		infoptr = stderr;
+
+    if (info > i2 && RequestInfo(I_Info1, info) && RequestInfo(I_Info2, info))
+        FPRINTF (infoptr, "\n\f\n\n");
 
     StartProfiler();
     If1Read();
@@ -227,9 +241,9 @@ char **argv;
     if ( !IsStamp( NORMALIZED ) )
 	Error1( "IF1 FILE IS NOT NORMALIZED" );
 
-    if ( RequestInfo(I_DeveloperInfo1,info) ) {
-        FPRINTF( stderr, "\n**** ARRAY MEMORY OPTIMIZATION\n" );
-	CountNodesAndEdges( "BEFORE ARRAY MEMORY OPTIMIZATION" );
+    if ( RequestInfo(I_Info2,info)  ) {
+        FPRINTF( infoptr, "**** MEMORY MANAGEMENT\n\n" );
+	/*CountNodesAndEdges( "BEFORE ARRAY MEMORY OPTIMIZATION" );*/
 	}
 
     StartProfiler();
@@ -240,9 +254,10 @@ char **argv;
     If2Clean();
     StopProfiler( "If2Clean" );
 
-    if ( RequestInfo(I_DeveloperInfo1,info) ) {
+   if ( RequestInfo(I_Info2,info)  ) {
       WriteIf2memPicture();
     }
+
 
     if ( !sdbx )
       WriteIf2memWarnings();
@@ -254,6 +269,9 @@ char **argv;
 			( minopt )? " minopt" : ""                           );
 
     AddStamp( BUILDINPLACE,  mstmp );
+    if ( RequestInfo(I_Info2,info) && infoptr!=stderr ) {
+        fclose (infoptr);
+        }
 
     /* OPEN THE OUTPUT FILE AND WRITE THE OPTIMIZED PROGRAM               */
 

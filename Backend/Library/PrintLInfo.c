@@ -18,18 +18,18 @@ void PrintLInfo( lvl, plvl, c, loop )
   /* ------------------------------------------------------------ */
   /* Output the source line (if it requested and available)	  */
   /* ------------------------------------------------------------ */
-  if ( RequestInfo(I_DetailedInfo,info) ) {
-    if ( (IsForall(loop) || IsLoop(loop)) && (loop->F_GEN->G_NODES) ) {
+  if ( RequestInfo(I_Info4,info) && (IsForall(loop) || IsLoop(loop)) &&
+	(loop->smark || loop->vmark || loop->reason1 || loop->reason2) ) {
+ /*   if ( (IsForall(loop) || IsLoop(loop)) && (loop->F_GEN->G_NODES) ) {
       source = GetSourceLine(loop->F_GEN->G_NODES);
     } else {
       source = GetSourceLine(loop);
     }
     if ( source ) {
-      if ( !TrailingNL ) (void)fputc('\n',stderr);
-      FPRINTF(stderr,"# %s\n",source);
-    }
+      if ( !TrailingNL ) (void)fputc('\n',infoptr);
+      FPRINTF(infoptr," # %s\n",source);
+    } */
     TrailingNL = FALSE;
-  }
 
   /* ------------------------------------------------------------ */
   /* Output the Compound ID #					  */
@@ -37,7 +37,7 @@ void PrintLInfo( lvl, plvl, c, loop )
   if ( IsForall(loop) ) {
     SPRINTF( lbuf, "%4d:%d   ",loop->ID,plvl);
   } else {
-    SPRINTF( lbuf, "%4d:     ",loop->ID,plvl);
+    SPRINTF( lbuf, "%4d:     ",loop->ID);
   }
   lb=lbuf+6;			/* Skip past stuff */
 
@@ -45,8 +45,8 @@ void PrintLInfo( lvl, plvl, c, loop )
   /* Remove the .sis extension from the file name		  */
   /* ------------------------------------------------------------ */
   (void)strcpy(fname,loop->file);
-  dotp = rindex(fname,'.');
-  if ( dotp ) *dotp = NULL;
+  dotp = strrchr(fname,'.');
+  if ( dotp ) *dotp = '\0';
 
   /* ------------------------------------------------------------ */
   /* Output the loop record					  */
@@ -83,44 +83,59 @@ void PrintLInfo( lvl, plvl, c, loop )
   /* ------------------------------------------------------------ */
   /* Pad to at least column 64 and add the function name	  */
   /* ------------------------------------------------------------ */
-  lb = index(lb,NULL);
+  lb = strchr(lb,'\0');
   do { *(lb++) = ' ';} while (lb-lbuf < 64);
   (void)strcpy(lb,loop->funct);
 
   /* ------------------------------------------------------------ */
   /* Truncate at 80 chars if too long and print			  */
   /* ------------------------------------------------------------ */
-  if ( strlen(lbuf) > 80 ) strcpy(lbuf+79,"$");
-  FPRINTF(stderr,"%s\n",lbuf);
+  if ( (int)strlen(lbuf) > 80 ) strcpy(lbuf+79,"$");
+  FPRINTF(infoptr,"%s\n",lbuf);
 
   /* ------------------------------------------------------------ */
   /* If we know why we aren't vectorized, report it		  */
   /* ------------------------------------------------------------ */
-  if ( RequestInfo(I_VectorConcurrent,info) && loop->reason1 ) {
-    for ( i=0; i < lvl*2+6; i++ ) (void)fputc(' ',stderr);
-    FPRINTF(stderr,"!Vector: %s\n",loop->reason1);
+  if ( loop->reason1 ) {
+    for ( i=0; i < lvl*2+6; i++ ) (void)fputc(' ',infoptr);
+    FPRINTF(infoptr,"!Vector: %s\n",loop->reason1);
   }
 
   /* ------------------------------------------------------------ */
   /* If we know why we aren't concurrent, report it		  */
   /* ------------------------------------------------------------ */
-  if ( RequestInfo(I_VectorConcurrent,info) && loop->reason2 ) {
-    for ( i=0; i < lvl*2+6; i++ ) (void)fputc(' ',stderr);
-    FPRINTF(stderr,"!Concurrent: %s\n",loop->reason2);
+  if ( loop->reason2 ) {
+    for ( i=0; i < lvl*2+6; i++ ) (void)fputc(' ',infoptr);
+    FPRINTF(infoptr,"!Concurrent: %s\n",loop->reason2);
   }
 
   /* ------------------------------------------------------------ */
   /* Need a trailing newline to clean up some problems		  */
   /* ------------------------------------------------------------ */
-  if ( RequestInfo(I_VectorConcurrent,info) &&
-      (loop->reason1 || loop->reason2)
-      ) {
-    (void)fputc('\n',stderr);
+  if (loop->reason1 || loop->reason2) {
+    (void)fputc('\n',infoptr);
     TrailingNL = TRUE;
+  }
   }  
 }
 
 /* $Log: PrintLInfo.c,v $
+ * Revision 1.10  1994/06/16  21:31:59  mivory
+ * info format and option changes M. Y. I.
+ *
+ * Revision 1.9  1994/04/15  15:51:53  denton
+ * Added config.h to centralize machine specific header files.
+ * Fixed gcc warings.
+ *
+ * Revision 1.8  1994/04/05  23:02:27  denton
+ * Cast for ANSI C.
+ *
+ * Revision 1.7  1994/04/01  00:02:50  denton
+ * NULL -> '\0' where appropriate
+ *
+ * Revision 1.6  1994/03/31  01:46:33  denton
+ * Replace anachronistic BSD functions, index->strchr, rindex->strrchr
+ *
  * Revision 1.5  1993/03/23  22:53:36  miller
  * date problem
  *

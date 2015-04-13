@@ -403,5 +403,6 @@ _Tracer_(args,writer,f,ID)
   /* ------------------------------------------------------------ */
   /* Better unlock or else! */
  Finish:
+  FLUSH(Entry,Entry+sizeof(*Entry));
   MY_SUNLOCK( SUtilityLock );
 }

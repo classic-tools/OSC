@@ -1,12 +1,9 @@
-#include <stdio.h>
+#include "../config.h"
 
 #define MAX_LENGTH  20000
 #define EXTRA       10      /* NEUTRAL ZONE!!! */
 
 #define IsDigit(c) ( (c >= '0') && (c <= '9') )
-
-#define FALSE 0
-#define TRUE  1
 
 #define OK    0
 #define ERROR 1
@@ -24,9 +21,9 @@ static int   lnum  = 0;
 char *MyAlloc( sz )
 int sz;
 {
-  char *p, *malloc();
+  char *p;
 
-  if ( (p = malloc(sz)) == NULL ) {
+  if ( (p = (char*)malloc(sz)) == NULL ) {
     fprintf( stderr, "%s: MyAlloc FAILED!!!\n", program );
     exit(ERROR);
     }
@@ -170,13 +167,12 @@ static int IsCppInfoLine()
   return( TRUE );
 }
 
-
+void
 main( argc, argv )
 int    argc;
 char **argv;
 {
   register char *c;
-  register char *p;
   register int   idx;
 
   for ( idx = 1; idx < argc; ++idx )

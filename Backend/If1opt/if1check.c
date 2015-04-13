@@ -28,20 +28,6 @@ PNODE n;
 }
 
 /**************************************************************************/
-/* LOCAL  **************         CheckError        ************************/
-/**************************************************************************/
-/* PURPOSE: PRINT MESSAGE msg AND LINE NUMBER ln TO output.               */
-/**************************************************************************/
-
-static void CheckError( ln, msg )
-int   ln;
-char *msg;
-{
-    FPRINTF( output, "%s: (line %d) %s\n", program, ln, msg );
-}
-
-
-/**************************************************************************/
 /* LOCAL  **************    CheckIsRetNormalized   ************************/
 /**************************************************************************/
 /* PURPOSE: RETURN TRUE IF THE RETURN NODE OF LOOP l IS NORMALIZED:       */
@@ -68,14 +54,26 @@ PNODE l;
 	    case IFRedLeft:
 	    case IFRedRight:
 	    case IFRedTree:
-		if ( n->imp->CoNsT[0] == REDUCE_CATENATE )
-                    if ( !IsConst( n->imp->isucc ) )
-		        CheckError( n->if1line, "ReduceCatenate Node 1.0" );
+		if ( n->imp->CoNsT[0] == REDUCE_CATENATE ) {
+		  if ( !IsConst( n->imp->isucc ) ) {
+		    UNEXPECTED( "ReduceCatenate Node 1.0" );
+		  }
+		}
+		switch ( n->imp->CoNsT[0] ) {
+                case REDUCE_CATENATE:
+                case REDUCE_GREATEST:
+                case REDUCE_LEAST:
+                case REDUCE_PRODUCT:
+                case REDUCE_SUM:
+		  break;
 
+                default:
+		  UNEXPECTED( "Bad reduction literal" );
+		}
 		break;
 
 	    default:
-		break;
+		UNEXPECTED( "Unknown returns operator" );
 	    }
 	}
 
@@ -181,30 +179,30 @@ PNODE n;
 	switch ( i->info->type ) {
             case IF_DOUBLE:
 	        if ( FloatType( i->CoNsT ) == 'e' )
-		    CheckError( i->if1line, "CONSTANT FORMAT ERROR" );
+		    UNEXPECTED( "CONSTANT FORMAT ERROR" );
 
 		if ( i->CoNsT[0] == '-' )
-	            CheckError( i->if1line, "SIGNED DOUBLE CONSTANT" );
+	            UNEXPECTED( "SIGNED DOUBLE CONSTANT" );
 
 		break;
 
             case IF_REAL:
 		if ( FloatType( i->CoNsT ) == 'd' )
-	            CheckError( i->if1line, "CONSTANT FORMAT ERROR" );
+	            UNEXPECTED( "CONSTANT FORMAT ERROR" );
 		    
 		if ( i->CoNsT[0] == '-' )
-	            CheckError( i->if1line, "SIGNED REAL CONSTANT" );
+	            UNEXPECTED( "SIGNED REAL CONSTANT" );
 
 		break;
 
             case IF_INTEGER:
 		if ( i->CoNsT[0] == '-' )
-	            CheckError( i->if1line, "SIGNED INTEGER CONSTANT" );
+	            UNEXPECTED( "SIGNED INTEGER CONSTANT" );
 
 		break;
 
 	    case IF_ARRAY:
-		CheckError( i->if1line, "STRING CONSTANT" );
+		UNEXPECTED( "STRING CONSTANT" );
 		break;
 
             default:
@@ -218,7 +216,7 @@ PNODE n;
 
     if ( (i == NULL) &&  (!IsReturn( n )) && (!IsCall( n )) &&
 	 (!IsGenerate( n )) && (IsSimple( n )))
-	CheckError( n->if1line, "CONSTANT NODE NOT FOLDED" );
+	UNEXPECTED( "CONSTANT NODE NOT FOLDED" );
 }
 
 
@@ -282,13 +280,13 @@ PNODE g;
     for ( n = g->G_NODES; n != NULL; n = n->nsucc )
 	if ( n->nsucc != NULL )
 	    if ( n->nsucc->label <= n->label )
-		CheckError( n->nsucc->if1line, "NODE NOT DFOrdered" );
+		UNEXPECTED( "NODE NOT DFOrdered" );
 
     for ( n = g->G_NODES; n != NULL; n = n->nsucc )
 	for ( i = n->imp; i != NULL; i = i->isucc )
 	    if ( !IsConst( i ) )
 		if ( i->src->label >= n->label )
-		    CheckError( n->if1line, "NODE NOT DFOrdered" );
+		    UNEXPECTED( "NODE NOT DFOrdered" );
 }
 
 
@@ -315,7 +313,7 @@ PNODE gg;
 		continue;
 
         if ( i->iport != p++ )
-	    CheckError( i->if1line, "ILLEGAL IMPORT PORT NUMBER" );
+	    UNEXPECTED( "ILLEGAL IMPORT PORT NUMBER" );
         }
 
     return( p );
@@ -341,8 +339,8 @@ PEDGE i;
 	    u = TRUE;
 
 	    if ( !AreSameType( e->info, i->info ) ) {
-		CheckError( i->if1line, "** USAGE TYPE MISMATCH" );
-		CheckError( e->if1line, "   USAGE TYPE MISMATCH" );
+		UNEXPECTED( "** USAGE TYPE MISMATCH" );
+		UNEXPECTED( "   USAGE TYPE MISMATCH" );
 		}
 	    }
 
@@ -368,7 +366,7 @@ PNODE c;
             u |= IsUsed( g, i );
 
         if ( !u )
-	    CheckError( i->if1line, "K IMPORT NOT USED" );
+	    UNEXPECTED( "K IMPORT NOT USED" );
 	}
 }
 
@@ -387,7 +385,7 @@ PNODE g;
 
     for ( i = g->imp; i != NULL; i = i->isucc )
         if ( !IsUsed( g->G_DAD, i ) )
-	    CheckError( i->if1line, "R EXPORT NOT USED" );
+	    UNEXPECTED( "R EXPORT NOT USED" );
 }
 
 
@@ -404,7 +402,7 @@ PNODE f;
 
     for ( i = f->F_BODY->imp; i != NULL; i = i->isucc )
         if ( !IsUsed( f->F_RET, i ) )
-	    CheckError( i->if1line, "T IMPORT NOT USED" );
+	    UNEXPECTED( "T IMPORT NOT USED" );
 }
 
 
@@ -426,7 +424,7 @@ PNODE l;
              IsUsed( l->L_RET,  i )  )
             continue;
 
-	CheckError( i->if1line, "T IMPORT NOT USED" );
+	UNEXPECTED( "T IMPORT NOT USED" );
 	}
 
     for ( i = l->L_INIT->imp; i != NULL; i = i->isucc ) {
@@ -435,7 +433,7 @@ PNODE l;
              IsUsed( l->L_RET,  i )   )
             continue;
 
-	CheckError( i->if1line, "L IMPORT NOT USED" );
+	UNEXPECTED( "L IMPORT NOT USED" );
         }
 }
 
@@ -463,9 +461,9 @@ PNODE l;
         case IFForall:
 	    for ( i = l->F_BODY->imp; i != NULL; i = i->isucc )
 		if ( IsConst( i ) )
-		    CheckError( i->if1line, "UNNECESSARY LITERAL: T := CoNsT" );
+		    UNEXPECTED( "UNNECESSARY LITERAL: T := CoNsT" );
 		else if ( IsSGraph( i->src ) )
-		    CheckError( i->if1line, "UNNECESSARY EDGE: T := M OR K" );
+		    UNEXPECTED( "UNNECESSARY EDGE: T := M OR K" );
 
 	    break;
 
@@ -476,7 +474,7 @@ PNODE l;
 		    continue;
 
 		if ( IsSGraph( i->src ) && ( i->iport == i->eport ) )
-	            CheckError( i->if1line, "UNNECESSARY EDGE: L := OLD L" );
+	            UNEXPECTED( "UNNECESSARY EDGE: L := OLD L" );
                 }
 
 	    for ( i = l->L_INIT->imp; i != NULL; i = i->isucc ) {
@@ -484,9 +482,9 @@ PNODE l;
 		    continue;
 
 		if ( IsConst( i ) )
-                    CheckError( i->if1line, "UNNECESSARY EDGE: L NR := CoNsT" );
+                    UNEXPECTED( "UNNECESSARY EDGE: L NR := CoNsT" );
                 else if ( IsSGraph( i->src ) )
-	            CheckError( i->if1line, "UNNECESSARY EDGE: L NR := K" );
+	            UNEXPECTED( "UNNECESSARY EDGE: L NR := K" );
                 }
 
 	    for ( i = l->L_INIT->imp; i != NULL; i = i->isucc ) {
@@ -500,7 +498,7 @@ PNODE l;
                     if ( !AreConstsEqual( i, ii ) )
 			continue;
 
-	            CheckError( i->if1line, 
+	            UNEXPECTED( 
 				"UNNECESSARY EDGES: L := CoNsT1, L := CoNsT1" );
 		    }
                 else if ( IsSGraph( i->src ) ) {
@@ -510,7 +508,7 @@ PNODE l;
                     if ( i->eport != ii->eport )
 			continue;
 
-	            CheckError( i->if1line, 
+	            UNEXPECTED( 
 				"UNNECESSARY EDGE: L := K1, L := K1" );
 		    }
                 }
@@ -523,10 +521,10 @@ PNODE l;
 	            continue;
 
 	        if ( IsConst( i ) )
-	            CheckError( i->if1line, "UNNECESSARY EDGE: T := CoNsT" );
+	            UNEXPECTED( "UNNECESSARY EDGE: T := CoNsT" );
                 else if ( IsSGraph( i->src ) )
 	            if ( !IsImport( l->L_BODY, i->eport ) )
-			    CheckError( i->if1line, 
+			    UNEXPECTED( 
 					"UNNECESSARY EDGE: T := K OR L NR" );
                 }
 
@@ -561,10 +559,10 @@ PNODE c;
     switch( c->type ) {
 	case IFSelect:
             if ( IsConst( c->S_TEST->imp ) )
-                CheckError( c->if1line, "UNREACHABLE IF BRANCH" );
+                UNEXPECTED( "UNREACHABLE IF BRANCH" );
 
 	    if ( !IsNodeListEmpty( c->S_TEST ) )
-		CheckError( c->S_TEST->if1line, "SELECT TEST NOT NORMALIZED" );
+		UNEXPECTED( "SELECT TEST NOT NORMALIZED" );
 
             CheckForUnusedRports( c->S_ALT  );
             CheckForUnusedRports( c->S_CONS );
@@ -577,7 +575,7 @@ PNODE c;
             for ( g = c->C_SUBS; g != NULL; g = g->gsucc )
 		for ( e = g->exp; e != NULL; e = e->esucc )
 		    if ( !IsImport( c, e->eport ) )
-			CheckError( e->if1line, "SUBGRAPH EXPORT NOT DEFINED" );
+			UNEXPECTED( "SUBGRAPH EXPORT NOT DEFINED" );
 
 	    break;
 
@@ -592,16 +590,16 @@ PNODE c;
             for ( g = c->C_SUBS; g != NULL; g = g->gsucc )
 		for ( e = g->exp; e != NULL; e = e->esucc )
 		    if ( !IsImport( c, e->eport ) )
-			CheckError( e->if1line, "SUBGRAPH EXPORT NOT DEFINED" );
+			UNEXPECTED( "SUBGRAPH EXPORT NOT DEFINED" );
 
 	    break;
 
         case IFForall:
 	    if ( !IsGenNormalized( c ) )
-		CheckError( c->F_GEN->if1line, "FORALL GEN NOT NORMALIZED" );
+		UNEXPECTED( "FORALL GEN NOT NORMALIZED" );
 
 	    if ( !CheckIsRetNormalized( c ) )
-		CheckError( c->F_GEN->if1line, "FORALL RETURN NOT NORMALIZED" );
+		UNEXPECTED( "FORALL RETURN NOT NORMALIZED" );
 
 	    CheckForUnusedRports( c->F_RET );
 	    CheckForUnusedTports( c );
@@ -614,35 +612,35 @@ PNODE c;
 
             for ( e = c->F_GEN->exp; e != NULL; e = e->esucc )
 		if ( !IsImport( c, e->eport ) )
-	            CheckError( e->if1line, "SUBGRAPH EXPORT NOT DEFINED" );
+	            UNEXPECTED( "SUBGRAPH EXPORT NOT DEFINED" );
 
             for ( e = c->F_BODY->exp; e != NULL; e = e->esucc )
 		if ( (!IsImport( c,        e->eport )) && 
 		     (!IsImport( c->F_GEN, e->eport ))   )
-	            CheckError( e->if1line, "SUBGRAPH EXPORT NOT DEFINED" );
+	            UNEXPECTED( "SUBGRAPH EXPORT NOT DEFINED" );
 
             for ( e = c->F_RET->exp; e != NULL; e = e->esucc )
 		if ( (!IsImport( c,         e->eport )) &&
 		     (!IsImport( c->F_GEN,  e->eport )) &&
 		     (!IsImport( c->F_BODY, e->eport ))   )
-	            CheckError( e->if1line, "SUBGRAPH EXPORT NOT DEFINED" );
+	            UNEXPECTED( "SUBGRAPH EXPORT NOT DEFINED" );
 
 	    for ( n = c->F_BODY->G_NODES; n != NULL; n = n->nsucc )
 		if ( OptIsInvariant( n ) )
-		    CheckError( n->if1line, "LOOP INVARIANT" );
+		    UNEXPECTED( "LOOP INVARIANT" );
 
 	    break;
 
         case IFLoopA:
 	case IFLoopB:
 	    if ( !IsNodeListEmpty( c->L_INIT ) )
-		CheckError( c->L_INIT->if1line, "LOOP INIT NOT NORMALIZED" );
+		UNEXPECTED( "LOOP INIT NOT NORMALIZED" );
 
 	    if ( !IsTestNormalized( c ) )
-		CheckError( c->L_TEST->if1line, "LOOP TEST NOT NORMALIZED" );
+		UNEXPECTED( "LOOP TEST NOT NORMALIZED" );
 
 	    if ( !CheckIsRetNormalized( c ) )
-		CheckError( c->L_RET->if1line, "LOOP RETURN NOT NORMALIZED" );
+		UNEXPECTED( "LOOP RETURN NOT NORMALIZED" );
 
 	    CheckForUnusedRports( c->L_RET );
 	    CheckForUnusedLTports( c );
@@ -657,27 +655,27 @@ PNODE c;
 
             for ( e = c->L_INIT->exp; e != NULL; e = e->esucc )
 		if ( !IsImport( c, e->eport ) )
-	            CheckError( e->if1line, "SUBGRAPH EXPORT NOT DEFINED" );
+	            UNEXPECTED( "SUBGRAPH EXPORT NOT DEFINED" );
 
             for ( e = c->L_BODY->exp; e != NULL; e = e->esucc )
 		if ( (!IsImport( c,         e->eport )) &&
 		     (!IsImport( c->L_INIT, e->eport ))   )
-	            CheckError( e->if1line, "SUBGRAPH EXPORT NOT DEFINED" );
+	            UNEXPECTED( "SUBGRAPH EXPORT NOT DEFINED" );
 
             for ( e = c->L_TEST->exp; e != NULL; e = e->esucc )
 		if ( (!IsImport( c,         e->eport )) &&
 		     (!IsImport( c->L_INIT, e->eport )) &&
 		     (!IsImport( c->L_BODY, e->eport ))   )
-	            CheckError( e->if1line, "SUBGRAPH EXPORT NOT DEFINED" );
+	            UNEXPECTED( "SUBGRAPH EXPORT NOT DEFINED" );
 
             for ( e = c->L_RET->exp; e != NULL; e = e->esucc )
 		if ( (!IsImport( c,         e->eport )) &&
 		     (!IsImport( c->L_INIT, e->eport ))   )
-	            CheckError( e->if1line, "SUBGRAPH EXPORT NOT DEFINED" );
+	            UNEXPECTED( "SUBGRAPH EXPORT NOT DEFINED" );
 
 	    for ( n = c->L_BODY->G_NODES; n != NULL; n = n->nsucc )
 		if ( OptIsInvariant( n ) )
-		    CheckError( n->if1line, "LOOP INVARIANT" );
+		    UNEXPECTED( "LOOP INVARIANT" );
 
 	    break;
 	}
@@ -716,28 +714,28 @@ register PNODE g;
 
 	if ( IsALimL( n ) )
 	    if ( IsStream( n->imp->info ) )
-	        CheckError( n->if1line, "STREAM LIMIT LOW" );
+	        UNEXPECTED( "STREAM LIMIT LOW" );
 
 	if ( n->exp == NULL )
-	    CheckError( n->if1line, "DEAD NODE" );
+	    UNEXPECTED( "DEAD NODE" );
 
         for ( e = n->exp; e != NULL; e = e->esucc )
 	    if ( IsUndefined( e->dst ) )
-		CheckError( e->if1line, "DESTINATION NODE UNDEFINED" );
+		UNEXPECTED( "DESTINATION NODE UNDEFINED" );
 
         for ( i = n->imp; i != NULL; i = i->isucc )
 	    if ( IsConst( i ) )
 		continue;
             else if ( IsUndefined( i->src ) )
-		CheckError( i->if1line, "SOURCE NODE UNDEFINED" );
+		UNEXPECTED( "SOURCE NODE UNDEFINED" );
 
         if ( IsCompound( n ) ) {
 	    if ( !AreKportsCombined( n ) )
-		CheckError( n->if1line, "REDUNDANT K IMPORTS" );
+		UNEXPECTED( "REDUNDANT K IMPORTS" );
 
 	    for ( i = n->imp; i != NULL; i = i->isucc )
 		if ( IsConst( i ) )
-		    CheckError( i->if1line, "CONSTANT NOT PROPAGATED" );
+		    UNEXPECTED( "CONSTANT NOT PROPAGATED" );
 
 	    for ( g = n->C_SUBS; g != NULL; g = g->gsucc )
 		CheckNode( g );
@@ -748,7 +746,7 @@ register PNODE g;
 
 	if ( IsNot( n ) )
 	    if ( (n->exp->esucc == NULL) && (IsNot( n->exp->dst )) )
-		CheckError( n->if1line, "REDUNDANT NOT NODE PAIRS" ); 
+		UNEXPECTED( "REDUNDANT NOT NODE PAIRS" ); 
         }
 }
 

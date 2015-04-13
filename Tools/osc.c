@@ -1,26 +1,22 @@
-#include <stdio.h>
-#include <ctype.h>
-#include <signal.h>
+#include "../config.h"
 #include "usage.h"		/* One-liner descr. of options */
 
-#ifndef RS6000
-extern char *malloc();
-#endif
+static void RemoveFile();
 
 #ifndef MAX_PATH
 #  define MAX_PATH	(1024)
 #endif
 
-#define TRUE     1
-#define FALSE    0
 #define ERROR    1
 #define OK       0
 #define SAME     0
 
-/* ABSOLUTE DIRECTORY PATHS TO SISAL COMPILER EXECUTABLES */
+/* ABSOLUTE DIRECTORY PATHS TO SISAL COMPILER FILES */
 
 #ifndef BIN_PATH
 #define BIN_PATH   "/usr/local/bin"
+#define LIB_PATH   "/usr/local/lib"
+#define INC_PATH   "/usr/local/include"
 #endif
 
 #define StrCat( r, s1, s2 ) strcat( strcpy( (r), (s1) ), (s2) )
@@ -33,22 +29,25 @@ extern char *malloc();
 #define NAMESIZE 1000
 
 /* ------------------------------------------------------------------------- */
-#define SIS      1  /* file.sis  */            /* LEGAL FILE SUFFIX CODES */
-#define IF1      4  /* file.if1  */
-#define MONO     3  /* file.mono */
-#define OPT      2  /* file.opt  */
-#define MEM      5  /* file.mem  */
-#define UP       6  /* file.up   */
-#define PART     7  /* file.part */
-#define COSTS    8  /* file.costs*/
-#define C        9  /* file.c    */
-#define S        10 /* file.s, file.o, or file.a */
-#define O        11 /* file.o    */
-#define A        12 /* file.a    */
-#define F        13 /* file.f    */
-#define I        14 /* file.i    */
+#define FTYPE_NONE   0 /* unknown    */
+#define FTYPE_S90    1 /* file.s90   */           /* LEGAL FILE SUFFIX CODES */
+#define FTYPE_SIS    2 /* file.sis   */
+#define FTYPE_IF0    3 /* file.if0   */
+#define FTYPE_IF1    4 /* file.if1   */
+#define FTYPE_MONO   5 /* file.mono  */
+#define FTYPE_OPT    6 /* file.opt   */
+#define FTYPE_MEM    7 /* file.mem   */
+#define FTYPE_UP     8 /* file.up    */
+#define FTYPE_PART   9 /* file.part  */
+#define FTYPE_COSTS 10 /* file.costs */
+#define FTYPE_C     11 /* file.c     */
+#define FTYPE_S     122/* file.s, file.o, or file.a */
+#define FTYPE_O     13 /* file.o     */
+#define FTYPE_A     14 /* file.a     */
+#define FTYPE_F     15 /* file.f     */
+#define FTYPE_I     16 /* file.i     */
+#define FTYPE_LD    17 /* file       */
 
-#define LD       14
 
 /* ------------------------------------------------------------------------- */
 /* File names								     */
@@ -59,6 +58,7 @@ extern char *malloc();
 char	*TMPDIR = USE_TMPDIR;	/* Directory for temporaries */
 char	*TMPPATH = "";		/* File head for temporaries */
 char   *file;			/* FILE NAME FOR CURRENT COMPILATION PHASE */
+char   infofile[200];	/* FILE NAME FOR INFO OUTPUT */
 char   *root;			/* ROOT OF file */
 char   *costs = NULL;		/* COSTS file */
 char   *cfile = "";		/* GENERATED C FILE */
@@ -69,35 +69,42 @@ char   *LoopReportOut = "-";	/* Name of Loop report to generate */
 /* ------------------------------------------------------------------------- */
 /* Command line items							     */
 /* ------------------------------------------------------------------------- */
-char   cmdline1[MAX_PATH*4];	/* Constructed command line for time */
-char  *av [MAXARGS];		/* COMMAND LINE OF CURRENT COMPILATION PHASE */
-int    avcnt   = -1;		/* INDEXES TO av, sis, if1, opt, ld, etc. */
+char	cmdline1[MAX_PATH*4];	/* Constructed command line for time */
+char	*av [MAXARGS];		/* COMMAND LINE OF CURRENT COMPILATION PHASE */
+int	avcnt   = -1;		/* INDEXES TO av, sis, if1, opt, ld, etc. */
+char	*DefinedMachine = "-DGENERIC";	/* Set in main below */
 
 /* ------------------------------------------------------------------------- */
 /* File names and lists							     */
 /* ------------------------------------------------------------------------- */
-char  *sis [MAXARGS];     /* file.sis */
-char  *sisi[MAXARGS];     /* file.sis -> file.i */
-char  *sisif1[MAXARGS];     /* file.sis -> file.if1 */
+char  *file_sis [MAXARGS];	/* file.sis */
 int    siscnt  = -1;
+char  *file_sisi[MAXARGS];	/* file.sis -> file.i */
+char  *file_sisif0[MAXARGS];	/* file.sis -> file.if0 */
+char  *file_sisif1[MAXARGS];	/* file.sis -> file.if1 */
 
-char  *i   [MAXARGS];     /* file.i   */
-char  *iif1[MAXARGS];     /* file.i -> file.if1  */
+char  *file_i[MAXARGS];		/* file.i */
 int    icnt    = -1;
+char  *file_iif0[MAXARGS];	/* file.i -> file.if0 */
+char  *file_iif1[MAXARGS];	/* file.i -> file.if1 */
 
-char  *if1 [MAXARGS];     /* file.if1 */
+char  *file_if0[MAXARGS];	/* file.if0 */
+char  *file_if0if1[MAXARGS];	/* file.if0 -> file.if1 */
+int    if0cnt  = -1;
+
+char  *file_if1[MAXARGS];	/* file.if1 */
 int    if1cnt  = -1;
 
-char  *f   [MAXARGS];     /* file.f */
+char  *file_f[MAXARGS];		/* file.f */
 int    fcnt    = -1;
 
-char  *c   [MAXARGS];     /* file.c */
+char  *file_c[MAXARGS];		/* file.c */
 int    ccnt    = -1;
 
-char  *ld [MAXARGS];      /* file.c, file.s, file.o, file.a */
+char  *file_ld[MAXARGS];	/* file.c, file.s, file.o, file.a */
 int    ldcnt   = -1;
 
-char  *opt[MAXARGS];      /* file.mono,file.if1,file.mem,file.up,file.part */
+char  *file_opt[MAXARGS];	/* file.mono, file.if1, file.mem, file.up,... */
 int    optcnt  = -1;
 
 char   hybridOPTION[NAMESIZE];
@@ -108,8 +115,14 @@ char   hybridDOT[NAMESIZE];
 /* ------------------------------------------------------------------------- */
 /* Absolute paths to sisal executables and directories			     */
 /* ------------------------------------------------------------------------- */
+
+#define FRONT1	1
+#define FRONT90	90
+int    front_vers  = FRONT1;
+
 char   sisalpt  [NAMESIZE];	/* Parse tables */
-char   sisal    [NAMESIZE];	/* frontend */
+char   front    [NAMESIZE];
+char   expand   [NAMESIZE];
 char   spprun   [NAMESIZE];
 char   spp2     [NAMESIZE];
 char   if1opt   [NAMESIZE];
@@ -124,13 +137,17 @@ char  *cc	= "CC_HELP";	/* C compiler */
 char   incl     [NAMESIZE];	/* include file directory */
 char   libs     [NAMESIZE];	/* library directory */
 char   srt0     [NAMESIZE];	/* sisal runtime startup file */
+#if defined(POWER4)
+char   sh_ld    [NAMESIZE];     /* shared memory loader import file */
+#endif
 char   buf1     [NAMESIZE];	/* cost file directory */
 
 /* ------------------------------------------------------------------------- */
 /* Compilation Phase Control */
 /* ------------------------------------------------------------------------- */
 int    start = -1;		/* WHICH PHASE TO START COMPILATION */
-int    stopIF1    = FALSE;	/* CONTROL END PHASE */
+int    stopIF0    = FALSE;	/* CONTROL END PHASE */
+int    stopIF1    = FALSE;
 int    stopCPP    = FALSE;
 int    stopMONO   = FALSE;
 int    stopOPT    = FALSE;
@@ -138,6 +155,7 @@ int    stopDI     = FALSE;
 int    stopMEM    = FALSE;
 int    stopUP     = FALSE;
 int    stopPART   = FALSE;
+int    stopIF3    = FALSE;
 int    stopC      = FALSE;
 int    stopS      = FALSE;
 int    stopc      = FALSE;
@@ -176,6 +194,9 @@ char   *traceoptions[MAXARGS];
 
 int    calloptioncnt = -1;	/* Never inline */
 char   *calloptions[MAXARGS];
+
+int    roptioncnt = -1;		/* Reduction interface */
+char   *roptions[MAXARGS];
 
 int    coptioncnt = -1;		/* C interface */
 char   *coptions[MAXARGS];
@@ -330,7 +351,7 @@ int	explodeI	= FALSE;
 
 int	prog		= FALSE;
 
-#ifdef ENCORE
+#if defined(ENCORE) || defined(POWER4)
 int	nocagg		= TRUE;
 int	nogshared	= TRUE; 
 #else
@@ -351,7 +372,7 @@ int	noassoc		= FALSE;
 
 /* ------------------------------------------------------------ */
 /* Generate parallel code? */
-#if SUNIX || SUN || RS6000
+#if defined(SUNIX) || defined(SUN) || defined(RS6000)
 int	concur		= FALSE;
 #else
 int	concur		= TRUE;
@@ -392,14 +413,9 @@ char	*mdb		= NULL;
 /* ------------------------------------------------------------ */
 /* General information */
 int	info		= FALSE;
+char   *infos;
 
 /* ------------------------------------------------------------ */
-/* Vector information */
-int	vinfo		= FALSE;
-
-/* ------------------------------------------------------------ */
-/* Concurrency information */
-int	cinfo		= FALSE;
 
 /* ------------------------------------------------------------ */
 /* Copy information */
@@ -421,6 +437,14 @@ int	MinSliceThrottle = FALSE;
 /* Do not keep intermediate files */
 int	Keep		= FALSE;
 
+#define RequestInfo(x,info) (info & (x))
+#define _InfoMask(x)            (1<<((x)-1))
+#define I_Info1         _InfoMask(1) /* IF1OPT */
+#define I_Info2         _InfoMask(2) /* IF2MEM */
+#define I_Info3         _InfoMask(3) /* IF2UP */
+#define I_Info4         _InfoMask(4) /* IF2PART */
+
+
 /* ------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
@@ -439,17 +463,16 @@ static void RegisterTempFile(s)
 /**************************************************************************/
 /* PURPOSE:  If the compiler dies unexpectedly, perform some cleanup work */
 /**************************************************************************/
-static void DeathWish(sig,code,scp)
-     int	sig,code;
+static void DeathWish(sig)
+     int	sig;
 {
   int		i;
-  static void RemoveFile();
   static int  GotHere = 0;
 
   if ( GotHere ) exit(1);	/* Just quit if reentry is possible */
   GotHere = 1;
 
-  fprintf(stderr,"*** Killed %d[%d] ***\n",sig,code);
+  fprintf(stderr,"*** Killed %d ***\n",sig);
   for(i=0;i<TempCount;i++) RemoveFile(TempFile[i]);
   exit(1);
 }
@@ -472,7 +495,7 @@ unsigned int ParseMap(string)
   int anInt;			/* tmp counter */
   char *index;			/* index into string */
   int start, stop;		/* tmp vars */
-#define AddToMask(map,val) if(val>0 && val <17) map |= (1<<val-1)
+#define AddToMask(map,val) if(val>0 && val <17) map |= (1 << (val-1) )
 
   map = 0;
 
@@ -577,7 +600,7 @@ char *nm;
     register char *s;
     register char  NameChar;
 
-    for ( p = nm, s = NULL; NameChar = *p; p++ )
+    for ( p = nm, s = NULL; (NameChar = *p)!='\0'; p++ )
         switch ( NameChar ) {
             case '/': 
                 s = NULL;
@@ -712,26 +735,33 @@ char *nm;
     register char *s;
 
     s = GetFileSuffix( nm );
-    if ( !s ) return NULL;
+    if ( !s ) return FTYPE_NONE;
 
-    if ( strcmp( s, ".sis"  ) == SAME ) return(SIS);
-    if ( strcmp( s, ".if1"  ) == SAME ) return(IF1);
-    if ( strcmp( s, ".mono" ) == SAME ) return(MONO);
-    if ( strcmp( s, ".opt"  ) == SAME ) return(OPT);
-    if ( strcmp( s, ".mem"  ) == SAME ) return(MEM);
-    if ( strcmp( s, ".up"   ) == SAME ) return(UP);
-    if ( strcmp( s, ".part" ) == SAME ) return(PART);
-    if ( strcmp( s, ".costs") == SAME ) return(COSTS);
-    if ( strcmp( s, ".a")     == SAME ) return(A);
-    if ( strcmp( s, ".c")     == SAME ) return(C);
-    if ( strcmp( s, ".s")     == SAME ) return(S);
-    if ( strcmp( s, ".o")     == SAME ) return(O);
-    if ( strcmp( s, ".f")     == SAME ) return(F);
-    if ( strcmp( s, ".i")     == SAME ) return(I);
+    if ( strcmp( s, ".s90"  ) == SAME ) return(FTYPE_S90);
+    if ( strcmp( s, ".sis"  ) == SAME ) return(FTYPE_SIS);
+    if ( strcmp( s, ".if0"  ) == SAME ) return(FTYPE_IF0);
+    if ( strcmp( s, ".if1"  ) == SAME ) return(FTYPE_IF1);
+    if ( strcmp( s, ".mono" ) == SAME ) return(FTYPE_MONO);
+    if ( strcmp( s, ".opt"  ) == SAME ) return(FTYPE_OPT);
+    if ( strcmp( s, ".mem"  ) == SAME ) return(FTYPE_MEM);
+    if ( strcmp( s, ".up"   ) == SAME ) return(FTYPE_UP);
+    if ( strcmp( s, ".part" ) == SAME ) return(FTYPE_PART);
+    if ( strcmp( s, ".costs") == SAME ) return(FTYPE_COSTS);
+    if ( strcmp( s, ".a")     == SAME ) return(FTYPE_A);
+    if ( strcmp( s, ".c")     == SAME ) return(FTYPE_C);
+    if ( strcmp( s, ".s")     == SAME ) return(FTYPE_S);
+    if ( strcmp( s, ".o")     == SAME ) return(FTYPE_O);
+    if ( strcmp( s, ".f")     == SAME ) return(FTYPE_F);
+    if ( strcmp( s, ".i")     == SAME ) return(FTYPE_I);
 
-    return (int)NULL;
+    return FTYPE_NONE;
 }
 
+static int IsIntermediate(filetype) 
+int filetype;
+{
+  return filetype>=FTYPE_S90 && filetype<=FTYPE_PART;
+}
 
 /**************************************************************************/
 /* LOCAL  **************         RemoveFile        ************************/
@@ -779,7 +809,7 @@ char *nm;
     return( p );
 }
 
-
+#ifdef UNUSED
 /**************************************************************************/
 /* LOCAL  **************      LongGetFileRoot      ************************/
 /**************************************************************************/
@@ -863,6 +893,7 @@ static void SubmitNQS(argc,argv,nqs_idx)
   RemoveFile(scriptname);
   exit(status);
 }
+#endif
 
 /**************************************************************************/
 /* LOCAL  **************      ParseCommandLine     ************************/
@@ -884,47 +915,55 @@ char **argv;
 
     if ( *argv[idx] != '-') {
       switch ( GetFileType( argv[idx] ) ) {
-       case (int)NULL:
+       case FTYPE_NONE:
 	Error2( "illegal file name:", argv[idx] );
 	break;
 
-       case I:
-	i[++icnt] = argv[idx];
+       case FTYPE_S90:
+        front_vers = FRONT90;
+	file_sis[++siscnt] = argv[idx];
 	break;
 
-       case SIS:
-	sis[++siscnt] = argv[idx];
+       case FTYPE_SIS:
+	file_sis[++siscnt] = argv[idx];
 	break;
 
-       case IF1:
-	if1[++if1cnt] = argv[idx];
+       case FTYPE_I:
+	file_i[++icnt] = argv[idx];
 	break;
 
-       case OPT:
-       case MONO:
-       case MEM:
-       case UP:
-       case PART:
-	opt[++optcnt] = argv[idx];
+       case FTYPE_IF0:
+	file_if0[++if0cnt] = argv[idx];
 	break;
 
-       case C:
-	c[++ccnt] = argv[idx];
+       case FTYPE_IF1:
+	file_if1[++if1cnt] = argv[idx];
 	break;
 
-       case F:
-puts(argv[idx]);
-	f[++fcnt] = argv[idx];
+       case FTYPE_OPT:
+       case FTYPE_MONO:
+       case FTYPE_MEM:
+       case FTYPE_UP:
+       case FTYPE_PART:
+	file_opt[++optcnt] = argv[idx];
 	break;
 
-       case COSTS:
+       case FTYPE_C:
+	file_c[++ccnt] = argv[idx];
+	break;
+
+       case FTYPE_F:
+	file_f[++fcnt] = argv[idx];
+	break;
+
+       case FTYPE_COSTS:
 	costs = argv[idx];
 	break;
 
-       case A:
-       case O:
-       case S:
-	ld[++ldcnt] = argv[idx];
+       case FTYPE_A:
+       case FTYPE_O:
+       case FTYPE_S:
+	file_ld[++ldcnt] = argv[idx];
 	break;
 
        default:
@@ -959,20 +998,28 @@ puts(argv[idx]);
   /* Get the intermediate names for the .sis and .i files	  */
   /* ------------------------------------------------------------ */
   for( idx=0; idx <= siscnt; idx++ ) {
-    sisi[idx] = SetFileSuffix((stopCPP)?(""):(TMPPATH),
-			      GetFileRoot(sis[idx]), ".i" );
-    sisif1[idx] = SetFileSuffix((stopIF1)?(""):(TMPPATH),
-				GetFileRoot(sis[idx]), ".if1" );
+    file_sisi[idx] = SetFileSuffix((stopCPP)?(""):(TMPPATH),
+			      GetFileRoot(file_sis[idx]), ".i" );
+    file_sisif0[idx] = SetFileSuffix((stopIF0)?(""):(TMPPATH),
+				GetFileRoot(file_sis[idx]), ".if0" );
+    file_sisif1[idx] = SetFileSuffix((stopIF1)?(""):(TMPPATH),
+				GetFileRoot(file_sis[idx]), ".if1" );
   }
   for( idx=0; idx <= icnt; idx++ ) {
-    iif1[idx] = SetFileSuffix((stopIF1)?(""):(TMPPATH),
-			      GetFileRoot(i[idx]), ".if1" );
+    file_iif0[idx] = SetFileSuffix((stopIF0)?(""):(TMPPATH),
+			      GetFileRoot(file_i[idx]), ".if0" );
+    file_iif1[idx] = SetFileSuffix((stopIF1)?(""):(TMPPATH),
+			      GetFileRoot(file_i[idx]), ".if1" );
+  }
+  for( idx=0; idx <= if0cnt; idx++ ) {
+    file_if0if1[idx] = SetFileSuffix((stopIF1)?(""):(TMPPATH),
+			      GetFileRoot(file_if0[idx]), ".if1" );
   }
 
   /* ------------------------------------------------------------ */
   /* Make sure that we aren't overwriting a source file		  */
   /* ------------------------------------------------------------ */
-  if ( NameSafety && aabs && GetFileType( aabs ) ) {
+  if ( NameSafety && aabs && IsIntermediate(GetFileType(aabs)) ) {
     Error2("Possible overwrite of source file.  You must use -oo",aabs);
   }
 
@@ -1070,12 +1117,12 @@ OptionError:
 }
 
 /**************************************************************************/
-/* LOCAL  **************   SubmitFrontendRequest   ************************/
+/* LOCAL  **************         SubmitFront1      ************************/
 /**************************************************************************/
 /* PURPOSE: SUBMIT A REQUEST TO THE FRONTEND TO COMPILE file.             */
 /**************************************************************************/
 
-static int SubmitFrontendRequest( SISfile, IF1file, farg )
+static int SubmitFront1( SISfile, IF1file, farg )
 char *SISfile;
 char *IF1file;
 char *farg;
@@ -1085,12 +1132,12 @@ char *farg;
 #define AddAV(s) {char *_p,*_f; int _n; for(_f=(s),_p=_f;*_p;) {\
       if (*_p == ' ' || *_p == '\t') {\
 	_n=_p-_f; av[avcnt] = (char*)(malloc(_n+1));\
-	strncpy(av[avcnt],_f,_n+1); av[avcnt][_n] = NULL; avcnt++;\
+	strncpy(av[avcnt],_f,_n+1); av[avcnt][_n] = '\0'; avcnt++;\
 	while(*_p == ' ' || *_p == '\t') {_p++;} _f = _p;\
       } else {_p++;}} if ( *_f) {av[avcnt++] = _f;}\
   }
   avcnt = 0;
-  AddAV(sisal);
+  AddAV(front);
   AddAV("-dir");
   AddAV(sisalpt);
   AddAV(SISfile);
@@ -1106,7 +1153,27 @@ char *farg;
 
   av[avcnt] = NULL;
 
-  return( Submit( sisal ) );
+  return( Submit( front ) );
+}
+
+/**************************************************************************/
+/* LOCAL  **************        SubmitFront90      ************************/
+/**************************************************************************/
+/* PURPOSE: SUBMIT A REQUEST TO FRONT90 TO COMPILE file.                  */
+/**************************************************************************/
+
+static int SubmitFront90( SISfile, IF0file, farg )
+char *SISfile;
+char *IF0file;
+char *farg;
+{
+  avcnt = 0;
+  AddAV(front);
+  AddAV(SISfile);
+  AddAV(IF0file);
+  av[avcnt] = NULL;
+
+  return( Submit( front ) );
 }
 
 
@@ -1125,50 +1192,62 @@ static int SubmitCommands()
   char		dashi[16];
   char		dashI[16];
   char		dashV[16];
+  char		*temp_c;
+  char		*temp_spp;
   int		pat;
-  char		*filetail;
   int		status;
+    char info1[200];
+    char info2[200];
+    char info3[200];
+    char info4[200];
 
   if ( icnt >= 0 || siscnt >= 0 ) {
     if ( optcnt >= 0 ) Error2( "USAGE:", "conflicting file types" );
     
     if ( siscnt < 0 ) {
-      root = GetFileRoot( i[0] );
+      root = GetFileRoot( file_i[0] );
     } else {
-      root = GetFileRoot( sis[0] );
+      root = GetFileRoot( file_sis[0] );
     }
 
     file  = SetFileSuffix((stopMONO)?(""):(TMPPATH),root, ".mono" );
-    start = SIS;
+    start = FTYPE_SIS;
+
+  } else if ( if0cnt >= 0 ) {
+    if ( optcnt >= 0 ) Error2( "USAGE:", "conflicting file types" );
+    
+    root  = GetFileRoot( file_if0[0] );
+    file  = SetFileSuffix((stopMONO)?(""):(TMPPATH),root, ".mono" );
+    start = FTYPE_IF0;
 
   } else if ( if1cnt >= 0 ) {
     if ( optcnt >= 0 ) Error2( "USAGE:", "conflicting file types" );
     
-    root  = GetFileRoot( if1[0] );
+    root  = GetFileRoot( file_if1[0] );
     file  = SetFileSuffix((stopMONO)?(""):(TMPPATH),root, ".mono" );
-    start = IF1;
+    start = FTYPE_IF1;
 
   } else if ( optcnt >= 0 ) {
     if ( (optcnt > 0) ) Error2( "USAGE:", "conflicting file types" );
 
-    root  = GetFileRoot( opt[0] );
-    file  = opt[0];
+    root  = GetFileRoot( file_opt[0] );
+    file  = file_opt[0];
     start = GetFileType( file );
 
   } else if ( ccnt >= 0 ) {
     root  = NULL;
     file  = NULL;
-    start = C;
+    start = FTYPE_C;
 
   } else if ( ldcnt >= 0 ) {
     root  = NULL;
     file  = NULL;
-    start = LD;
+    start = FTYPE_LD;
 
   } else if ( fcnt >= 0 ) {
     root  = NULL;
     file  = NULL;
-    start = F;
+    start = FTYPE_F;
 
   } else {
     return( OK );
@@ -1184,14 +1263,29 @@ static int SubmitCommands()
 
   switch ( start ) {
     /*******************************************************************/
-  case SIS:
+  case FTYPE_SIS:
     for ( idx = 0; idx <= siscnt; idx++ ) {
+
       if ( !nocpp ) {
 	avcnt = 0;
 	AddAV(cc);
-	sprintf( cmdline1, "%s%s %s '%s' %s %s",
-		(Prof || prof)? "time " : "", spprun, spp2, av[0], 
-		sis[idx],sisi[idx]);
+
+	temp_c		= SetFileSuffix((stopCPP)?(""):(TMPPATH),
+					GetFileRoot(file_sis[idx]), ".c" );
+	temp_spp	= SetFileSuffix((stopCPP)?(""):(TMPPATH),
+					GetFileRoot(file_sis[idx]), ".spp" );
+
+	sprintf( cmdline1, "%s%s %s '%s' %s %s %s %s %s",
+		(Prof || prof)? "time " : "",
+		spprun,		/* SPP Script */
+		spp2,		/* SPP Pass 2 */
+		av[0],		/* C compiler */
+		file_sis[idx],	/* Sisal source */
+		temp_c,		/* Temp c file */
+		temp_spp,	/* Temp spp file */
+		file_sisi[idx],	/* sis.i output file */
+		DefinedMachine	/* -DSGI or whatever */
+		);
 
 	for ( cnt = 0; cnt <= cppoptioncnt; cnt++ ) {
 	  strcat( cmdline1, " " );
@@ -1205,12 +1299,13 @@ static int SubmitCommands()
 	}
 
 	/* ------------------------------------------------------------ */
+        /* Run the preprocessor on command line .sis files              */
 	/* About to create tempfile, so register it with the list	*/
 	/* ------------------------------------------------------------ */
-	RegisterTempFile(sisi[idx]);
+	RegisterTempFile(file_sisi[idx]);
 
 	if ( !debug && system(cmdline1) != 0 ) {
-	  RemoveFile( sisi[idx] );
+	  RemoveFile( file_sisi[idx] );
 	  return( ERROR );
 	}
       }
@@ -1218,42 +1313,101 @@ static int SubmitCommands()
       if ( stopCPP ) continue;
 
       /* ------------------------------------------------------------ */
-      /* Make sure that dead frontend requests do not leave dead .i   */
+      /* Run the front end on command line .sis or .i files from .sis */
+      /* Make sure that dead front end requests do not leave dead .i  */
       /* files laying around (Srdjan)				      */
       /* ------------------------------------------------------------ */
-      RegisterTempFile(sisif1[idx]);
-      if ( !nocpp ) {
-	status = SubmitFrontendRequest(sisi[idx],sisif1[idx],sis[idx]);
+      if (front_vers==FRONT90) {
+        RegisterTempFile(file_sisif0[idx]);
+	status = SubmitFront90(file_sis[idx],
+          file_sisif0[idx],file_sis[idx]);
+        if ( status != OK ) {
+          for(jdx=0;jdx<=idx;jdx++) RemoveFile(file_sisif0[jdx]);
+	  return ERROR;
+        }
+      } else if ( !nocpp ) {
+        RegisterTempFile(file_sisif1[idx]);
+	status = SubmitFront1(file_sisi[idx],
+          file_sisif1[idx],file_sis[idx]);
+        RemoveFile( file_sisi[idx] );
       } else {
-	status = SubmitFrontendRequest(sis[idx],sisif1[idx],sis[idx]);
+        RegisterTempFile(file_sisif1[idx]);
+	status = SubmitFront1(file_sis[idx],
+          file_sisif1[idx],file_sis[idx]);
+        if ( status != OK ) {
+          for(jdx=0;jdx<=idx;jdx++) RemoveFile(file_sisif1[jdx]);
+	  return ERROR;
+        }
       }
 
-      /* ------------------------------------------------------------ */
-      /* CLEAN UP temporary file.i FILES			      */
-      /* ------------------------------------------------------------ */
-      if ( !nocpp ) RemoveFile( sisi[idx] );
-
-      if ( status != OK ) {
-	for(jdx=0;jdx<=idx;jdx++) RemoveFile(sisif1[jdx]);
-	return ERROR;
-      }
     }
 
     if ( stopCPP ) return( OK );
 
     /* ------------------------------------------------------------ */
-    /* Now compile any supplied .i files			    */
+    /* Run the front end on command line .i files		    */
     /* ------------------------------------------------------------ */
     for ( idx = 0; idx <= icnt; idx++ ) {
-      RegisterTempFile(iif1[idx]);
-      status = SubmitFrontendRequest( i[idx], iif1[idx], i[idx] );
-      if ( status != OK ) {
-	for(jdx=0;jdx<=idx;jdx++) RemoveFile(iif1[jdx]);
-	return( ERROR );
+      if (front_vers==FRONT90) {
+        RegisterTempFile(file_iif0[idx]);
+        status = SubmitFront90( file_i[idx], 
+          file_iif0[idx], file_i[idx] );
+        if ( status != OK ) {
+           for(jdx=0;jdx<=idx;jdx++) RemoveFile(file_iif0[jdx]);
+           return( ERROR );
+        }
+      } else {
+        RegisterTempFile(file_iif1[idx]);
+        status = SubmitFront1( file_i[idx], 
+          file_iif1[idx], file_i[idx] );
+        if ( status != OK ) {
+           for(jdx=0;jdx<=idx;jdx++) RemoveFile(file_iif1[jdx]);
+           return( ERROR );
+        }
       }
     }
+
     /*******************************************************************/
-  case IF1:
+  case FTYPE_IF0:
+    if ( stopCPP || stopIF0 ) return( OK );
+
+    if (front_vers==FRONT90) {
+       av[0] = expand;
+       avcnt = 3;
+      for ( idx = 0; idx <= siscnt; idx++ ) {		/* from .sis files */
+        av[1] = file_sisif0[idx];
+        av[2] = file_sisif1[idx];
+        status = Submit(expand);
+        if ( status != OK ) {
+           RemoveFile(file_sisif0[idx]);
+           return( ERROR );
+        }
+      }
+      for ( idx = 0; idx <= icnt; idx++ ) {		/* from .i files */
+        av[1] = file_iif0[idx];
+        av[2] = file_iif1[idx];
+        status = Submit(expand);
+        if ( status != OK ) {
+           RemoveFile(file_iif0[idx]);
+           return( ERROR );
+        }
+      }
+      for ( idx = 0; idx <= if0cnt; idx++ ) {		/* .if0 files */
+        av[1] = file_if0[idx];
+        av[2] = file_if0if1[idx];
+        status = Submit(expand);
+        if ( status != OK ) {
+           RemoveFile(file_if0[idx]);
+           return( ERROR );
+        }
+      }
+      for ( idx = 0; idx <= siscnt; idx++ ) RemoveFile(file_sisif0[idx]);
+      for ( idx = 0; idx <= icnt;   idx++ ) RemoveFile(file_iif0[idx]);
+      for ( idx = 0; idx <= if0cnt; idx++ ) RemoveFile(file_if0[idx]);
+    }
+
+    /*******************************************************************/
+  case FTYPE_IF1:
     if ( stopCPP || stopIF1 ) return( OK );
 
     av[0] = if1ld;
@@ -1288,6 +1442,11 @@ static int SubmitCommands()
       av[avcnt++] = foptions[idx];
     }
 
+    for ( idx = 0; idx <= roptioncnt; idx++ ) {
+      av[avcnt++] = "-r";
+      av[avcnt++] = roptions[idx];
+    }
+
     if ( cRay ) {
       av[avcnt++] = "-FU";
     } else {
@@ -1299,12 +1458,12 @@ static int SubmitCommands()
     }
 
     /* ------------------------------------------------------------ */
-    /* Submit with if1 files from .sis files, .i files, and	      */
-    /*.if1 files.						      */
+    /* Submit with if1 files.                                       */ 
     /* ------------------------------------------------------------ */
-    for ( idx = 0; idx <= siscnt; idx++ ) av[avcnt++] = sisif1[idx];
-    for ( idx = 0; idx <= icnt;   idx++ ) av[avcnt++] = iif1[idx];
-    for ( idx = 0; idx <= if1cnt; idx++ ) av[avcnt++] = if1[idx];
+    for ( idx = 0; idx <= siscnt; idx++ ) av[avcnt++] = file_sisif1[idx];
+    for ( idx = 0; idx <= icnt;   idx++ ) av[avcnt++] = file_iif1[idx];
+    for ( idx = 0; idx <= if0cnt; idx++ ) av[avcnt++] = file_if0if1[idx];
+    for ( idx = 0; idx <= if1cnt; idx++ ) av[avcnt++] = file_if1[idx];
 
     av[avcnt] = NULL;
 
@@ -1316,9 +1475,10 @@ static int SubmitCommands()
     /* ------------------------------------------------------------ */
     /* Remove the .if1 files					      */
     /* ------------------------------------------------------------ */
-    for ( idx = 0; idx <= siscnt; idx++ ) RemoveFile(sisif1[idx]);
-    for ( idx = 0; idx <= icnt;   idx++ ) RemoveFile(iif1[idx]);
-    for ( idx = 0; idx <= if1cnt; idx++ ) RemoveFile(if1[idx]);
+    for ( idx = 0; idx <= siscnt; idx++ ) RemoveFile(file_sisif1[idx]);
+    for ( idx = 0; idx <= icnt;   idx++ ) RemoveFile(file_iif1[idx]);
+    for ( idx = 0; idx <= if0cnt; idx++ ) RemoveFile(file_if0if1[idx]);
+    for ( idx = 0; idx <= if1cnt; idx++ ) RemoveFile(file_if1[idx]);
 
     if ( status != OK ) {
       RemoveFile(file);
@@ -1326,7 +1486,7 @@ static int SubmitCommands()
     }
 
     /*******************************************************************/
-  case MONO:
+  case FTYPE_MONO:
     if ( stopMONO )
       return( OK );
 
@@ -1416,10 +1576,8 @@ static int SubmitCommands()
     if ( info ) {
       sprintf(dashi,"-i%d",info);
       av[avcnt++] = dashi;
-    }
-    if ( vinfo || cinfo ) {
-      sprintf(dashI,"-I%d",vinfo|cinfo);
-      av[avcnt++] = dashI;
+      sprintf (info1, "-F%s", SetFileSuffix (TMPPATH, "info", ".p1"));
+      av[avcnt++] = info1;
     }
 
     if ( !stopDI ) {
@@ -1451,7 +1609,7 @@ static int SubmitCommands()
     if ( stopDI ) return( OK );
 
     /*******************************************************************/
-  case OPT:
+  case FTYPE_OPT:
     if ( stopOPT ) return( OK );
 
     av[0] = if2mem;
@@ -1485,6 +1643,8 @@ static int SubmitCommands()
     if ( info ) {
       sprintf(dashi,"-i%d",info);
       av[avcnt++] = dashi;
+      sprintf (info2, "-F%s", SetFileSuffix (TMPPATH, "info", ".p2"));
+      av[avcnt++] = info2;
     }
 
     if ( noif2mem )
@@ -1504,7 +1664,7 @@ static int SubmitCommands()
 
     file = tmp1;
     /*******************************************************************/
-  case MEM:
+  case FTYPE_MEM:
     if ( stopMEM ) return( OK );
 
     av[0] = if2up;
@@ -1519,6 +1679,8 @@ static int SubmitCommands()
     if ( info ) {
       sprintf(dashi,"-i%d",info);
       av[avcnt++] = dashi;
+      sprintf (info3, "-F%s", SetFileSuffix (TMPPATH, "info", ".p3"));
+      av[avcnt++] = info3;
     }
 
     if ( !Warnings ) av[avcnt++] = "-w";
@@ -1555,7 +1717,7 @@ static int SubmitCommands()
 
     file = tmp2;
     /*******************************************************************/
-  case UP:
+  case FTYPE_UP:
     if ( stopUP ) return( OK );
 
     av[0] = if2part;
@@ -1583,6 +1745,8 @@ static int SubmitCommands()
     if ( info ) {
       sprintf(dashi,"-i%d",info);
       av[avcnt++] = dashi;
+      sprintf (info4, "-F%s", SetFileSuffix (TMPPATH, "info", ".p4"));
+      av[avcnt++] = info4;
     }
 
     if ( noassoc ) av[avcnt++] = "-R";
@@ -1623,7 +1787,7 @@ static int SubmitCommands()
 
     file = tmp3;
     /*******************************************************************/
-  case PART:
+  case FTYPE_PART:
     if ( stopPART ) return( OK );
 
     av[0] = if2gen;
@@ -1641,6 +1805,7 @@ static int SubmitCommands()
     if ( Prof ) av[avcnt++] = "-W";
 
     if ( ShowSource ) av[avcnt++] = "-%";
+    if ( stopIF3 ) av[avcnt++] = "-t";
 
     for ( idx = 0; idx <= flopoptioncnt; idx++ ) {
       av[avcnt++] = "-@";
@@ -1726,10 +1891,8 @@ static int SubmitCommands()
     if ( info ) {
       sprintf(dashi,"-i%d",info);
       av[avcnt++] = dashi;
-    }
-    if ( cinfo || vinfo ) {
-      sprintf(dashV,"-V%d",cinfo|vinfo);
-      av[avcnt++] = dashV;
+      sprintf (infofile, "-F%s", SetFileSuffix (TMPPATH, "info", ".p1"));
+      av[avcnt++] = infofile;
     }
 
     if ( noregs )  av[avcnt++] = "-r";
@@ -1773,13 +1936,13 @@ static int SubmitCommands()
 
     file = tmp4;
 
-    c[++ccnt] = cfile = file;
+    file_c[++ccnt] = cfile = file;
 
     /*******************************************************************/
-  case C:
+  case FTYPE_C:
     if ( stopC ) return( OK );
     /*******************************************************************/
-  case LD:
+  case FTYPE_LD:
     /*******************************************************************/
     if ( dohybrid ) {
       avcnt = 0;
@@ -1803,7 +1966,7 @@ static int SubmitCommands()
       if ( Submit( av[0] ) == ERROR )
 	return( ERROR );
 
-      ld[++ldcnt] = hybridDOT;
+      file_ld[++ldcnt] = hybridDOT;
     }
     /*******************************************************************/
     if ( forF && ccnt < 0 ) goto ProcessFORTRAN;
@@ -1816,12 +1979,14 @@ static int SubmitCommands()
 #endif
 
 #ifdef CRAY
-    if ( info || vinfo ) {
+    if ( info ) {
 #if SCC >= 3
       av[avcnt++] = "-h";
       av[avcnt++] = "report=v";
 #else
       av[avcnt++] = "-hvreport";
+      sprintf (infofile, "-F%s", SetFileSuffix (TMPPATH, "info", ".p1"));
+      av[avcnt++] = infofile;
 #endif
     }
 
@@ -1873,18 +2038,15 @@ static int SubmitCommands()
     if ( cpyinfo )
       av[avcnt++] = "-DCInfo=1";
 
-#ifdef SUN
-    av[avcnt++] = "-DSUN";
-#endif
 
-#ifdef SGI
-    av[avcnt++] = "-DSGI";
-#endif
+    /* ------------------------------------------------------------ */
+    /* Drop in the machine specific name			    */
+    /* ------------------------------------------------------------ */
+    av[avcnt++] = DefinedMachine;
 
-#ifdef RS6000
-    av[avcnt++] = "-DRS6000";
-#endif
-
+    /* ------------------------------------------------------------ */
+    /* Handle special operating systems				    */
+    /* ------------------------------------------------------------ */
 #ifdef SUNIX
     av[avcnt++] = "-DSUNIX";
 #endif
@@ -1893,35 +2055,27 @@ static int SubmitCommands()
     av[avcnt++] = "-DGANGD";
 #endif
 
-#ifdef SYMMETRY
-    av[avcnt++] = "-DSYMMETRY";
+#ifdef NON_COHERENT_CACHE
+      av[avcnt++] = "-DNON_COHERENT_CACHE";
+      av[avcnt] = malloc(25);
+      sprintf(av[avcnt++],"-DCACHE_LINE=%d",CACHE_LINE);
 #endif
-
-#ifdef BALANCE
-    av[avcnt++] = "-DBALANCE";
+#ifdef NO_STATIC_SHARED
+      av[avcnt++] = "-DNO_STATIC_SHARED";
 #endif
-
-#ifdef ENCORE
-    av[avcnt++] = "-DENCORE";
-#endif
-
-#ifdef CRAY
-    av[avcnt++] = "-DCRAY";
-#ifdef CRAYXY
-    av[avcnt++] = "-DCRAYXY";
-#endif
-#ifdef CRAY2
-    av[avcnt++] = "-DCRAY2";
-#endif
+#ifdef POWER4
+      av[avcnt++] = "-DPOWER4";
+      av[avcnt++] = "-qmaxmem=10000";
 #endif
 
 #ifdef ALLIANT
-    av[avcnt++] = "-DALLIANT";
     av[avcnt++] = "-ce";
 
-    if ( info || vinfo ) {
+    if ( info ) {
       av[avcnt++] = "-l";
       av[avcnt++] = "-OMip";
+      sprintf (infofile, "-F%s", SetFileSuffix (TMPPATH, "info", ".p1"));
+      av[avcnt++] = infofile;
     }
     else
       av[avcnt++] = "-OMipsl";
@@ -1956,7 +2110,7 @@ static int SubmitCommands()
 #  endif
 #endif
 
-#if BALANCE || SYMMETRY
+#if defined(BALANCE) || defined(SYMMETRY)
       av[avcnt++] = "-i";
 #endif
     }
@@ -1967,9 +2121,15 @@ static int SubmitCommands()
 #endif
 #endif
 
-#ifdef F68881
 #if !GNU
+#ifdef F68881
     av[avcnt++] = "-f68881";
+#endif
+#ifdef M68881
+    av[avcnt++] = "-m68881";
+#endif
+#ifdef M68020
+    av[avcnt++] = "-m68020";
 #endif
 #endif
 
@@ -1977,7 +2137,7 @@ static int SubmitCommands()
 
     if ( forF || stopc ) av[avcnt++] = "-c";
 
-#if SYMMETRY || BALANCE
+#if defined(SYMMETRY) || defined(BALANCE)
     av[avcnt++] = "-w";
 #endif
 
@@ -2012,12 +2172,15 @@ static int SubmitCommands()
       }
       else
 	av[avcnt++] = aabs;
+    } else if ( stopc && aabs!=NULL ) {
+        av[avcnt++] = "-o";
+	av[avcnt++] = aabs;
     }
 
     /* ------------------------------------------------------------ */
     /* Add in any C source files (supplied or generated)	    */
     /* ------------------------------------------------------------ */
-    for ( idx = 0; idx <= ccnt; idx++ ) av[avcnt++] = c[idx];
+    for ( idx = 0; idx <= ccnt; idx++ ) av[avcnt++] = file_c[idx];
 
     /* ------------------------------------------------------------ */
     /* Add runtime libraries					    */
@@ -2031,7 +2194,7 @@ static int SubmitCommands()
 #ifndef BALANCE
       av[avcnt++] = libs;
       /* HPUX cc needs a blank between '-L' and path */
-#	if HPUX || HPUXPA
+#	if defined(HPUX) || defined(HPUXPA)
 #	if !GNU
       av[avcnt++] = BIN_PATH;
 #	endif
@@ -2043,9 +2206,9 @@ static int SubmitCommands()
       /* ------------------------------------------------------------ */
       /* User supplied loader options				      */
       /* ------------------------------------------------------------ */
-      for ( idx = 0; idx <= ldcnt; idx++ ) av[avcnt++] = ld[idx];
+      for ( idx = 0; idx <= ldcnt; idx++ ) av[avcnt++] = file_ld[idx];
 
-#if ALLIANT || SYMMETRY || BALANCE
+#if defined(ALLIANT) || defined(SYMMETRY) || defined(BALANCE)
       av[avcnt++] = libs;
 #else
       av[avcnt++] = "-lsisal";
@@ -2065,7 +2228,7 @@ static int SubmitCommands()
       av[avcnt++] = "-lmpc";
 #endif
 
-#if BALANCE || SYMMETRY
+#if defined(BALANCE) || defined(SYMMETRY)
 #ifdef GANGD
       av[avcnt++] = "-lppp";
 #endif
@@ -2077,14 +2240,16 @@ static int SubmitCommands()
       av[avcnt++] = "-lpp";
 #endif
 
+#if defined(POWER4)
+        av[avcnt++] = "-lfrte";
+        av[avcnt++] = "/usr/lpp/power4/lib/libcache.a";
+        av[avcnt++] = sh_ld;
+#endif
+
       av[avcnt++] = "-lm";
 
-#ifndef CRAY
-#ifndef SGI
-#ifndef NeXT
+#if !defined(CRAY) && !defined(SGI) && !defined(NeXT) && !defined(SUNIX)
       av[avcnt++] = "-lc";
-#endif
-#endif
 #endif
     }
 
@@ -2100,9 +2265,9 @@ static int SubmitCommands()
     /* ------------------------------------------------------------ */
     for ( idx = 0; idx <= ccnt; idx++ ) {
       char	ofile[MAX_PATH],*dotc;
-      if ( strcmp( cfile, c[idx] ) == SAME ) RemoveFile( c[idx] );
-      if ( !mdb ) {
-	strcpy(ofile,c[idx]);
+      if ( strcmp( cfile, file_c[idx] ) == SAME ) RemoveFile( file_c[idx] );
+      if ( !mdb && !stopc ) {
+	strcpy(ofile,file_c[idx]);
 	dotc = GetFileSuffix(ofile);
 	if ( dotc ) {
 	  strcpy(dotc,".o");
@@ -2116,7 +2281,7 @@ static int SubmitCommands()
   ProcessFORTRAN:
     if ( !forF || stopc ) break;
 
-  case F:
+  case FTYPE_F:
 
     avcnt = 0;
     AddAV(ff);
@@ -2141,10 +2306,10 @@ static int SubmitCommands()
       av[avcnt++] = ffoptions[cnt];
 
     for ( idx = 0; idx <= fcnt; idx++ )
-      av[avcnt++] = f[idx];
+      av[avcnt++] = file_f[idx];
 
     for ( idx = 0; idx <= ccnt; idx++ )
-      av[avcnt++] = SetFileSuffix("",GetFileRoot( c[idx] ), ".o" );
+      av[avcnt++] = SetFileSuffix("",GetFileRoot( file_c[idx] ), ".o" );
 
 
 #ifndef ALLIANT
@@ -2160,11 +2325,12 @@ static int SubmitCommands()
 #endif
 
     for ( idx = 0; idx <= ldcnt; idx++ )
-      av[avcnt++] = ld[idx];
+      av[avcnt++] = file_ld[idx];
 
-#if ALLIANT || SYMMETRY || BALANCE || SUNIX || RS6000
+#if defined(ALLIANT) || defined(SYMMETRY) || defined(BALANCE) || \
+    defined(SUNIX) || defined(RS6000)
     av[avcnt++] = libs;
-#if SUNIX || RS6000
+#if defined(SUNIX) || defined(RS6000)
     av[avcnt++] = "-lsisal";
 #endif
 #else
@@ -2185,7 +2351,7 @@ static int SubmitCommands()
     av[avcnt++] = "-lmpc";
 #endif
 
-#if BALANCE || SYMMETRY
+#if defined(BALANCE) || defined(SYMMETRY)
 #ifdef GANGD
     av[avcnt++] = "-lppp";
 #endif
@@ -2219,6 +2385,40 @@ static int SubmitCommands()
     break;
   }
 
+/* merge info output files */
+  if (info) {
+  sprintf (infofile, "/bin/rm -f %s", SetFileSuffix (TMPPATH, "info", ".out")); 
+  system (infofile); 
+  sprintf (infofile, "echo info = %s >> %s; echo >> %s", infos, 
+	SetFileSuffix (TMPPATH, "info", ".out"),
+	SetFileSuffix (TMPPATH, "info", ".out")); 
+  system (infofile); 
+  }
+
+  if (RequestInfo(I_Info1, info)) {
+  sprintf (infofile, "cat %s >> %s; /bin/rm -f %s", 
+	SetFileSuffix (TMPPATH, "info", ".p1"), 
+	SetFileSuffix (TMPPATH, "info", ".out"), 
+	SetFileSuffix (TMPPATH, "info", ".p1"));
+  system (infofile); }
+  if (RequestInfo(I_Info2, info)) {
+  sprintf (infofile, "cat %s >> %s; /bin/rm -f %s", 
+	SetFileSuffix (TMPPATH, "info", ".p2"),
+	SetFileSuffix (TMPPATH, "info", ".out"), 
+	SetFileSuffix (TMPPATH, "info", ".p2"));
+  system (infofile); }
+  if (RequestInfo(I_Info3, info)) {
+  sprintf (infofile, "cat %s >> %s; /bin/rm -f %s", 
+	SetFileSuffix (TMPPATH, "info", ".p3"),
+	SetFileSuffix (TMPPATH, "info", ".out"), 
+	SetFileSuffix (TMPPATH, "info", ".p3"));
+  system (infofile); }
+  if (RequestInfo(I_Info4, info)) {
+  sprintf (infofile, "cat %s >> %s; /bin/rm -f %s", 
+	SetFileSuffix (TMPPATH, "info", ".p4"),
+	SetFileSuffix (TMPPATH, "info", ".out"), 
+	SetFileSuffix (TMPPATH, "info", ".p4"));
+  system (infofile); }
   return( OK );
 }
 
@@ -2230,16 +2430,17 @@ static int SubmitCommands()
 /*          AND CALL SubmitCommands TO REALIZE COMPILATION.               */
 /**************************************************************************/
 
-static char VERSION[] = "v12.9.2";
+static char VERSION[] = "v13.0";
 #ifndef VPREFIX
 # define VPREFIX ""
 #endif
 
+void
 main( argc, argv )
 int    argc;
 char **argv;
 {
-  int		i,fake_argc;
+  int		fake_argc;
   char		*p,*OSC_OPTIONS,*OSC_ENVIRONMENT,*fake_argv[100];
   char		*getenv();
   char		*TMP;
@@ -2269,7 +2470,55 @@ char **argv;
   signal(SIGXCPU,DeathWish);
 #endif
 
+  /* ------------------------------------------------------------ */
+  /* Set up a few machine specific things...			  */
+  /* ------------------------------------------------------------ */
   sprintf( procs = (char *) malloc(100), "-P%d", MAX_PROCS ); 
+
+#ifdef LINUX
+    DefinedMachine = "-DLINUX";
+#endif
+
+#ifdef SUN
+    DefinedMachine = "-DSUN";
+#endif
+
+#ifdef SGI
+    DefinedMachine = "-DSGI";
+#endif
+
+#ifdef RS6000
+    DefinedMachine = "-DRS6000";
+#endif
+
+#ifdef SYMMETRY
+    DefinedMachine = "-DSYMMETRY";
+#endif
+
+#ifdef BALANCE
+    DefinedMachine = "-DBALANCE";
+#endif
+
+#ifdef ENCORE
+    DefinedMachine = "-DENCORE";
+#endif
+
+#ifdef CRAY
+    DefinedMachine = "-DCRAY";
+#ifdef CRAYXY
+    DefinedMachine = "-DCRAYXY";
+#endif
+#ifdef CRAY2
+    DefinedMachine = "-DCRAY2";
+#endif
+#endif
+#ifdef CRAYT3D
+    DefinedMachine = "-UCRAY";
+#endif
+
+#ifdef ALLIANT
+    DefinedMachine = "-DALLIANT";
+#endif
 
   /* ------------------------------------------------------------ */
   /* See if there is a temp directory set			  */
@@ -2293,7 +2542,7 @@ char **argv;
     p = OSC_ENVIRONMENT;
     do {
       /* Convert blanks to null */
-      while(*p && isspace(*p)) *(p++) = NULL;
+      while(*p && isspace(*p)) *(p++) = '\0';;
       if ( *p ) {
 	/* Set the pointer to the argument */
 	fake_argv[fake_argc++] = p;
@@ -2309,10 +2558,18 @@ char **argv;
   /* Now parse any command line options				  */
   /* ------------------------------------------------------------ */
   ParseCommandLine( argc, argv );
+  if (verbose) 
+      printf("OSC %s %s\n", VERSION, VPREFIX);
 
   /* ------------------------------------------------------------ */
-  StrCat( sisal,     BIN_PATH,  "/sisal"     );
-  StrCat( sisalpt,   BIN_PATH,  ""           );
+  if ( front_vers==FRONT90 ) {
+     StrCat( front,  BIN_PATH,  "/front90"   );
+     StrCat( expand, BIN_PATH,  "/expand90"  );
+  } else {
+     StrCat( front,  BIN_PATH,  "/sisal"     );
+     expand[0] = '\0';
+  }
+  StrCat( sisalpt,   LIB_PATH,  ""           );	/* etablebin, ptablebin */
   StrCat( if1ld,     BIN_PATH,  "/if1ld"     );
   StrCat( if1opt,    BIN_PATH,  "/if1opt"    );
   StrCat( if2mem,    BIN_PATH,  "/if2mem"    );
@@ -2326,7 +2583,7 @@ char **argv;
 #ifdef USEFF
       ff = USEFF;
 #else
-#  if ALLIANT || BALANCE || SYMMETRY
+#if defined(ALLIANT) || defined(BALANCE) || defined(SYMMETRY)
       ff = "fortran";
 #  else
 #    ifdef CRAY
@@ -2354,30 +2611,34 @@ char **argv;
 #endif
       }
 
-    StrCat( incl,      "-I",          BIN_PATH );
+    StrCat( incl,      "-I",          INC_PATH );
 
-#if ALLIANT || SYMMETRY || BALANCE
-    StrCat( libs,      BIN_PATH,      "/libsisal.a" );
+#if defined(ALLIANT) || defined(SYMMETRY) || defined(BALANCE)
+    StrCat( libs,      LIB_PATH,      "/libsisal.a" );
 #else
 
-#  if HPUX || HPUXPA
+#  if defined(HPUX) || defined(HPUXPA)
    /* HPUX cc needs blank between '-L' and path */
 #    if GNU
-       StrCat( libs,      "-L",          BIN_PATH );
+       StrCat( libs,      "-L",          LIB_PATH );
 #    else
        strcpy( libs,      "-L");
 #    endif
 #  else
-     StrCat( libs,      "-L",          BIN_PATH );
+     StrCat( libs,      "-L",          LIB_PATH );
 #  endif
 
 #endif
 
-    StrCat( srt0,      BIN_PATH,  "/p-srt0.o"    );
+    StrCat( srt0,      LIB_PATH,  "/p-srt0.o"    );
+
+#if defined(POWER4)
+    sprintf( sh_ld, "%s%s%s", "-bimport:", LIB_PATH, "/shared.imp"    );
+#endif
 
     if ( costs == NULL ) {
         costs = buf1;
-        StrCat( costs,   BIN_PATH,  "/s.costs"   );
+        StrCat( costs,   LIB_PATH,  "/s.costs"   );
         }
 
     if ( SubmitCommands() == ERROR ) {
@@ -2389,6 +2650,91 @@ char **argv;
 }
 
 /* $Log: osc.c,v $
+ * Revision 1.40  1994/08/12  19:27:32  denton
+ * Removed ANSI violation.
+ *
+ * Revision 1.39  1994/08/08  19:17:54  denton
+ * Removed include for ANSI
+ *
+ * Revision 1.38  1994/08/03  22:07:23  denton
+ * Added M68881 for Machten
+ *
+ * Revision 1.37  1994/08/03  00:52:59  denton
+ * Machten to M68881
+ *
+ * Revision 1.36  1994/07/28  17:19:44  denton
+ * Added MACHTEN floating point to CC
+ *
+ * Revision 1.35  1994/06/24  16:01:48  denton
+ * Added -IF3.
+ *
+ * Revision 1.34  1994/06/16  21:32:46  mivory
+ * info format and option changes M. Y. I.
+ *
+ * Revision 1.33  1994/06/07  23:05:17  denton
+ * First attempt at .s90 extension.
+ *
+ * Revision 1.32  1994/05/03  15:17:00  denton
+ * Cleaned up intermediate if0 files.
+ *
+ * Revision 1.31  1994/05/03  00:32:21  denton
+ * Switch expander to use Submit() so -v displays its progress.
+ *
+ * Revision 1.30  1994/05/02  23:34:04  denton
+ * First try at hooking in front90 and expand90.
+ *
+ * Revision 1.29  1994/05/02  20:37:01  denton
+ * Clean up some variable names.  Eliminated extraneous print.
+ *
+ * Revision 1.28  1994/04/18  19:24:58  denton
+ * Removed remaining gcc warnings.
+ *
+ * Revision 1.27  1994/04/15  15:52:07  denton
+ * Added config.h to centralize machine specific header files.
+ * Fixed gcc warings.
+ *
+ * Revision 1.26  1994/04/07  23:05:40  denton
+ * Fixed ANSI static function error.
+ *
+ * Revision 1.25  1994/04/06  23:40:54  denton
+ * Added new options in preparation of a more UNIX-like compiler:
+ *    -c -> -externC
+ *    -f -> -externF
+ *    -c added to produce .o
+ *    -main added as alias to -e.  Will separate to make -man mean add SisalMain
+ *    -front=SISAL1.2
+ *    -front=SISAL90 added for language selection
+ *    -IFO added to stop after expander (not yet complete)
+ *    -o available on -c and only complains about files from internal phases
+ *
+ * Revision 1.24  1994/04/06  16:40:25  denton
+ * Prepare for new file types.
+ *
+ * Revision 1.23  1994/04/06  00:36:12  denton
+ * Removed -lc from SUNIX ld line
+ *
+ * Revision 1.22  1994/04/06  00:24:44  denton
+ * Default is GENERIC since SUNIX is not a machine
+ *
+ * Revision 1.21  1994/03/24  22:41:21  denton
+ * Distributed DSA, non-coherent cache, non-static shared memory
+ *
+ * Revision 1.20  1994/02/01  22:33:55  miller
+ * LINUX updates -- Changed how the -D<target> flag was added to compiles
+ * and preprocessing.
+ *
+ * Revision 1.19  1994/01/28  18:09:16  denton
+ * ->speedups.1
+ *
+ * Revision 1.18  1994/01/27  23:52:43  miller
+ * New man page and shell stuff
+ *
+ * Revision 1.2  1994/01/06  18:10:02  denton
+ * *** empty log message ***
+ *
+ * Revision 1.1  1994/01/06  18:07:29  denton
+ * Initial revision
+ *
  * Revision 1.16  1993/11/30  00:51:46  miller
  * Death wish to clean up trash files
  *

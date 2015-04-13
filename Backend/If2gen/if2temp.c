@@ -8,7 +8,6 @@
 
 #include "world.h"
 
-
 #define IsLastUse(x)        ((x)->rc == 1) 
 #define IncPopularity(x,y)  if ( x->temp != NULL ) x->temp->pop += y
 
@@ -147,11 +146,22 @@ PNODE g;
 
             break;
 
-	default:
+	case IFLoopA:
+	case IFLoopB:
 	    if ( g->G_DAD->L_BODY == g || g->G_DAD->L_RET == g )
 		return;
 
 	    break;
+
+        case IFUReduce:
+	    UNIMPLEMENTED( "IFUReduce" );
+	    if ( g->G_DAD->L_BODY == g || g->G_DAD->L_RET == g )
+		return;
+
+            break;
+
+        default:
+            UNEXPECTED( "Unknown compound" );
         }
 
     for ( e = g->exp; e != NULL; e = e->esucc )
@@ -385,7 +395,7 @@ int   eport;
 /*          AND BOOLEAN ALL MATCH.                                        */
 /**************************************************************************/
 
-static IsTypeMatch( i1, i2 )
+static int IsTypeMatch( i1, i2 )
 PEDGE i1;
 PEDGE i2;
 {
@@ -1054,6 +1064,216 @@ PNODE st;
 
 
 /**************************************************************************/
+/* LOCAL  **************     AssignUReduceTemps     ***********************/
+/**************************************************************************/
+/* PURPOSE: ASSIGN TEMPORARIES TO UReduce NODE r.  AN ATTEMPT IS MADE TO  */
+/*          REUSE STORAGE.                                                */
+/**************************************************************************/
+
+static void AssignUReduceTemps( r )
+PNODE r;
+{
+    register PEDGE i;
+    register PEDGE ii;
+    register PEDGE si;
+    register PNODE n;
+
+    /* PROPAGATE K PORT TEMPORARIES TO ALL SUBGRAPHS                      */
+
+    for ( i = r->imp; i != NULL; i = i->isucc ) {
+	if ( IsLastUse( i ) && (i->cm != -1) ) {
+	    if ( !(IsExport( r->R_BODY, i->iport ) ||
+		   IsExport( r->R_RET,  i->iport )) )
+		PropagateTemp( r->R_INIT, i->iport, FALSE, i->temp );
+            else
+		PropagateTemp( r->R_INIT, i->iport, TRUE, i->temp );
+	    }
+        else
+            PropagateTemp( r->R_INIT, i->iport, TRUE, i->temp );
+
+	PropagateTemp( r->R_BODY, i->iport, TRUE, i->temp );
+	PropagateTemp( r->R_RET,  i->iport, TRUE, i->temp );
+	}
+
+    /* ALLOCATE TEMPORARIES FOR ALL L PORT VALUES                         */
+
+    for ( i = r->R_INIT->imp; i != NULL; i = si ) {
+	si = i->isucc;
+
+	if ( IsConst( i ) ) {
+	    AddAssignNode( FindLastNode( r->R_INIT ), r->R_INIT, i,
+			   GetTemp( "tmp", i->info, NONE )       );
+	    continue;
+	    }
+
+	if ( !IsLastUse( i ) ) {
+	    DecrementRefCount( i->src, i->eport );
+	    AddAssignNode( FindLastNode( r->R_INIT ), r->R_INIT, i,
+			   GetTemp( "tmp", i->info, NONE )       );
+	    }
+	}
+
+    /* PROPAGATE L PORT TEMPORARIES TO ALL SUBGRAPHS                      */
+
+    for ( i = r->R_INIT->imp; i != NULL; i = i->isucc ) {
+	PropagateTemp( r->R_RET,  i->iport, TRUE, i->temp );
+
+	ii = FindImport( r->R_BODY, i->iport );
+
+	if ( IsConst(ii))
+	  if ( !IsExport( r->R_BODY, i->iport ) )
+	    continue;
+
+	/* IF NOT REFERENCED IN THE BODY AND NOT NEEDED AFTER ITS NEW     */
+	/* VALUE IS DEFINED THEN DIRECTLY REDEFINE IT.                    */
+
+	if ( !IsExport( r->R_BODY, i->iport ) )
+	    if ( (ii->cm != -1) && (ii->temp == NULL) )
+                switch ( ii->src->type ) {
+		    case IFSelect: 
+		    case IFForall: 
+		    case IFTagCase:
+		    case IFLoopA:  
+		    case IFLoopB:  
+		    case IFFirstSum:
+		    case IFFirstMin:
+		    case IFFirstAbsMin:
+		    case IFFirstAbsMax:
+		    case IFTri:
+		    case IFFirstMax:
+		    case IFCall:
+		    case IFLoopPoolEnq: 
+		    case IFOptLoopPoolEnq:
+		    case IFSGraph:
+		        break;
+
+                    default:
+			if ( !IsConst( ii ) )
+		            PropagateTemp( ii->src, ii->eport, TRUE, i->temp );
+
+			continue;
+		    }
+
+	if ( ii->cm != -1 )
+	    PropagateTemp( r->R_BODY, i->iport, FALSE, i->temp); /* WRITE */
+	else
+	    PropagateTemp( r->R_BODY, i->iport, TRUE, i->temp );  /* READ */
+	}
+
+    /* MARK ALL FINALVALUE NODES CANDIDATE FOR EXECUTION AFTER THE LAST   */
+    /* LOOP ITERATION COMPLETES AND NOT DURING EXECUTION.                 */
+
+    for ( n = r->R_RET->G_NODES; n != NULL; n = n->nsucc )
+	if ( IsFinalValue( n ) && IsBasic( n->exp->info ) )
+	    if ( n->imp->isucc == NULL )
+		if ( IsOnlyFinalValueNode( n ) )
+		    n->lmark = TRUE;
+
+    /* ASSIGN TEMPORARIES IN THE RETURN AND BODY SUBGRAPHS                */ 
+
+    AssignTemps( r->R_RET );
+    AssignTemps( r->R_BODY );
+
+				    /* BODY MAY HAVE PREMATURELY FREED    */
+				    /* SOME L PORT TEMPORARIES            */
+    ChangeToAllocated( NULL_EDGE, r->R_INIT ); 
+
+    /* WHERE NECESSARY, FORCE ASSIGNMENTS TO L PORT TEMPORARIES IN THE    */
+    /* BODY SUBGRAPH.                                                     */
+
+    for ( i = r->R_BODY->imp; i != NULL; i = si ) {
+	si = i->isucc;
+
+	if ( i->iport == 0 )
+	    continue;
+
+        if ( (ii = FindImport( r->R_INIT, i->iport )) == NULL ) {   /* T */
+	    if ( IsConst( i ) || IsTempImported( r->R_INIT, i->temp ) ) {
+		ii = AddAssignNode( FindLastNode( r->R_BODY ), r->R_BODY, i,
+				    GetTemp( "tmp", i->info, NONE )       );
+
+		}
+
+	    continue;
+	    }
+
+        if ( ii->temp == i->temp )
+	    continue;
+
+        if ( IsConst( i ) )
+	    continue;
+
+	if ( !IsTempExported( r->R_BODY, i->temp ) )
+	    continue;
+
+	if ( IsSGraph( i->src ) )
+	    continue;
+
+	AddAssignNode( FindLastNode( r->R_BODY ), r->R_BODY, i,
+		       GetTemp( "tmp", i->info, NONE )       );
+
+	if ( !IsTempImported( r->R_INIT, i->temp ) )
+	    FreeTemp( i );
+	}
+
+    /* BIND TEMPORARIES FOR THOSE FINALVALUE NODES SCHEDULED TO EXECUTE   */
+    /* AFTER THE LOOP IS DONE */
+
+
+    for ( n = r->R_RET->G_NODES; n != NULL; n = n->nsucc )
+	if ( n->lmark ) {
+	    if ( n->imp->temp != NULL ) /* !CONSTANT */ /* CANN 9/8/89 */
+	    n->exp->temp = n->imp->temp;
+
+	    PropagateTemp( r, n->exp->iport, FALSE, n->exp->temp );
+	    }
+
+    /* ASSIGN FINAL TEMPORARIES FROM REDUCTION */
+
+    for ( i = r->exp; i!=NULL; i = i->esucc ) {
+        if ( !i->temp )
+            i->temp = GetTemp( "tmp", i->info, NONE );
+        PropagateTemp( i->dst->G_DAD, i->iport, FALSE, i->temp);
+    }
+
+
+    /* FREE TEMPORARIES ALLOCATED IN r OR IMPORTED TO r THAT ARE DEAD     */
+    /* WHEN IT COMPLETES.                                                 */
+
+    for ( i = r->imp; i != NULL; i = i->isucc )
+	if ( !IsTempExported( r, i->temp ) )
+	    FreeTemp( i );
+
+    for ( i = r->R_INIT->imp; i != NULL; i = i->isucc )
+	if ( !( IsTempExported( r, i->temp ) ||
+		IsTempImported( r, r->temp ) ) )
+            FreeTemp( i );
+
+    for ( i = r->R_BODY->imp; i != NULL; i = i->isucc )
+	if ( !IsTempImported( r->R_INIT, i->temp ) )
+	    FreeTemp( i );
+}
+
+
+/**************************************************************************/
+/* LOCAL  **************     AssignReturnsTemps     ***********************/
+/**************************************************************************/
+/* PURPOSE: ASSIGN TEMPORARIES TO RETURN SUBGRAPH g.                      */
+/**************************************************************************/
+
+static void AssignReturnsTemps( g )
+PNODE g;
+{
+    register PNODE r;
+
+    for ( r = g->nsucc; r != NULL; r = r->nsucc ) {
+        if ( r->type == IFUReduce )
+            AssignUReduceTemps( r );
+    }
+}
+
+
+/**************************************************************************/
 /* LOCAL  **************     AssignSelectTemps     ************************/
 /**************************************************************************/
 /* PURPOSE: ASSIGN TEMPORARIES TO Select OR TagCase NODE s. AN ATTEMPT IS */
@@ -1274,7 +1494,7 @@ PEDGE i;
 /* LOCAL  **************     AssignForallTemps     ************************/
 /**************************************************************************/
 /* PURPOSE: ASSIGN TEMPORARIES TO Forall NODE f. AN ATTEMPT IS MADE TO    */
-/*          IS MADE TO RESUE STORAGE.                                     */
+/*          TO REUSE STORAGE.                                             */
 /**************************************************************************/
 
 static void AssignForallTemps( f )
@@ -1495,6 +1715,10 @@ PNODE f;
 	  PropagateTemp( f->F_RET, i->iport, TRUE, i->temp );
       }
 
+    /* ASSIGN REDUCTION TEMPORARIES AFTER PUSHING THROUGH THE BODY.       */
+
+    AssignReturnsTemps( f->F_RET );
+
     /* FREE TEMPORARIES ALLOCATED IN f OR IMPORTED TO f THAT ARE DEAD     */
     /* WHEN THE NODE COMPLETES.                                           */
 
@@ -1526,7 +1750,7 @@ PNODE f;
 /* LOCAL  **************      AssignLoopTemps      ************************/
 /**************************************************************************/
 /* PURPOSE: ASSIGN TEMPORARIES TO LOOP NODE l.  AN ATTEMPT IS MADE TO     */
-/*          RESUE STORAGE IMPORTED TO l AND SHARE STORAGE ACROSS          */
+/*          REUSE STORAGE IMPORTED TO l AND SHARE STORAGE ACROSS          */
 /*          SUBGRAPHS.                                                    */
 /**************************************************************************/
 
@@ -1598,7 +1822,7 @@ PNODE l;
 	/* END BUG FIX */
 
 	/* IF NOT REFERENCED IN THE BODY AND NOT NEEDED AFTER ITS NEW     */
-	/* VALUE IS DEFININED THEN DIRECTLY REDEFINE IT.                  */
+	/* VALUE IS DEFINED THEN DIRECTLY REDEFINE IT.                    */
 
 	if ( !IsExport( l->L_BODY, i->iport ) )
 	    if ( (ii->cm != -1) && (ii->temp == NULL) )
@@ -1709,6 +1933,10 @@ PNODE l;
 	    PropagateTemp( l, n->exp->iport, FALSE, n->exp->temp );
 	    }
 
+    /* ASSIGN REDUCTION TEMPORARIES AFTER PUSHING THROUGH THE BODY.       */
+
+    AssignReturnsTemps( l->L_RET );
+
     /* FREE TEMPORARIES ALLOCATED IN l OR IMPORTED TO l THAT ARE DEAD     */
     /* WHEN IT COMPLETES.                                                 */
 
@@ -1725,7 +1953,6 @@ PNODE l;
 	if ( !IsTempImported( l->L_INIT, i->temp ) )
 	    FreeTemp( i );
 }
-
 
 /**************************************************************************/
 /* LOCAL  **************      BindExportTemps      ************************/
@@ -1822,6 +2049,11 @@ PNODE g;
 	default:
 	    break;
 	}
+
+    /* FOR ALL OF THE NODES IN THIS GRAPH, ASSIGN TEMPORARIES TO        */
+    /* THE EXPORT EDGES (PropagateTemp, INCREMENT REFERENCE COUNT) AND  */
+    /* FREE TEMPORARIES ON IMPORTS (FreeTemp, DECREMENT REFERENCE COUNT */
+    /* AND CHECK FOR 0).  RECURSIVELY DESCEND INTO COMPOUND GRAPHS.     */
 
     for ( n = g; n != NULL; n = n->nsucc ) {
 	switch ( n->type ) {
@@ -2221,12 +2453,22 @@ PNODE g;
 	    case IFFinalValue:
 		if ( n->lmark && (!IsConst(n->imp)) )
 		    break;
+	    case IFAGather:
+		n->exp->temp = GetTemp( "tmp", n->exp->info, NONE );
+		PropagateTemp( n->exp->dst->G_DAD, n->exp->iport, FALSE, 
+			       n->exp->temp                           );
+		break;
 
+	    case IFReduce:
+                if ( n->imp->CoNsT[0] == REDUCE_USER ) {
+                    f = FindFunction( UpperCase( n->imp->CoNsT, TRUE, FALSE ) );
+                    /* THESE ARE NEVER FREED! */
+                    n->temp = GetTemp( "cframe", f->info, NONE );
+                    BindExportTemps( n, f->info, n->temp->name );
+                    } /* DROP THROUGH */
 	    case IFRedLeft:
 	    case IFRedRight:
 	    case IFRedTree:
-	    case IFReduce:
-	    case IFAGather:
 		n->exp->temp = GetTemp( "tmp", n->exp->info, NONE );
 		PropagateTemp( n->exp->dst->G_DAD, n->exp->iport, FALSE, 
 			       n->exp->temp                           );
@@ -2245,6 +2487,9 @@ PNODE g;
 		PropagateTemp( n->exp->dst->G_DAD, n->exp->iport, FALSE, 
 			       n->exp->temp                           );
 		break;
+
+            case IFUReduce:             /* HANDLE IN AssignReturnsTemps() */
+                break;
 
 	    case IFScatterBufPartitions:
 		if ( !(n->exp->dst->G_DAD->vmark) ) {
@@ -2366,8 +2611,8 @@ if ( IsConst( n->L_TEST->imp ) )
     if ( Warnings ) {
       FPRINTF( stderr, 
 	      "%s: W - FOR INITIAL ON LINE %d OF %s IN %s ITERATES FOREVER\n",
-	      program, n->line, (n->funct == NULL)? "???()" : n->funct,
-	      (n->file == NULL)? "???.sis" : n->file );
+	      program, n->line, (n->funct == NULL)? "FUNCT?()" : n->funct,
+	      (n->file == NULL)? "FILE?.sis" : n->file );
     }
 
 		ccost += n->ccost;
@@ -2430,8 +2675,8 @@ if ( IsConst( n->L_TEST->imp ) )
       FPRINTF( stderr,
 	      "%s: W - RESULT %d OF %s ON LINE %d IN %s IS NEVER USED\n",
 	      program, eport,
-	      (f->funct == NULL)? "???()" : f->funct, n->line, 
-	      (n->file == NULL)? "???.sis" : n->file
+	      (f->funct == NULL)? "FUNCT?()" : f->funct, n->line, 
+	      (n->file == NULL)? "FILE?.sis" : n->file
 	      );
     }
   }
@@ -2586,8 +2831,8 @@ FreeRest:
 		break;
 
 	    default:
-	        SPRINTF(buf,"AssignTemps: ILLEGAL NODE TYPE -- %d",n->type);
-		Error1( buf );
+	        SPRINTF( buf, "Missing node type %d", n->type );
+                UNEXPECTED( buf );
 	    }
 
 	/* ADJUST FOR OVER-ESTIMATES OF POPULARITY WITHIN COMPOUNDS      */

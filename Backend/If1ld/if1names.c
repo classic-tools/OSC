@@ -55,7 +55,7 @@ register PINFO i;
       }
 
   Error2( "IsInterfaceType", "FOR LOOP FAILURE" );
-  return NULL;
+  return 0;
 }
 
 
@@ -229,6 +229,9 @@ void CheckForUnresolvedNames()
       continue;
       }
 
+    if ( IsReductionInterface( x->name ) )
+      n->mark = 'd';
+
     /* NOT AN ENTRY POINT SO MAKE IT A LOCAL FUNCTION IN THE MODULE! */
     if ( n->type == IFXGraph )
       n->type = IFLGraph;
@@ -275,7 +278,7 @@ void CheckForUnresolvedNames()
         Error2( "PARAMETER LIST TYPE MISMATCH FOR:",
 		(i->node->funct)? i->node->funct : i->name );
 
-      i->mark = NULL; /* GET i OUT OF THE IMPORT LIST */
+      i->mark = '\0'; /* GET i OUT OF THE IMPORT LIST */
       continue;
       }
     }

@@ -1,4 +1,7 @@
 /* $Log: AssignIDs.c,v $
+ * Revision 1.2  1994/04/15  15:50:28  denton
+ * Added config.h to centralize machine specific header files.
+ *
  * Revision 1.1  1993/01/14  22:25:57  miller
  * Added a compound node identifier field to the PRAGMA set.  Modified the
  * vinfo and info options (-I and -i).  Modified the if1split to use
@@ -26,7 +29,7 @@ void NewCompoundID(n)
 /**************************************************************************/
 /* PURPOSE: Recursively assign ID numbers to each compound node.	  */
 /**************************************************************************/
-static AssignIDs(g)
+static void AssignIDs(g)
      PNODE	g;
 {
   PNODE		n,subg;

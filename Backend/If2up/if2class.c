@@ -8,6 +8,7 @@
 
 #include "world.h"
 
+static void  ClassifyGraphEdges();
 
 /**************************************************************************/
 /* LOCAL  **************         IsWritten         ************************/
@@ -68,7 +69,6 @@ PNODE c;
     register PNODE g;
     register PEDGE i;
     register int   s  = FALSE;
-    static void  ClassifyGraphEdges();
 
     for ( g = c->C_SUBS; g != NULL; g = g->gsucc )
         ClassifyGraphEdges( g );

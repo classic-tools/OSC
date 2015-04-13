@@ -1,6 +1,5 @@
 #include "world.h"
 
-
 /**************************************************************************/
 /* GLOBAL **************         InfoAlloc         ************************/
 /**************************************************************************/
@@ -14,6 +13,11 @@ int   type;
 {
   register PINFO i;
   register PBBLOCK b;
+
+  /* Update LargestTypeLabelSoFar. */
+
+  if (LargestTypeLabelSoFar < label)
+    LargestTypeLabelSoFar = label;
 
   b = MyBBlockAlloc();
   i = &(b->i);
@@ -47,10 +51,23 @@ int   type;
   i->next  = NULL;
   i->print = TRUE;
 
+  i->temp = NULL;
+
   return( i );
 }
 
 /* $Log: InfoAlloc.c,v $
+ * Revision 1.4  1994/06/24  16:01:32  denton
+ * Added -IF3.
+ *
+ * Revision 1.3  1994/05/25  19:44:35  denton
+ * Added FindLargestLabel to return the value of LargestTypeLabelSoFar.
+ * Shortened name of GetAggregateType.c to remove ar warnings.
+ *
+ * Revision 1.2  1994/04/14  21:01:09  solomon
+ * Added the global variable int LargestTypeLabelSoFar = 0.  Also added
+ * code to update this variable.
+ *
  * Revision 1.1  1993/01/21  23:28:56  miller
  * Initial version of the IFX library.  It replaces the if[12]build.c
  * read.c timer.c util.c and write.c and if[12].h files from the

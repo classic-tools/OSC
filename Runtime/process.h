@@ -76,12 +76,23 @@ struct ActRec {
   int     SliceBounds[3];                 /* LOOP SLICE CONTROL INFO     */
   struct  ActRec *NextAR;                 /* FORWARD QUEUE LINK          */
   int     Done;                           /* IS THIS TASK DONE YET?      */
+  int	  pid;
+  int     Flush;
+#if defined(NON_COHERENT_CACHE)
+  char    pad[CACHE_LINE];
+#endif
   };
 
 struct ActRecCache {
   struct ActRec *Head;                    /* HEAD OF QUEUE               */
   struct ActRec *Tail;                    /* TAIL OF QUEUE               */
+#if defined(NON_COHERENT_CACHE)
+  char   pad1[CACHE_LINE - (2 * sizeof(struct ActRect *))];
+#endif
   LOCK_TYPE      Mutex;                   /* QUEUE LOCK                  */
+#if defined(NON_COHERENT_CACHE)
+  char   pad2[CACHE_LINE - (1 * sizeof(LOCK_TYPE))];
+#endif
   };
 
 
@@ -112,6 +123,10 @@ struct WorkerInfo {
   struct timeval WallTimeBuffer;              /* WALL CLOCK START TIME   */
   double WallTime;                            /* ELAPSED WALL CLOCK TIME */
   double CpuTime;                             /* ELAPSED CPU TIME        */
+  long   ClkTck;                              /* CLOCK TICK FROM SYSCONF */
+#if defined(NON_COHERENT_CACHE)
+  char   pad[CACHE_LINE];
+#endif
   };
 
 #ifdef GatherCopyInfo
@@ -222,10 +237,10 @@ extern POINTER SharedMalloc();
 extern void    AcquireSharedMemory();
 extern void    ReleaseSharedMemory();
 extern void    StartWorkers();
+extern void    StartWorkersWithEntry();
 extern void    StopWorkers();
 extern void    AbortParallel();
 
-extern void    ParseCommandLine();
 extern void    DumpRunTimeInfo();
 extern void    InitSisalRunTime();
 
@@ -235,6 +250,7 @@ extern void    Sync();
 extern void    InitSpawn();
 extern void    SpawnSlices();
 extern void    OptSpawnSlices();
+extern void    OptSpawnSlicesFast();
 extern void    BuildSlices();
 
 extern void    EnterWorker();
@@ -250,6 +266,103 @@ extern void           RListEnQ();
 extern void    StopTimer();
 extern void    StartTimer();
 
+/* ------------------------------------------------------------ */
+
+#if defined(NO_STATIC_SHARED)
+struct shared_s
+{
+	int     NumWorkers;
+	int     DsaSize; 
+	int     BindParallelWork;
+        int     OneLevelParallel;
+	int     UseGss;
+	int     UseStride;
+	int     DEFStride;
+	int     XftThreshold;
+	int     WstWindowSize;
+	int     LoopSlices;
+	int     GatherPerfInfo;
+	int     ArrayExpansion;
+	int     NoFibreOutput;
+	int     UsePrivateMemory;
+	char    DefaultLoopStyle;
+	int	UsingSdbx;
+	int	Sequential;
+        int     *SisalShutDown;
+	struct  WorkerInfo *AllWorkerInfo;
+	BARRIER_TYPE Fb;
+	BARRIER_TYPE Sb;
+	int	UnderDBX;
+	struct  ActRecCache *ARList;
+	struct  top *caches;
+#if !defined(DIST_DSA)
+	struct  bot *dsorg;
+	struct  top *zero_bl;
+	int     *zb_start;
+	LOCK_TYPE *coal_lock;
+	struct  top *btop;
+#else
+        LOCK_TYPE *Dsa_lock;
+#endif
+	int	xfthresh;
+	int	maxsize;
+	char    *SharedMemory;
+        char    *SharedBase;
+	int	SharedSize;
+        LOCK_TYPE *UtilityLock;
+        LOCK_TYPE *SUtilityLock;
+	void	(*Entry_point)();
+};
+
+extern void InitSharedGlobals();
+extern int sdebug;
+
+extern struct shared_s SR;
+extern struct shared_s *SRp;
+
+#define NumWorkers (SRp->NumWorkers)
+#define DsaSize (SRp->DsaSize) 
+#define BindParallelWork (SRp->BindParallelWork)
+#define OneLevelParallel (SRp->OneLevelParallel)
+#define UseGss (SRp->UseGss)
+#define UseStride (SRp->UseStride)
+#define DEFStride (SRp->DEFStride)
+#define XftThreshold (SRp->XftThreshold)
+#define WstWindowSize (SRp->WstWindowSize)
+#define LoopSlices (SRp->LoopSlices)
+#define GatherPerfInfo (SRp->GatherPerfInfo)
+#define ArrayExpansion (SRp->ArrayExpansion)
+#define NoFibreOutput (SRp->NoFibreOutput)
+#define UsePrivateMemory (SRp->UsePrivateMemory)
+#define DefaultLoopStyle (SRp->DefaultLoopStyle)
+#define UsingSdbx (SRp->UsingSdbx)
+#define Sequential (SRp->Sequential)
+#define SisalShutDown (SRp->SisalShutDown)
+#define AllWorkerInfo (SRp->AllWorkerInfo)
+#define UnderDBX (SRp->UnderDBX)
+#define ARList (SRp->ARList)
+#define caches (SRp->caches)
+#if !defined(DIST_DSA)
+#define zero_bl (SRp->zero_bl)
+#define dsorg (SRp->dsorg)
+#define btop (SRp->btop)
+#define coal_lock (SRp->coal_lock)
+#define zb_start (SRp->zb_start)
+#else
+#define Dsa_lock (SRp->Dsa_lock)
+#endif
+#define xfthresh (SRp->xfthresh)
+#define maxsize (SRp->maxsize)
+#define SharedMemory (SRp->SharedMemory)
+#define SharedBase (SRp->SharedBase)
+#define SharedSize (SRp->SharedSize)
+#define UtilityLock (SRp->UtilityLock)
+#define SUtilityLock (SRp->SUtilityLock)
+#define Entry_point (SRp->Entry_point)
+
+/* ------------------------------------------------------------ */
+
+#else
 extern int     NumWorkers;
 extern int     DsaSize;
 extern int     BindParallelWork;
@@ -263,6 +376,19 @@ extern int     GatherPerfInfo;
 extern int     ArrayExpansion;
 extern int     NoFibreOutput;
 extern int     UsePrivateMemory;
+extern char    DefaultLoopStyle;
+extern volatile int *SisalShutDown;
+extern struct WorkerInfo *AllWorkerInfo;
+extern int     OneLevelParallel;
+extern LOCK_TYPE *UtilityLock;
+extern LOCK_TYPE *SUtilityLock;
+extern void (*Entry_point)();
+#if defined(DIST_DSA)
+extern LOCK_TYPE *Dsa_lock;
+#endif
+#endif
+
+/* ------------------------------------------------------------ */
 
 extern void    InitErrorSystem();
 extern int     SisalError();
@@ -270,18 +396,11 @@ extern int     SisalError();
 extern void    DsaInit();
 extern POINTER Alloc();
 extern void    DeAlloc();
+extern void    DoDeAllocWork();
 extern void    DeAllocToBt();
 
-extern volatile int *SisalShutDown;
-
-extern struct WorkerInfo *AllWorkerInfo;
-
-extern void FreePointerSwapStorage();
+extern void    FreePointerSwapStorage();
 extern POINTER AllocPointerSwapStorage();
-
-extern LOCK_TYPE *UtilityLock;
-extern LOCK_TYPE *SUtilityLock;
+extern POINTER SkiAllocPointerSwapStorage();
 
 extern double TSECND();
-
-extern char DefaultLoopStyle;

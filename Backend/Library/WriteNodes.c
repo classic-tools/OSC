@@ -43,13 +43,10 @@ PNODE g;
   /* WriteImports( g ); */
 
   for ( n = g->G_NODES; n != NULL; n = n->nsucc ) {
-    switch ( n->type ) {
-     case IFLoopA:
-     case IFLoopB:
-     case IFTagCase:
-     case IFForall:
-     case IFSelect:
-     case IFIfThenElse:
+    /* ------------------------------------------------------------ */
+    /* Compound nodes						    */
+    /* ------------------------------------------------------------ */
+    if ( IsCompound(n) ) {
       FPRINTF( output, "{ Compound %2d %2d\n", n->label, n->type );
 
       for ( sg = n->C_SUBS; sg != NULL; sg = sg->gsucc )
@@ -61,9 +58,10 @@ PNODE g;
       for ( l = n->C_ALST; l != NULL; l = l->next )
 	FPRINTF( output, " %d", l->datum );
 
-      break;
-
-     default:
+    } else {
+      /* ------------------------------------------------------------ */
+      /* Simple nodes						      */
+      /* ------------------------------------------------------------ */
       FPRINTF( output, "N %2d %2d", n->label, n->type );
     }
 
@@ -75,6 +73,15 @@ PNODE g;
 }
 
 /* $Log: WriteNodes.c,v $
+ * Revision 1.4  1994/03/09  23:17:48  miller
+ * Now, ANY compound node (opcode < 100) will be output, not just
+ * the predefined kinds.  The previous restriction was crimping
+ * the Frontend90 design.
+ *
+ * Revision 1.3  1994/03/03  17:17:54  solomon
+ * Added "case IFRepeatLoop" to the list of case statements that is
+ * testing for compound nodes.
+ *
  * Revision 1.2  1993/11/12  19:58:39  miller
  * Support for new IF90 compounds
  *

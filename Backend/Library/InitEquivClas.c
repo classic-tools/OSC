@@ -32,10 +32,13 @@ void InitEquivClasses()
     ttable[ i->eid ] = i;
   }
 
-  lclass = TYPE_STOP;		/* LAST LEGAL IF2 TYPE (see if2.h) */
+  lclass = BASE_CODE_LAST;		/* LAST LEGAL IF2 TYPE */
 }
 
 /* $Log: InitEquivClas.c,v $
+ * Revision 1.2  1994/02/15  23:20:32  miller
+ * Allow new IF1 types (Typeset, complex, etc...)
+ *
  * Revision 1.1  1993/04/16  19:00:25  miller
  * Name shortening to keep the archiver from truncating names in Backend/Library
  * Since some names were changed, other files were affected.  All names in the

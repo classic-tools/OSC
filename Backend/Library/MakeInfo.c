@@ -23,7 +23,7 @@ int   ref2;
 
   switch ( type ) {
    case IF_BASIC:
-    type = ref1 + BASIC_TYPE_START;
+    type = ref1 + BASE_CODE_FIRST;
     break;
 
    case IF_UNKNOWN:
@@ -49,6 +49,13 @@ int   ref2;
   i->file  = NULL;
 
   switch ( type ) {
+
+  case IF_REDUCTION:
+    i->R_SETUP = i1;
+    i->R_MAP   = i2;
+    i->tname   = "REDUCTION";
+    break;
+
    case IF_FUNCTION:
     i->F_IN  = i1;
     i->F_OUT = i2;
@@ -59,6 +66,8 @@ int   ref2;
     i->A_ELEM = i1;
     if ( !StreamsOK ) Error2( "MakeInfo", "STREAM DATA TYPE ENCOUNTERED" );
     streams = TRUE;
+    i->tname = "STREAM";
+    break;
 
    case IF_MULTIPLE:
     i->A_ELEM = i1;
@@ -122,6 +131,15 @@ int   ref2;
 }
 
 /* $Log: MakeInfo.c,v $
+ * Revision 1.5  1994/05/04  18:11:00  denton
+ * R_BODY->R_MAP; FindEnclosingCompound->FindEnclosing
+ *
+ * Revision 1.4  1994/03/09  23:14:48  miller
+ * Changes for the new frontend -- Added a new typecode (IF_SET)
+ *
+ * Revision 1.3  1994/02/15  23:20:33  miller
+ * Allow new IF1 types (Typeset, complex, etc...)
+ *
  * Revision 1.2  1993/11/12  19:57:18  miller
  * Support for IF90 typeset type
  *

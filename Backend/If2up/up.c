@@ -11,6 +11,10 @@
 
 FILE *input  = stdin;                  /* IF2 INPUT  FILE POINTER         */
 FILE *output = stdout;                 /* IF2 OUTPUT FILE POINTER         */
+FILE *infoptr;                 /* IF2 INFO OUTPUT FILE POINTER         */
+FILE *infoptr2;                 /* IF2 INFO OUTPUT FILE POINTER         */
+char infofile[200];
+char infofile2[200];
 
 char *program    = "if2up";            /* PROGRAM NAME                    */
 
@@ -154,6 +158,10 @@ char **argv;
 	  if ( isdigit((int)(c[1])) ) info=atoi(c+1);
 	  break;
 
+        case 'F' :
+          strcpy (infofile, c+1);
+          break;
+
 	default:
 	  Error2( "ILLEGAL ARGUMENT", --c );
 	}
@@ -176,8 +184,24 @@ int    argc;
 char **argv;
 {
     register FILE *fd;
+    int i3 = I_Info3;
 
     ParseCommandLine( argc, argv );
+
+    if (RequestInfo (I_Info3, info)) 
+	if ((infoptr = fopen(infofile, "a")) == NULL)
+		infoptr = stderr;
+
+    if (RequestInfo (I_Info2, info))  {
+	strncpy (infofile2,infofile, strlen(infofile) - 1);
+	strcat (infofile2, "2");
+	if ((infoptr2 = fopen(infofile2, "a")) == NULL)
+		infoptr2 = stderr;
+    }
+
+    if (info > i3 && (RequestInfo(I_Info2, info) || RequestInfo(I_Info1, info))
+	&& RequestInfo(I_Info3, info))
+           FPRINTF (infoptr, "\n\f\n\n");
 
     StartProfiler();
     If2Read();
@@ -200,8 +224,8 @@ char **argv;
     /* if ( !IsStamp( MONOLITH ) ) */ /* NEW CANN 2/92 */
 	/* Error1( "MONOLITHIC INPUT REQUIRED" ); */
 
-    if ( RequestInfo(I_DeveloperInfo1,info) ) {
-      FPRINTF( stderr, "\n**** UPDATE-IN-PLACE OPTIMIZATION\n" );
+    if ( RequestInfo(I_Info3,info)  ) {
+      FPRINTF( infoptr, "**** COPY ELIMINATIONS\n\n" );
     }
 
     StartProfiler();
@@ -216,6 +240,10 @@ char **argv;
 	AddStamp( UNIVSTROWNER, "    CSU -> UNIVERSAL STREAM OWNERSHIP" );
 
     AddStamp( UPDATEINPLACE,  ustmp );
+    if (RequestInfo (I_Info3, info) && infoptr!=stderr)
+        fclose (infoptr);
+    if (RequestInfo (I_Info2, info) && infoptr2!=stderr)
+        fclose (infoptr2);
 
     /* OPEN THE OUTPUT FILE AND WRITE THE OPTIMIZED PROGRAM               */
 

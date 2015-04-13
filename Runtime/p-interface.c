@@ -10,14 +10,14 @@ int axValue;
 {
   if ( lsValue > 0 ) {
     if ( gssValue == 1 )
-      SisalError( "sconfig", "-gss AND -ls CONFLICT" );
+      SisalError( "PARAMETER CONFLICT IN sconfig", "-gss AND -ls" );
 
     LoopSlices = lsValue;
     }
 
   if ( gssValue == 1 ) {
     if ( LoopSlices > 0 )
-      SisalError( "sconfig", "-gss AND -ls CONFLICT" );
+      SisalError( "PARAMETER CONFLICT IN sconfig", "-gss AND -ls" );
 
     DefaultLoopStyle = 'G';	/* GSS */
     }
@@ -40,12 +40,12 @@ int rValue;
   if ( dsValue > 0 )
     DsaSize = dsValue;
   else
-    SisalError( "sstart", "ILLEGAL -ds VALUE" );
+    SisalError( "ILLEGAL VALUE SPECIFIED IN sstart", "-ds" );
 
   if ( wValue > 0 && wValue <= MAX_PROCS )
     NumWorkers = wValue;
   else
-    SisalError( "sstart", "ILLEGAL -w VALUE" );
+    SisalError( "ILLEGAL VALUE SPECIFIED IN sstart", "-w" );
 
   if ( rValue == TRUE ) {
     GatherPerfInfo = TRUE;
@@ -56,6 +56,36 @@ int rValue;
     LoopSlices = NumWorkers;
 }
 
+#define FIBREIN		1
+#define FIBREOUT	2
+#define SINFO		3
+
+static void ParseFileParameters(filename)
+    char        *filename;
+{
+    FILE        *optfile;
+    char        arg[512];
+    int         argc;
+    char        *argv[100];
+
+    /*** Read the file into argc and argv. ***/
+
+    argv[0] = '\0';		/* no command was used */
+    argc = 1;
+    optfile = fopen(filename, "r");
+    if (optfile==NULL) {
+        SisalError("UNABLE TO READ STARTUP FILE SPECIFIED IN sstartf", 
+                   filename);
+        return;
+    }
+    while (fscanf(optfile, " %s", arg)==1 && argc<100) {
+        argv[argc++] = strcpy((char*)malloc(strlen(arg)+1), arg);
+    }
+    fclose(optfile);
+
+    ParseCommandLine(argc, argv);
+    return;
+}
 
 #define SCONFIG_FUNCTION(x)                                                \
 void x( lsValue, gssValue, bValue, xftValue, axValue )                     \
@@ -79,6 +109,26 @@ int *rValue;                                             \
   StartWorkers();                                        \
 }
 
+#define SPCALL_FUNCTION(x)				\
+void x ( filename, entry )				\
+char *filename;						\
+void (*entry)();					\
+{							\
+  ParseFileParameters( filename );                      \
+  InitSisalRunTime();                                   \
+  StartWorkersWithEntry(entry);                         \
+}
+
+
+#define SSTARTF_FUNCTION(x)                              \
+void x( filename )                                       \
+char *filename;                                          \
+{                                                        \
+  ParseFileParameters( filename );                       \
+  InitSisalRunTime();                                    \
+  StartWorkers();                                        \
+}
+
 #define SSTOP_FUNCTION(x) \
 void x()                  \
 {                         \
@@ -92,16 +142,21 @@ void x()                  \
 
 /* C VERSIONS */
 SSTART_FUNCTION( sstart )
+SSTARTF_FUNCTION( sstartf )
 SSTOP_FUNCTION( sstop )
 SCONFIG_FUNCTION( sconfig )
 
 /* FORTRAN VERSIONS: CRAY, OTHERS */
 SSTART_FUNCTION( SSTART )
-SSTOP_FUNCTION( SSTOP )
 SSTART_FUNCTION( sstart_ )
+SSTARTF_FUNCTION( SSTARTF )
+SSTARTF_FUNCTION( sstartf_ )
+SSTOP_FUNCTION( SSTOP )
 SSTOP_FUNCTION( sstop_ )
 SCONFIG_FUNCTION( SCONFIG )
 SCONFIG_FUNCTION( sconfig_ )
+SPCALL_FUNCTION( SPCALL )
+SPCALL_FUNCTION( spcall_ )
 
 
 #define IDInfo( x, y, z, w ) \
@@ -135,7 +190,10 @@ SCONFIG_FUNCTION( sconfig_ )
 	} \
       break; \
     default: \
-      SisalError( "Mixed Language Interface", "ILLEGAL ARRAY DESCRIPTOR" );  \
+      InfoInc = -5; \
+      DimInc = 1; \
+      SisalError( "ILLEGAL ARRAY DESCRIPTOR", \
+                  "mixed language interface row major" );  \
     } \
   if ( DimInc == 1 && x != 1 ) \
     Mutable = FALSE; \
@@ -224,5 +282,6 @@ InfoError:
   FPRINTF( stderr, "Descriptor Info: Plo=%d Phi=%d Llo=%d Lhi=%d\n",
 		    Plo,Phi,Llo,Lhi );
 
-  SisalError( "IDescriptorCheck", "ILLEGAL INTERFACE ARRAY DESCRIPTOR" );
+  SisalError( "ILLEGAL ARRAY DESCRIPTOR", 
+              "mixed language interface IDescriptorCheck" );
 }

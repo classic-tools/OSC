@@ -1,38 +1,11 @@
 OSC: SISAL 1.2 NATIVE COMPILER AND DEBUGGER
 
+See "Frontend/Front1/sisal.5" for an overview of the SISAL language.
+See "CHANGES" for release number information.
 
-AUTHOR(S): sisal (frontend parser):  Rea Simpson (Modified by David Cann)
-           osc driver and utilities: David Cann
-	   if1opt:                   Daivd Cann
-	   if2mem:                   David Cann and S. Harikrishnan*
-	   if2up:                    David Cann
-	   if2part:                  David Cann
-	   if2gen:                   David Cann
-	   sdbx:                     David Cann
-	   dsa:                      Rod Oldehoeft and David Cann**
-	   current run time:         David Cann***
-
-	   Work after 8/92:	     Patrick Miller
-
-          *[Designed by John Ranelletti]
-         **[Redesign of early version by Bruce Bigler]
-        ***[Redesign of early versions by Bruce Votipka and Tam Richert]
-
-
-Applies to these systems:
-  * Sun running SunOS"
-  * Some other sequential machine running UNIX"
-  * Sequent Balance running DYNIX"
-  * Alliant FX series running Concentrix"
-  * Encore Multimax running Umax"
-  * Sequent Symmetry running DYNIX
-  * Cray X-MP or Y-MP running UNICOS
-  * Cray 2 running UNICOS
-  * SGI running IRIX
-  * IBM RS6000 running AIX
 
 This distribution contains compiler and run-time library software for
-executing SISAL programs on the machines/operating systems listed above.
+executing SISAL programs on the machines/operating systems listed below.
 Specifically, this compiler accepts SISAL source (.sis files) or 
 the intermediate form produced by the frontend for SISAL (.if1 files).
 The included software consists of:
@@ -56,7 +29,65 @@ The included software consists of:
   to generate speedup curves.
   
 --Man pages for osc and its utilities.
+
   
+AUTHOR(S): sisal (frontend parser):  Rea Simpson (Modified by David Cann)
+           osc driver and utilities: David Cann
+	   if1opt:                   Daivd Cann
+	   if2mem:                   David Cann and S. Harikrishnan*
+	   if2up:                    David Cann
+	   if2part:                  David Cann
+	   if2gen:                   David Cann
+	   sdbx:                     David Cann
+	   dsa:                      Rod Oldehoeft and David Cann**
+	   current run time:         David Cann***
+
+	   Work after 8/92:	     Patrick Miller
+                                     Scott Denton
+
+          *[Designed by John Ranelletti]
+         **[Redesign of early version by Bruce Bigler]
+        ***[Redesign of early versions by Bruce Votipka and Tam Richert]
+
+
+Current ports (in order of quality of testing):
+	SGI IRIS (R3000) running IRIX 4.0.5, 4 processor
+		cc and f77
+		gcc 2.5.8 (mips-sgi-irix4.0.5)
+	Cray C90 running UNICOS 7.C, 16 processor
+		cc, cf77
+	Meiko CS-2 (SPARC) running Solaris 2.1, 1 processor
+		cc
+		gcc 2.5.6 (sparc-sun-solaris2.1)
+	IBM workstation (RS6000) running AIX, 1 processor, 
+		cc and f77
+		gcc 2.3.3 (rs6000-ibm-aix)
+	Sun 3 (MC68020) running Sun UNIX 4.2 Release 3.4, 1 processor
+		cc
+	Sun Sparc 10 (SPARC) running Solaris 2.3, 1 processor
+		cc
+	DEC Decstation (R3000) running ULTRIX V4.3 R 44, 1 processor
+		cc (problem with branches > 32K)
+		gcc 2.3.3 (mips-dec-ultrix4.1)
+        Apple Macintosh running MachTen 2.1.1 (BSD 4.3), 1 processor
+		gcc 2.3.3
+        PC x486 running LINUX Slackware
+		gcc 2.5.8
+	Cray T3D (YMP/ALPHA) running UNICOS, 1 processor
+		cc
+
+Previous ports:
+	Alliant FX series running Concentrix, cc
+	Cray Y-MP or X-MP running UNICOS, cc
+	Cray 2 running UNICOS, cc
+	Encore Multimax running Umax, cc
+	HP9000 Series300,400,700 running HPUX (cc, gcc) 
+	PC (Intel x486) running MS-DOS, gcc
+	IBM Power4 (RS6000) running AIX, cc
+	Sequent Balance running DYNIX, cc
+	Sequent Symmetry running DYNIX, cc
+	SGI Challenge running IRIX, cc
+	Sun Sparc running Sun OS
 
 CSU DISCLAIMER
 
@@ -119,27 +150,28 @@ INSTALLATION PROCEDURE
 
    If you do not have the power to write in the installation and man
    page directories, as is usually the case for "/usr/local/bin" and
-   "/usr/man/manl", do this instead:
+   "/usr/local/man", do this instead:
 
    a) Enter "make local >& LOGFILE".
    b) Examine LOGFILE for errors.
    c) Find a SUPER USER to execute the following: "make install >& LOGFILE".
    d) Again examine LOGFILE for errors.
 
-4. Now the directory PATH has subdirectories with these contents:
+4. Now the directory PATH has directories with these contents:
 
-   Frontend --All SISAL to IF1 compilation source files
-   Backend  --All IF1 to native code compilation source files
-   Runtime  --All runtime source files
-   Tools    --Support Utilities
-   Man/manl --A possible home for man pages after installation
-   bin      --A possible home for executables, runtime library, and .h files
-              after installation
+   Tools	Support Utilities
+   Frontend	All SISAL to IF1 compilation source files
+   Backend	All IF1 to native code compilation source files
+   Runtime	All runtime source files
+   ../bin	A possible home for executables after installation
+   ../lib	A possible home for runtime library after installation
+   ../include	A possible home for header file (.h) after installation
+   ../man	A possible home for manual pages after installation
    
 To obtain a man page, you can use
-     psroff -man -Pprinter mandirectory/manfile.l
+     psroff -man -Pprinter mandirectory/manfile.1
 for the paper version, or
-     nroff -man mandirectory/manfile.l
+     nroff -man mandirectory/manfile.1 | more
 to see it on your terminal.  In the above, "printer" is the name of
 the printer where the man page will appear, "mandirectory" is the path
 you specified for the man page directory, and "manfile" is the command

@@ -12,6 +12,9 @@
 #include <math.h>
 /* #include <setjmp.h> */
 /* #include <assert.h> */
+#ifndef NO_TIME
+# include <time.h>
+#endif
 
 
 /* CANN 1/92 TO ALLOW FOR BIGGER LINE BUFFERS */
@@ -83,7 +86,7 @@ typedef char *Anyptr;
 
 typedef Signed   char schar;
 /* typedef unsigned char unchar;*/ /* CANN TYPE CHANGE 1/92 FOR LONGER LINES */
-typedef unsigned int unchar;
+/* typedef unsigned int unchar;*/
 typedef unsigned char boolean;
 
 #ifndef true

@@ -10,10 +10,15 @@
 
 int ikcnt  = 0;          /* COUNT OF COMBINED K IMPORTS            */
 int unnec  = 0;          /* COUNT OF UNNECESSARY EDGES OR LITERALS */
+int Tunnec  = 0;          /* COUNT OF UNNECESSARY EDGES OR LITERALS */
 int unused = 0;          /* COUNT OF UNUSED VALUES                 */
+int Tunused = 0;          /* COUNT OF UNUSED VALUES                 */
 int dscnt  = 0;          /* COUNT OF DEAD SIMPLE NODES             */
+int Tdscnt  = 0;          /* COUNT OF DEAD SIMPLE NODES             */
 int dccnt  = 0;          /* COUNT OF DEAD COMPOUND NODES           */
+int Tdccnt  = 0;          /* COUNT OF DEAD COMPOUND NODES           */
 int agcnt  = 0;          /* COUNT OF DEAD AGather NODES            */
+int Tagcnt  = 0;          /* COUNT OF DEAD AGather NODES            */
 
 
 /**************************************************************************/
@@ -44,12 +49,15 @@ PNODE n;
     register PEDGE si;
     register PEDGE ii;
 
+    ASSERT( IsAnyLoop( n ), "Not a loop");
     switch ( n->type ) {
         case IFForall:
             /* T := constant, M, OR K */
 
             for ( i = n->F_BODY->imp; i != NULL; i = si ) { 
                 si = i->isucc;
+
+                ++Tunnec;
 
                 if ( IsConst( i ) ) {
                     if ( !CanPropagateConst( i ) )
@@ -77,6 +85,8 @@ PNODE n;
             for ( i = n->L_BODY->imp; i != NULL; i = si ) {
                 si  = i->isucc;
 
+                ++Tunnec;
+
                 if ( !IsConst( i ) )
                     if ( IsSGraph( i->src ) )
                         if ( i->iport == i->eport ) {
@@ -91,7 +101,9 @@ PNODE n;
             for ( i = n->L_INIT->imp; i != NULL; i = si ) {
                 si = i->isucc;
 
+
                 if ( !IsImport( n->L_BODY, i->iport ) ) {
+                ++Tunnec;
                     if ( IsConst( i ) ) {
                         if ( !CanPropagateConst( i ) )
                             continue;
@@ -121,8 +133,11 @@ PNODE n;
             for ( i = n->L_INIT->imp; i != NULL; i = si ) {
                 si = i->isucc;
 
+
                 if ( (ii = FindImport( n->L_BODY, i->iport ) ) == NULL )
                     continue;
+                ++Tunnec;
+                ++Tunnec;
 
                 if ( IsConst( i ) ) {
                     if ( !IsConst( ii ) )
@@ -171,6 +186,7 @@ PNODE n;
 
                     if ( IsImport( n->L_INIT, i->iport ) )
                         continue;
+                ++Tunnec;
                         
                     if ( IsConst( i ) ) {
                         if ( !CanPropagateConst( i ) )
@@ -193,8 +209,8 @@ PNODE n;
             break;
 
         default:
-            break;
-        }
+            UNEXPECTED("Unknown loop");
+    }
 }
 
 
@@ -255,6 +271,8 @@ PNODE l;
         for ( i = l->L_BODY->imp; i != NULL; i = si ) {
             si = i->isucc;
 
+            ++Tunused;
+
             if ( IsExport( l->L_TEST, i->iport ) || 
                  IsExport( l->L_BODY, i->iport ) ||
                  IsExport( l->L_RET,  i->iport )   )
@@ -268,6 +286,8 @@ PNODE l;
 
     for ( i = l->L_INIT->imp; i != NULL; i = si ) {
         si = i->isucc;
+
+            ++Tunused;
 
         if ( IsExport( l->L_TEST, i->iport ) || 
              IsExport( l->L_BODY, i->iport ) ||
@@ -304,6 +324,8 @@ PNODE c;
             if ( IsExport( g, i->iport ) )
               break;
 
+            ++Tunused;
+
         if ( g == NULL ) {
           UnlinkImport( i ); 
           UnlinkExport( i );
@@ -331,6 +353,8 @@ PNODE g;
     for ( i = g->imp; i != NULL; i = si ) {
         si = i->isucc;
 
+            ++Tunused;
+
         if ( !IsExport( g->G_DAD, i->iport ) ) {
             UnlinkImport( i ); 
             UnlinkExport( i );
@@ -357,6 +381,8 @@ PNODE f;
 
     for ( i = f->F_BODY->imp; i != NULL; i = si ) {
         si = i->isucc;
+
+            ++Tunused;
 
         if ( !IsExport( f->F_RET, i->iport ) ) {
             UnlinkImport( i );
@@ -397,7 +423,7 @@ PNODE g;
     switch( n->type ) {
       case IFSelect:
         CombineKports( n );
-        FastRemoveUnnecEdges( n );
+        /* FastRemoveUnnecEdges( n ); */
         FastRemoveUnusedRports( n->S_ALT  );
 	FastCleanGraph( n->S_ALT );
         FastRemoveUnusedRports( n->S_CONS );
@@ -407,7 +433,7 @@ PNODE g;
 
       case IFTagCase:
         CombineKports( n );
-        FastRemoveUnnecEdges( n );
+        /* FastRemoveUnnecEdges( n ); */
 
         for ( sg = n->C_SUBS; sg != NULL; sg = sg->gsucc ) {
           FastRemoveUnusedRports( sg );
@@ -520,6 +546,14 @@ PNODE n;
     if ( glue && IsCall( n ) )
       return;
 
+    if (IsCompound(n))
+	++Tdccnt;
+    else
+	++Tdscnt;
+
+    if (n->type == IFAGather)
+	++Tagcnt;
+
     if ( n->exp == NULL ) {
         for ( i = n->imp; i != NULL; i = si ) {
             si = i->isucc;
@@ -557,12 +591,12 @@ PEDGE d;
 
 void WriteCleanInfo()
 {
-    FPRINTF( stderr, "\n   * GRAPH CLEANUP SUMMARY\n\n" );
-    FPRINTF( stderr, " Unnecessary Edges And Literals:  %d\n", unnec  );
-    FPRINTF( stderr, " Unused Values:                   %d\n", unused );
-    FPRINTF( stderr, " Removed Simple Nodes             %d\n", dscnt  );
-    FPRINTF( stderr, " Removed Compound Nodes           %d\n", dccnt  );
-    FPRINTF( stderr, " Removed AGather Nodes            %d\n", agcnt  );
+    FPRINTF( infoptr, "\n **** GRAPH CLEANUP SUMMARY\n\n" );
+    FPRINTF( infoptr, " Unnecessary Edges And Literals:  %d of %d\n", unnec,Tunnec  );
+    FPRINTF( infoptr, " Unused Values:                   %d of %d\n", unused,Tunused );
+    FPRINTF( infoptr, " Removed Simple Nodes             %d of %d\n", dscnt,Tdscnt  );
+    FPRINTF( infoptr, " Removed Compound Nodes           %d of %d\n", dccnt,Tdccnt  );
+    FPRINTF( infoptr, " Removed AGather Nodes            %d of %d\n", agcnt,Tagcnt  );
 }
 
 

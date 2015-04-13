@@ -36,6 +36,8 @@ PNODE n;
   register PADE   a;
 
   for ( i  = n->imp; i != NULL; i = i->isucc ) {
+    if (CheckForBadEdges)
+      CheckEdge(i);
     if ( IsConst( i ) )
       WriteConst( i );
     else
@@ -49,6 +51,9 @@ PNODE n;
 }
 
 /* $Log: WriteImports.c,v $
+ * Revision 1.2  1994/04/14  21:45:36  solomon
+ * Added edge checking to WriteImports().
+ *
  * Revision 1.1  1993/01/21  23:30:46  miller
  * Initial version of the IFX library.  It replaces the if[12]build.c
  * read.c timer.c util.c and write.c and if[12].h files from the

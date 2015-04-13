@@ -1,0 +1,42 @@
+#* Press RETURN to continue.
+
+#Enter a number: [1]
+7
+# Number of available processors? [1]
+16
+# Is ranlib supported? [n]
+
+# Is getrusage supported? [n]
+
+# Do you wish to use the Sisal pre-processor? [n]
+
+# C compiler to use for OSC? [cc]
+
+# Optimize the compiler phases? [y]
+
+# Optimize the application and runtime library? [y]
+
+# Compile for dbx use "-g" use? [n]
+
+# Default creation mask for directories: [755]
+
+# Default creation mask for executables: [755]
+
+# Default creation mask for read only objects (man pages, includes, ...): [644]
+
+# Default root for installation: [/usr/local/src/osc_develop/OSC/..]
+
+# Path for executable installation: [/usr/local/src/osc_develop/OSC/../bin]
+
+# Path for library installation: [/usr/local/src/osc_develop/OSC/../lib]
+
+# Path for header installation: [/usr/local/src/osc_develop/OSC/../include]
+
+# Path for man page installation: [/usr/local/src/osc_develop/OSC/../man]
+
+# Path to working directory TMPDIR: [none]
+
+# Examine the $TMPDIR environment variable [y]
+
+# Enter version prefix for osc banner [none]
+

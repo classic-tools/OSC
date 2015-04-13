@@ -12,12 +12,17 @@
 static int gcnt = 0;                          /* COUNT OF REMOVED GROUNDS */
 
 int rmcmcnt = 0;                           /* COUNT OF REMOVED CM PRAGMAS */
+int trmcmcnt = 0;                           /* COUNT OF REMOVED CM PRAGMAS */
 int rmpmcnt = 0;                           /* COUNT OF REMOVED PM PRAGMAS */
+int trmpmcnt = 0;                           /* COUNT OF REMOVED PM PRAGMAS */
 int rmsrcnt = 0;                           /* COUNT OF REMOVED SR PRAGMAS */
+int trmsrcnt = 0;                           /* COUNT OF REMOVED SR PRAGMAS */
 int rmcnoop = 0;               /* COUNT OF REMOVED CONDITIONAL COPY NoOpS */
 int rmnoop  = 0;                           /* COUNT OF REMOVED COPY NoOpS */
 int rmsmark = 0;                           /* COUNT OF REMOVED smarks     */
+char rmark[2000];                           /* COUNT OF REMOVED smarks     */
 int rmvmark = 0;                           /* COUNT OF REMOVED vmarks     */
+char vmark[2000];                           /* COUNT OF REMOVED vmarks     */
 int rmdab   = 0;                  /* COUNT OF REMOVED IFDefArrayBuf NODES */
 
 
@@ -142,11 +147,17 @@ PNODE r;
 
     if ( e->pm > 0 ) {
       rmpmcnt++;
+      trmpmcnt++;
       }
+    else
+      trmpmcnt++;
 
     if ( i->cm == -1 ) {
       rmcmcnt++;
+      trmcmcnt++;
       }
+    else
+      trmcmcnt++;
 
     i->cm = 0;
 
@@ -252,11 +263,21 @@ PNODE g;
 	if ( !bip ) {
 	  if ( n->exp->dst->G_DAD->vmark ) {
 	    rmvmark++;
+#ifdef MYI
+            SPRINTF(vmark,
+                "%s Sequentializing loop %d at line %d, funct %s, file %s\n\n", 
+                vmark, n->ID, n->line, n->funct, n->file);
+#endif
 	    n->exp->dst->G_DAD->vmark = FALSE;
 	    }
 
 	  if ( n->exp->dst->G_DAD->smark ) {
 	    rmsmark++;
+#ifdef MYI
+            SPRINTF(rmark,
+                "%s Sequentializing loop %d at line %d, funct %s, file %s\n\n", 
+		rmark, n->ID, n->line, n->funct, n->file);
+#endif
 	    n->exp->dst->G_DAD->smark = FALSE;
 	    }
           }
@@ -297,7 +318,10 @@ PNODE f;
     if ( i->iport == 0 ) {
       if ( i->cm == -1 ) {
         rmcmcnt++;
+        trmcmcnt++;
 	}
+      else
+        trmcmcnt++;
 
       UnlinkImport( i );
       UnlinkExport( i ); 
@@ -425,8 +449,11 @@ PNODE n;
 
 	  break;
 
+       case REDUCE_USER:
+          break;
+
 	default:
-	  break;
+	  UNEXPECTED("Unknown reduction");
 	}
 
       break;
@@ -522,17 +549,21 @@ void If2Opt()
 /**************************************************************************/
 /* PURPOSE: WRITE if2opt INFORMATION TO stderr.                           */
 /**************************************************************************/
+void WriteIf2OptInfo2()
+{
+  FPRINTF( infoptr4, "\n **** SEQUENTIALIZED LOOPS\n\n" );
+  FPRINTF( infoptr4, "%s\n Sequentialized Concurrent Loops: %d\n", rmark,rmsmark );
+  FPRINTF( infoptr4, "%s\n Sequentialized Vector Loops:     %d\n", vmark,rmvmark );
+}
 
 void WriteIf2OptInfo()
 {
-  FPRINTF( stderr, "\n**** MISCELLANEOUS IF2 OPTIMIZATIONS\n" );
-  FPRINTF( stderr, " Removed Ground Imports:           %d\n", gcnt  );
-  FPRINTF( stderr, " Additionally Removed pm Pragmas: %d\n", rmpmcnt );
-  FPRINTF( stderr, " Additionally Removed cm Pragmas: %d\n", rmcmcnt );
-  FPRINTF( stderr, " Additionally Removed sr Pragmas: %d\n", rmsrcnt );
-  FPRINTF( stderr, " Additionally Removed NoOps:      %d\n", rmnoop  );
-  FPRINTF( stderr, " Additionally Removed CNoOp:      %d\n", rmcnoop );
-  FPRINTF( stderr, " Sequentialized Concurrent Loops: %d\n", rmsmark );
-  FPRINTF( stderr, " Sequentialized Vector Loops:     %d\n", rmvmark );
-  FPRINTF( stderr, " Removed IFDefArrayBuf Nodes:     %d\n", rmdab   );
+  FPRINTF( infoptr3, "\n **** ADDITIONAL COPY ELIMINATIONS\n\n" );
+/*  FPRINTF( infoptr3, " Removed Ground Imports:           %d\n", gcnt  ); */
+  FPRINTF( infoptr3, " Additionally Eliminated Increment Reference Count Pragmas: %d of %d\n", rmpmcnt, trmpmcnt );
+  FPRINTF( infoptr3, " Additionally Eliminated Decrement Reference Count Pragmas: %d of %d\n", rmcmcnt, trmcmcnt );
+  FPRINTF( infoptr3, " Additionally Eliminated Set Reference Count Pragmas:       %d of %d\n", rmsrcnt, trmsrcnt );
+  FPRINTF( infoptr3, " Additionally Eliminated Copy Nodes:                        %d\n", rmnoop  );
+  FPRINTF( infoptr3, " Additionally Eliminated Conditional Copy Nodes:            %d\n", rmcnoop );
+  /*FPRINTF( infoptr3, " Removed IFDefArrayBuf Nodes:     %d\n", rmdab   ); */
 }

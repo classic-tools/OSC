@@ -1,4 +1,11 @@
 /* $Log: world.h,v $
+ * Revision 1.11  1994/06/16  21:31:34  mivory
+ * info format and option changes M. Y. I.
+ *
+ * Revision 1.10  1994/04/15  15:51:26  denton
+ * Added config.h to centralize machine specific header files.
+ * Fixed gcc warings.
+ *
  * Revision 1.9  1993/03/23  22:42:34  miller
  * date problem
  *
@@ -16,9 +23,12 @@
  * Make changes for LINT and combined files.
  * */
 
+#include "../../config.h"
 #include "../Library/IFX.h"
 
 extern int    mig;		/* MIGRATE NODES TOWARD USES? */
+extern FILE *infoptr;		/* information output file */
+extern FILE *infoptr2;		/* information output file */
 
 extern PNODE  nohead;		/* NoOp NODE LIST HEAD */
 extern PNODE  notail;		/* NoOp NODE LIST TAIL */

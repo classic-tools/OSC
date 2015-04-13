@@ -14,21 +14,26 @@ int   p;
 PNODE l;
 {
   register PEDGE i;
-
-  for ( i = l->L_BODY->imp; i != NULL; i = i->isucc )
-    if ( !IsImport( l->L_INIT, i->iport ) ) {
-      if ( i->iport != p ) {
-	ChangeExportPorts( l->L_TEST, i->iport, -p );
-	i->iport = -p;
-      }
-
-      p++;
+ if (l->L_BODY != NULL)
+    {
+      for ( i = l->L_BODY->imp; i != NULL; i = i->isucc )
+	if ( (!l->L_INIT) && (!i) && (!IsImport( l->L_INIT, i->iport )) ) {
+	  if ( (l->L_TEST) && (i->iport != p )) {
+	    ChangeExportPorts( l->L_TEST, i->iport, -p );
+	    i->iport = -p;
+	  }
+	  
+	  p++;
+	}
     }
-
   return( p );
 }
 
 /* $Log: AssignNewLoop.c,v $
+ * Revision 1.2  1994/03/03  17:13:58  solomon
+ * Added some tests to help prevent failing when dealing with invalid
+ * if1 code.
+ *
  * Revision 1.1  1993/04/16  18:59:46  miller
  * Name shortening to keep the archiver from truncating names in Backend/Library
  * Since some names were changed, other files were affected.  All names in the

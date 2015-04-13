@@ -1,26 +1,29 @@
-# **** FILE CREATION MASKS
 SHELL = /bin/sh
-DMASK = 700
-XMASK = 755
-MMASK = 744
+XMASK = 555
+MMASK = 444
 
 .SUFFIXES: .c .o
 	
 CC           = cc -g
-BIN_PATH     = ../../bin
-MAN_PATH     = ../../Man
+BIN_PATH     = ../../../bin
+LIB_PATH     = ../../../lib
+INC_PATH     = ../../../include
+MAN_PATH     = ../../../man
 BINSTALL     = cp
+SINSTALL     = cp
 PAR          =
-RANLIB	     = ranlib
+#RANLIB	     = ranlib
+RANLIB	     = touch
 AR	     = ar r
 
-OTHER = nametable.o
-OTHERSRC = nametable.c
+OTHER = nametabl.o
+OTHERSRC = nametabl.c
 #START
 A2LOBJ=  \
 	AddStamp.o \
 	AddTimeStamp.o \
 	AddToEquivCla.o \
+	AddToGraphLis.o \
 	AddToNodeList.o \
 	AdeAlloc.o \
 	ArchiveStuff.o \
@@ -50,6 +53,7 @@ A2LOBJ=  \
 	ChangeExports.o \
 	ChangeImportP.o \
 	ChangeToConst.o \
+	CheckEdge.o \
 	ClearTouchFla.o \
 	CopyEdge.o \
 	CopyEdgeAndLi.o \
@@ -59,6 +63,7 @@ A2LOBJ=  \
 	CountItems.o \
 	CreateAndInse.o \
 	CreateNewEqui.o \
+	DirectEdge.o \
 	DontCombineFi.o \
 	EdgeAlloc.o \
 	ElapsedTime.o \
@@ -68,25 +73,38 @@ A2LOBJ=  \
 	Error2.o \
 	ExitScope.o \
 	FastAreNodesE.o \
+	FindEnclosing.o \
 	FindExport.o \
 	FindFunction.o \
 	FindGraph.o \
 	FindGraphNode.o \
 	FindImport.o \
 	FindInfo.o \
+	FindLabel.o \
+	FindLargestEx.o \
+	FindLargestIm.o \
+	FindLargestLa.o \
+	FindLargestPo.o \
 	FindLastGraph.o \
 	FindLastImpor.o \
 	FindLastNode.o \
+	FindLargestNo.o \
 	FindNode.o \
+	FindReturns.o \
 	FindSource.o \
 	FixConstantIm.o \
 	FixSignedCons.o \
 	FoldItems.o \
 	GatherOthers.o \
+	GetAggregateT.o \
 	GetNewCallNod.o \
 	GetSourceLine.o \
 	GetStampStrin.o \
 	HasWriteExpor.o \
+	CopyEdgeAndRe.o \
+	CopyExports.o \
+	CopyImports.o \
+	CopyNode.o \
 	If1Read.o \
 	If1Write.o \
 	If2Read.o \
@@ -95,6 +113,7 @@ A2LOBJ=  \
 	InfoAlloc.o \
 	InitEquivClas.o \
 	IntToAscii.o \
+	IntegerPower.o \
 	IsABRecord.o \
 	IsAdePresent.o \
 	IsAggregate.o \
@@ -111,6 +130,7 @@ A2LOBJ=  \
 	IsPath.o \
 	IsPathInit.o \
 	IsReadOnly.o \
+	IsReductionIn.o \
 	IsStamp.o \
 	LinkAdeExport.o \
 	LinkAdeImport.o \
@@ -149,6 +169,7 @@ M2ZOBJ = \
 	MyAlloc.o \
 	MyBBlockAlloc.o \
 	NameAlloc.o \
+	NewType.o \
 	NodeAlloc.o \
 	NormalizeNode.o \
 	PPrintConst.o \
@@ -208,6 +229,7 @@ SRC=  \
 	AddStamp.c \
 	AddTimeStamp.c \
 	AddToEquivCla.c \
+	AddToGraphLis.c \
 	AddToNodeList.c \
 	AdeAlloc.c \
 	ArchiveStuff.c \
@@ -237,6 +259,7 @@ SRC=  \
 	ChangeExports.c \
 	ChangeImportP.c \
 	ChangeToConst.c \
+	CheckEdge.c \
 	ClearTouchFla.c \
 	CopyEdge.c \
 	CopyEdgeAndLi.c \
@@ -246,6 +269,7 @@ SRC=  \
 	CountItems.c \
 	CreateAndInse.c \
 	CreateNewEqui.c \
+	DirectEdge.c \
 	DontCombineFi.c \
 	EdgeAlloc.c \
 	ElapsedTime.c \
@@ -255,25 +279,37 @@ SRC=  \
 	Error2.c \
 	ExitScope.c \
 	FastAreNodesE.c \
+	FindEnclosing.c \
 	FindExport.c \
 	FindFunction.c \
 	FindGraph.c \
 	FindGraphNode.c \
 	FindImport.c \
 	FindInfo.c \
+	FindLabel.c \
+	FindLargestEx.c \
+	FindLargestIm.c \
+	FindLargestLa.c \
+	FindLargestPo.c \
 	FindLastGraph.c \
 	FindLastImpor.c \
 	FindLastNode.c \
 	FindNode.c \
+	FindReturns.c \
 	FindSource.c \
 	FixConstantIm.c \
 	FixSignedCons.c \
 	FoldItems.c \
 	GatherOthers.c \
+	GetAggregateT.c \
 	GetNewCallNod.c \
 	GetSourceLine.c \
 	GetStampStrin.c \
 	HasWriteExpor.c \
+	CopyEdgeAndRe.c \
+	CopyExports.c \
+	CopyImports.c \
+	CopyNode.c \
 	If1Read.c \
 	If1Write.c \
 	If2Read.c \
@@ -282,6 +318,7 @@ SRC=  \
 	InfoAlloc.c \
 	InitEquivClas.c \
 	IntToAscii.c \
+	IntegerPower.c \
 	IsABRecord.c \
 	IsAdePresent.c \
 	IsAggregate.c \
@@ -298,6 +335,7 @@ SRC=  \
 	IsPath.c \
 	IsPathInit.c \
 	IsReadOnly.c \
+	IsReductionIn.c \
 	IsStamp.c \
 	LinkAdeExport.c \
 	LinkAdeImport.c \
@@ -334,6 +372,7 @@ SRC=  \
 	MyAlloc.c \
 	MyBBlockAlloc.c \
 	NameAlloc.c \
+	NewType.c \
 	NodeAlloc.c \
 	NormalizeNode.c \
 	PPrintConst.c \
@@ -390,10 +429,10 @@ SRC=  \
 	WriteStamps.c \
 	WriteTheLMap.c
 #END
-INCL   = world.h ../Library/IFX.h
+INCL   = world.h IFX.h ../../config.h
 
 MINIMAL=0
-.c.o:
+.c.o: $(INCL)
 	${CC} -c $*.c
 	-@if [ $(MINIMAL) = 1 ]; then /bin/rm -f $*.c; else cat /dev/null; fi
 
@@ -404,8 +443,8 @@ all: local optional
 #------------------------------------------------------------
 makenames: makenames.c
 	${CC} -o makenames makenames.c
-nametable.c: ../Library/IFX.h makenames
-	makenames < ../Library/IFX.h > nametable.c
+nametabl.c: IFX.h makenames
+	makenames < IFX.h > nametabl.c
 
 #------------------------------------------------------------
 libifx.a: $(OTHER) $(A2LOBJ) $(M2ZOBJ)
@@ -426,11 +465,24 @@ llib-lifx.ln: $(SRC) $(OTHERSRC) $(INCL)
 
 #------------------------------------------------------------
 install:
-	@echo Nothing to install
+	cat formdoc.doc if.doc > tmpman.c
+	$(CC) -E -P -DMANPAGE tmpman.c > tmpman.i
+	cp tmpman.i tmpman.c
+	$(CC) -E -P -DMANPAGE tmpman.c > tmpman.i
+	/bin/rm -f ${MAN_PATH}/man5/if.5
+	${SINSTALL} tmpman.i ${MAN_PATH}/man5/if.5
+	chmod $(MMASK) ${MAN_PATH}/man5/if.5
+
+	cat formdoc.doc if.doc > tmpman.c
+	$(CC) -E -P -DHTML tmpman.c > tmpman.i
+	/bin/rm -f ${MAN_PATH}/if.html
+	${SINSTALL} tmpman.i ${MAN_PATH}/if.html
+	chmod $(MMASK) ${MAN_PATH}/if.html
 
 clean:
-	/bin/rm -f ${A2LOBJ} ${M2ZOBJ} ${OTHER} nametable.c
+	/bin/rm -f ${A2LOBJ} ${M2ZOBJ} ${OTHER} nametabl.c
 	/bin/rm -f libifx.a lint.log llib-lifx.ln makenames
+	/bin/rm -f tmpman.c tmpman.i
 
 ${A2LOBJ} ${M2ZOBJ}: ${INCL}
 

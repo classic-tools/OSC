@@ -32,8 +32,8 @@ static int   Number2 = -1;
 #define A_BREAKL  4
 #define A_BREAKE  5
 
-struct SdbxInfo SdbxState  = { A_NONE, NULL, "", NULL };
-struct SdbxInfo SdbxAction = { A_NONE, NULL, "", NULL };
+struct SdbxInfo SdbxState  = { A_NONE, NULL, "", 0, 0, 0, NULL, NULL };
+struct SdbxInfo SdbxAction = { A_NONE, NULL, "", 0, 0, 0, NULL, NULL };
 
 #define MAX_WHERE  1000
 #define MAX_SCOPES 1000
@@ -274,7 +274,7 @@ char *Word;
 }
 
 
-static GetCommand()
+static void GetCommand()
 {
   register int Ch;
 

@@ -1,0 +1,40 @@
+#if defined(MANPAGE)
+#define BeginDocument(x, y, z) .TH x y
+#define EndDocument
+#define BeginSection(x) .SH x
+#define EndSection(x)
+#define BeginVerbatim \#include "begverb.doc"
+#define EndVerbatim \#include "endverb.doc"
+#endif 
+
+#if defined(LATEX)
+#define BeginDocument(x, y, z) \
+    \documentstyle{article} \
+    \title{x(y)} \
+    \author{z} \
+    \begin{document} \
+    \maketitle
+#define EndDocument \end{document}
+#define BeginSection(x) \section{x}
+#define EndSection(x)
+#define BeginVerbatim \begin{verbatim}
+#define EndVerbatim \end{verbatim}
+#endif
+
+#if defined(TEXT)
+#define BeginDocument(x, y, z) x(y)                z
+#define EndDocument
+#define BeginSection(x) x
+#define EndSection(x)
+#define BeginVerbatim
+#define EndVerbatim
+#endif
+
+#if defined(HTML)
+#define BeginDocument(x, y, z) <title>x(y)</title><h1>x(y)</h1>
+#define EndDocument
+#define BeginSection(x) <h2>x</h2>
+#define EndSection(x)
+#define BeginVerbatim <pre>
+#define EndVerbatim </pre>
+#endif

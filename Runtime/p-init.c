@@ -23,6 +23,10 @@ char	*bformat	= "%c\n";
 
 char  *av [MAXARGS];		/* COMMAND LINE OF CURRENT COMPILATION PHASE */
 
+#if defined(NO_STATIC_SHARED)
+struct shared_s LSR;	/* READ ARGS. LOCALLY BEFORE COPYING TO DYNAMIC MEM. */
+#endif
+
 /**************************************************************************/
 /* LOCAL  **************        SubmitNQS          ************************/
 /**************************************************************************/
@@ -101,11 +105,11 @@ static void SubmitNQS(argc,argv,nqs_idx)
 }
 
 /**************************************************************************/
-/* LOCAL  **************       ParseCEscapes       ************************/
+/* GLOBAL  **************       ParseCEscapes       ***********************/
 /**************************************************************************/
 /* PURPOSE:  Convert C string escapes into internal representation	  */
 /**************************************************************************/
-static char *ParseCEscapes(s)
+char *ParseCEscapes(s)
      char	*s;
 {
   char	*buf = (char*)(malloc(strlen(s)+1));
@@ -141,7 +145,7 @@ static char *ParseCEscapes(s)
     }
   }
 
-  *p = NULL;
+  *p = '\0';
 
   return buf;
 }
@@ -154,6 +158,14 @@ char *argv[];
   int   Tmp;
   int   FibreFileMode;
   char	*CorrectUsage;
+
+#if defined(NO_STATIC_SHARED)
+  /* ------------------------------------------------------------ */
+  /* Now initialize the to default values only for the master     */
+  /* ------------------------------------------------------------ */
+  if (p_procnum == 0)
+        InitSharedGlobals();
+#endif
 
   FibreFileMode = FIBREIN;
 
@@ -189,7 +201,7 @@ char *argv[];
     /* ------------------------------------------------------------ */
     /* Handle empty file names					    */
     /* ------------------------------------------------------------ */
-    if ( argv[idx][1] == NULL ) {
+    if ( argv[idx][1] == '\0' ) {
       FibreFileMode++;
       continue;
     }
@@ -347,9 +359,18 @@ void DumpRunTimeInfo()
 
 void InitSisalRunTime()
 {
+#if defined(DIST_DSA)
+  AcquireSharedMemory( DsaSize * MAX_PROCS );
+#else
   AcquireSharedMemory( DsaSize );
+#endif
 
+#if defined(DIST_DSA)
+  InitDsaCaches( DsaSize/2, XftThreshold );
+  InitDsa( DsaSize/2, XftThreshold );
+#else
   InitDsa( DsaSize, XftThreshold );
+#endif
 
   InitErrorSystem();
   InitWorkers();

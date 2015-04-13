@@ -1,4 +1,7 @@
 /* $Log: report.c,v $
+ * Revision 1.8  1994/04/18  19:23:47  denton
+ * Removed remaining gcc warnings.
+ *
  * Revision 1.7  1993/03/23  22:43:54  miller
  * date problem
  *
@@ -66,7 +69,7 @@ static void CheckPragma(s)
   /* ------------------------------------------------------------ */
   /* All comments start with '#$<char>'				  */
   /* ------------------------------------------------------------ */
-  if ( s[1] != '$' || s[2] == NULL || s[3] == NULL ) return;
+  if ( s[1] != '$' || s[2] == '\0' || s[3] == '\0' ) return;
 
   /* ------------------------------------------------------------ */
   /* Execute the appropriate action				  */

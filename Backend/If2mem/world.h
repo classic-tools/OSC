@@ -1,4 +1,11 @@
 /* $Log: world.h,v $
+ * Revision 1.11  1994/06/16  21:31:02  mivory
+ * info format and option changes M. Y. I.
+ *
+ * Revision 1.10  1994/04/15  15:51:14  denton
+ * Added config.h to centralize machine specific header files.
+ * Fixed gcc warings.
+ *
  * Revision 1.9  1993/03/23  22:35:46  miller
  * date problem
  *
@@ -16,6 +23,7 @@
  * Make changes for LINT and combined files.
  * */
 
+#include "../../config.h"
 #include "../Library/IFX.h"
 
 
@@ -31,6 +39,9 @@ extern int   fover;		/* OVERRIDE AGather FILTERS? */
 extern int   Oinvar;
 
 extern int   paddh;		/* COUNT OF AAddH PREFERENCES */
+
+extern FILE *infoptr;
+extern int agg;
 
 /* ------------------------------------------------------------ */
 /* if2mem.c */

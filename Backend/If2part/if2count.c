@@ -1,4 +1,7 @@
 /* $Log: if2count.c,v $
+ * Revision 1.9  1994/06/16  21:31:09  mivory
+ * info format and option changes M. Y. I.
+ *
  * Revision 1.8  1993/03/23  22:43:25  miller
  * date problem
  *
@@ -62,24 +65,24 @@ int   indent;
     static	int	LoopCount = 0;
 
     /* ------------------------------------------------------------ */
-    FPRINTF( stderr, "%d\t", ++LoopCount );
+    FPRINTF( infoptr, "%d\t", ++LoopCount );
     for ( i = 0; i < indent; i++ ) 
-	FPRINTF( stderr, " " );
+	FPRINTF( infoptr, " " );
 
-    FPRINTF( stderr, "%d: %s", indent, msg );
+    FPRINTF( infoptr, "%d: %s", indent, msg );
 
-    FPRINTF( stderr, " (%s) ", cfunct->G_NAME );
+    FPRINTF( infoptr, " (%s) ", cfunct->G_NAME );
     if ( n->MinSlice ) {
-      FPRINTF( stderr, "[cost=%g,%s]: ", n->ccost,n->MinSlice );
+      FPRINTF( infoptr, "[cost=%g,%s]: ", n->ccost,n->MinSlice );
     } else {
-      FPRINTF( stderr, "[cost=%g]: ", n->ccost );
+      FPRINTF( infoptr, "[cost=%g]: ", n->ccost );
     }
-    FPRINTF( stderr, "(%s,%s,%d)\n", n->file, n->funct, n->line);
+    FPRINTF( infoptr, "(%s,%s,%d)\n", n->file, n->funct, n->line);
 
     if ( n->reason2) {
-      FPRINTF( stderr, "\t");
-      for ( i = 0; i < indent+3; i++ ) FPRINTF( stderr, " " );
-      FPRINTF( stderr, "*** %s\n",n->reason2);
+      FPRINTF( infoptr, "\t");
+      for ( i = 0; i < indent+3; i++ ) FPRINTF( infoptr, " " );
+      FPRINTF( infoptr, "*** %s\n",n->reason2);
     }
 }
 
@@ -166,23 +169,23 @@ void PartIf2Count()
 
     fnodes = vecs = slices = strcps = syncs = 0;
 
-    FPRINTF( stderr, "\n   * PARTITION AND VECTORIZATION MAP (procs=%d)\n\n",
+    FPRINTF( infoptr, "\n **** PARTITION AND VECTORIZATION MAP (procs=%d)\n\n",
 		     procs );
 
     for ( f = glstop->gsucc; f != NULL; f = f->gsucc ) {
-	FPRINTF( stderr, "FUNCTION %s [cost=%g] [apl=%d] [pbsy=%d]\n",
+	FPRINTF( infoptr, " FUNCTION %s [cost=%g] [apl=%d] [pbsy=%d]\n",
 			 f->G_NAME, f->ccost, f->level, f->pbusy   );
 
 	WriteMap( cfunct = f, 1, 1 );
 	}
 
-    if ( RequestInfo(I_MoreInfo,info) ) {
-      FPRINTF( stderr, "\n   * OCCURRENCE COUNTS\n\n" );
-      FPRINTF( stderr,   "Forall Nodes:                       %d\n", fnodes  );
-      FPRINTF( stderr,   "Sliced Forall Nodes:                %d\n", slices  );
-      FPRINTF( stderr,   "Vectorized Forall Nodes:            %d\n", vecs    );
-      FPRINTF( stderr,   "Sliced and Vectorized Forall Nodes: %d\n", slvecs  );
-      FPRINTF( stderr,   "Stream Consumer/Producer Tasks:     %d\n", strcps  );
-      FPRINTF( stderr,   "Syncronization Operations:          %d\n", syncs   );
+    if ( RequestInfo(I_Info4,info)  ) {
+      FPRINTF( infoptr, "\n **** OCCURRENCE COUNTS\n\n" );
+      FPRINTF( infoptr,   " Forall Nodes:                       %d\n", fnodes  );
+      FPRINTF( infoptr,   " Sliced Forall Nodes:                %d\n", slices  );
+      FPRINTF( infoptr,   " Vectorized Forall Nodes:            %d\n", vecs    );
+      FPRINTF( infoptr,   " Sliced and Vectorized Forall Nodes: %d\n", slvecs  );
+      FPRINTF( infoptr,   " Stream Consumer/Producer Tasks:     %d\n", strcps  );
+      FPRINTF( infoptr,   " Syncronization Operations:          %d\n", syncs   );
     }
 }

@@ -1,48 +1,54 @@
 SHELL=/bin/sh
+
+DIFF=diff
+
 OSC=osc
+SRFLAGS=
+SFLAGS=
 
 run: runloop1 runloop2 runloop3
 
-runloop1: touch loop1 input.1 loop1.answers
-	@loop1 input.1 > loop1.test \
+runloop1: touch loop1 loop1.in loop1.ans
+	loop1 $(SRFLAGS) loop1.in > loop1.test \
 		-bformat "%c " \
 		-cformat "'%c' " \
 		-fformat "%.4f " \
 		-dformat "%.4lf " \
 		-iformat "%d "
-	@-diff loop1.test loop1.answers >> test.log
-	diff loop1.test loop1.answers
+	@-$(DIFF) loop1.test loop1.ans >> test.log
+	$(DIFF) loop1.test loop1.ans
 	@echo Loop1 Compared OK
 
-runloop2: touch loop2 input.2 loop2.answers
-	@loop2 input.2 > loop2.test \
+runloop2: touch loop2 loop2.in loop2.ans
+	loop2 $(SRFLAGS) loop2.in > loop2.test \
 		-bformat "%c " \
 		-cformat "'%c' " \
 		-fformat "%.4f " \
 		-dformat "%.4lf " \
 		-iformat "%d "
-	@-diff loop2.test loop2.answers >> test.log
-	diff loop2.test loop2.answers
+	@-$(DIFF) loop2.test loop2.ans >> test.log
+	$(DIFF) loop2.test loop2.ans
 	@echo Loop2 Compared OK
 
-runloop3: touch loop3 input.3 loop3.answers
-	@loop3 input.3 > loop3.test -dformat "%.6lf"
-	@-diff loop3.test loop3.answers >> test.log
-	diff loop3.test loop3.answers
+runloop3: touch loop3 loop3.in loop3.ans
+	loop3 $(SRFLAGS) loop3.in > loop3.test -dformat "%.6lf"
+	@-$(DIFF) loop3.test loop3.ans >> test.log
+	$(DIFF) loop3.test loop3.ans
 	@echo Loop3 Compared OK
 
 touch:
 
 loop1: loop1.sis
-	$(OSC) loop1.sis -o loop1 > test.log 2>&1
+	$(OSC) $(SFLAGS) loop1.sis -o loop1 >> test.log 2>&1
 loop2: loop2.sis
-	$(OSC) loop2.sis -o loop2 >> test.log 2>&1
+	$(OSC) $(SFLAGS) loop2.sis -o loop2 >> test.log 2>&1
 loop3: loop3.sis
-	$(OSC) loop3.sis -o loop3 >> test.log 2>&1
+	$(OSC) $(SFLAGS) loop3.sis -o loop3 >> test.log 2>&1
 
 clean:
-	@/bin/rm -f test.log loop1 loop1.o loop1.test \
-			    loop2 loop2.o loop2.test \
-			    loop3 loop3.o loop3.test
-
+	@/bin/rm -f test.log s.info \
+		loop1 loop1.o loop1.test \
+		loop2 loop2.o loop2.test \
+		loop3 loop3.o loop3.test
+	@/bin/rm -f core *.if1 *.opt *.mono *.mem *.up *.part *.c *.o
 #

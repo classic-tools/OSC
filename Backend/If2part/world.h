@@ -1,4 +1,11 @@
 /* $Log: world.h,v $
+ * Revision 1.14  1994/06/16  21:31:19  mivory
+ * info format and option changes M. Y. I.
+ *
+ * Revision 1.13  1994/04/15  15:51:21  denton
+ * Added config.h to centralize machine specific header files.
+ * Fixed gcc warings.
+ *
  * Revision 1.12  1993/03/23  22:43:37  miller
  * date problem
  *
@@ -27,6 +34,7 @@
  * Make changes for LINT and combined files.
  * */
 
+#include "../../config.h"
 #include "../Library/IFX.h"
 
 #define SliceThreshold      mcosts[0]
@@ -59,7 +67,8 @@
 #define MDB_PARX 'P'
 #define MDB_SEQX 'S'
 
-extern int    vinfo;		/* DUMP VECTOR-CONCURRENT INFO */
+extern int    info;		/* DUMP INFO */
+extern FILE *infoptr;		/* Info fileptr */
 
 extern double scosts[];		/* SIMPLE NODE COST TABLE */
 extern double atcosts[];	/* AT-NODE COST TABLE */

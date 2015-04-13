@@ -235,11 +235,11 @@ PNODE g;
 
 void WriteGCseInfo()
 {
-    FPRINTF( stderr, "\n   * GLOBAL COMMON NODE ELIMINATION\n\n" );
-    FPRINTF( stderr, " Select Subgraph Movements:  %d\n", ccnt   );
-    FPRINTF( stderr, " Combined Nodes:             %d\n", ncnt   );
-    FPRINTF( stderr, " Select Clean Operations:    %d\n", sccnt  );
-    FPRINTF( stderr, " Select ICSE Movements:      %d\n", sacnt  );
+    FPRINTF( infoptr, "\n **** GLOBAL COMMON NODE ELIMINATION\n\n" );
+    FPRINTF( infoptr, " Select Subgraph Movements:  %d\n", ccnt   );
+    FPRINTF( infoptr, " Combined Nodes:             %d\n", ncnt   );
+    FPRINTF( infoptr, " Select Clean Operations:    %d\n", sccnt  );
+    FPRINTF( infoptr, " Select ICSE Movements:      %d\n", sacnt  );
 }
 
 

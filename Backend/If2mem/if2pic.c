@@ -128,15 +128,15 @@ PNODE n;
 
 static void PrintATNodeInfo()
 {
-  FPRINTF( stderr, "\n   * INSERTED AT-NODE INFORMATION\n" );
-  FPRINTF( stderr, " Total Number of AT-NODES: %d\n", inatns );
-  FPRINTF( stderr, " Total Number of CONVERTED AT-NODES: %d\n", convatns );
-  FPRINTF( stderr, " Total Number of SYNC AT-NODES: %d\n", syncatns );
-  FPRINTF( stderr, " Total Number of FAILED SYNC AT-NODES: %d\n", fsyncatns );
-  FPRINTF( stderr, " Total Number of PARENT AT-NODES: %d\n", patns );
-  FPRINTF( stderr, " Total Number of Incremental-Build AT-NODES: %d\n", 
+  FPRINTF( infoptr, "\n **** INSERTED AT-NODE INFORMATION\n\n" );
+  FPRINTF( infoptr, " Total Number of AT-NODES:                         %d\n", inatns );
+  FPRINTF( infoptr, " Total Number of CONVERTED AT-NODES:               %d\n", convatns );
+  FPRINTF( infoptr, " Total Number of SYNC AT-NODES:                    %d\n", syncatns );
+  FPRINTF( infoptr, " Total Number of FAILED SYNC AT-NODES:             %d\n", fsyncatns );
+  FPRINTF( infoptr, " Total Number of PARENT AT-NODES:                  %d\n", patns );
+  FPRINTF( infoptr, " Total Number of Incremental-Build AT-NODES:       %d\n", 
 	   incratns );
-  FPRINTF( stderr, " Total Number of FAILED Incremtnal-Build AT-NODES: %d\n",
+  FPRINTF( infoptr, " Total Number of FAILED Incremtnal-Build AT-NODES: %d\n",
 		     fincratns );
 }
 
@@ -271,7 +271,7 @@ char  *op;
     if ( !IsArray( n->exp->info ) )
 	return;
 
-    FPRINTF( stderr, "  AT-NODE CONVERSION FAILURE: %s: %s, %s, %d\n",
+    FPRINTF( infoptr, " AT-NODE CONVERSION FAILURE: %s: %s, %s, %d\n",
 		        op, n->file, n->funct, n->line              );
 }
 
@@ -301,9 +301,9 @@ int   eport;
         switch ( a->type ) {
 	    case IFAAddHAT:
 	        if ( IsPMarked( a, 1 ) && (UsageCount( a, 1 ) > 1) )
-	          FPRINTF( stderr, "[P_FANOUT]\n" );
+	          FPRINTF( infoptr, "[P_FANOUT]\n" );
 
-		FPRINTF( stderr, "   array_addh(%%mk=%c,%%mk=V): %s, %s, %d\n", 
+		FPRINTF( infoptr, "   array_addh(%%mk=%c,%%mk=V): %s, %s, %d\n", 
 				 a->imp->mark, a->file, a->funct, a->line    );
 
                 break;
@@ -598,7 +598,7 @@ void WriteIf2memPicture()
 {
     PNODE f;
 
-    FPRINTF( stderr, "\n   * ARRAY MEMORY MAP\n" );
+   /* FPRINTF( stderr, "\n   * ARRAY MEMORY MAP\n" );
 
     for ( f = glstop->gsucc ; f != NULL ; f = f->gsucc ) {
 	if ( IsIGraph( f ) )
@@ -608,8 +608,9 @@ void WriteIf2memPicture()
 
 	WriteGraphPicture( f );
 	}
-    
+   */ 
     PrintATNodeInfo();
+	WriteAggregateInfo();
 }
 
 

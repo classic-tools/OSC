@@ -101,9 +101,12 @@ PEDGE e;
 	  return;
 	  } 
 
-	FPRINTF( stderr, "help e = %x e->if1line = %d e->dst->type = %d e->eport %d\n",
-	e, e->if1line, e->dst->type, e->eport );
-	Error1( "PrintTemp: temp == NULL" );
+        ERRORINFO( "e = 0x%x ", (unsigned)e );
+	ERRORINFO( "e->if1line = %d", e->if1line );
+	ERRORINFO( "e->dst->type = %d ", e->dst->type );
+	ERRORINFO( "e->eport = %d", e->eport );
+	UNEXPECTED( "Missing temporary" );
+        return;
 	}
 
     if ( !IsFunction( t->info ) ) {
@@ -449,7 +452,7 @@ static void ExpandDollarFormula(c,n,errorbuf)
      PNODE	n;
      char	*errorbuf;
 {
-  errorbuf[0] = NULL;		/* Assume no errors */
+  errorbuf[0] = '\0';		/* Assume no errors */
      
   for(; *c; c++) {
     if ( *c == '$' ) {
@@ -509,7 +512,6 @@ PNODE g;
   return( FALSE );
 }
 
-
 /**************************************************************************/
 /* LOCAL  **************    PrintBuildSlices	   ************************/
 /**************************************************************************/
@@ -524,7 +526,11 @@ PNODE n;
   char	   ebuf[100];
   char	   *Style;
 
+  int	   size;
+
   f = n->usucc->usucc->imp->src;
+
+  size = LCMSize(n->usucc->usucc);
 
   /* ------------------------------------------------------------ */
   /* Select the appropriate style of slicer.  For Runtime	  */
@@ -549,13 +555,18 @@ PNODE n;
    case 'S':
     Style = "Strided";
     break;
+#if defined(NON_COHERENT_CACHE)
+   case 'C':
+    Style = "Cached";
+    break;
+#endif
    default:
     SPRINTF(buf,"Bad Slice option for loop %d",f->ID);
     Error1(buf);
   }
 
   PrintIndentation( indent );
-  FPRINTF( output, "%sBSlices( %s, %s, %s, %s\n",
+  FPRINTF( output, "%sBSlices( %s, %s, %s, %s",
 	  Style,
 	  (IsComplex( f->F_BODY ))? "SPAWN_COMPLEX" : "SPAWN_SIMPLE",
 	  n->usucc->temp->info->sname, 
@@ -593,6 +604,9 @@ PNODE n;
   } else {
     FPRINTF( output, "LoopSlices" );
   }
+
+  FPRINTF( output, ", %d",size );
+  FPRINTF( output,", %d",f->norm);
 
   /* ------------------------------------------------------------ */
   FPRINTF( output, " );\n" );
@@ -659,7 +673,8 @@ PNODE n;
   PrintIndentation( indent );
 
   if ( n->type == IFOptLoopPoolEnq ) {
-    FPRINTF( output, "OptSpawn( %s,", n->temp->info->sname );
+    FPRINTF( output, "OptSpawn%s( %s,", (n->Fmark ? "Fast":""),
+				n->temp->info->sname );
   } else {
     /* ------------------------------------------------------------ */
     /* Select the appropriate style of slicer.  For Runtime	  */
@@ -692,9 +707,9 @@ PNODE n;
     FPRINTF( output, "%sSpawn(",Style );
   }
 
-  FPRINTF( output, " %s, %s, %s",
+  FPRINTF( output, " %s, %s, %s, %d, %d",
 	   (IsComplex( f->F_BODY ))? "SPAWN_COMPLEX" : "SPAWN_SIMPLE",
-	   n->usucc->G_NAME, n->temp->name      );
+	   n->usucc->G_NAME, n->temp->name, LCMSize(f->F_RET), f->norm      );
 	   
   PrintRanges( n );
   FPRINTF( output, " );\n" );
@@ -829,6 +844,7 @@ PNODE g;
     register char  *LastFile;
     char	   *SourceLine;
 	     char  buf[100];
+    PINFO    info;
 
     if ( g->mark == 's' ) {
       FPRINTF( output, "#ifdef CInfo\n" );
@@ -1041,7 +1057,7 @@ PNODE g;
 	        FPRINTF( output, " = (%s) ", n->exp->info->tname );
 		FPRINTF( output, 
 		   "SisalError( %s, \"EXPLICIT ERROR VALUE GENERATED!\" );\n",
-		   GetSisalInfo( n->exp->dst, buf ) );
+		   GetSisalInfoOnEdge( n->exp, buf ) );
 
 		break;
 
@@ -1389,7 +1405,7 @@ PNODE g;
 	      break;
 
 	    default:
-		Error1( "PrintGraph: ILLEGAL NODE TYPE" );
+		UNEXPECTED( "Unknown node" );
 	    }
 
 	if ( sdbx )
@@ -1425,19 +1441,27 @@ PNODE g;
 		FPRINTF( output, "LockParent;\n" );
 		}
 
+            info = NULL;
 	    for ( i = g->imp; i != NULL; i = i->isucc ) {
 		if ( i->iport == 0 )
 		    continue;
 
 		if ( IsLPGraph( g ) ) {
 		    if ( !IsArray( i->info ) )
+		    {
                         PrintSumOfTerms( indent, i );
+			info = i->dst->info;
+		    }
 
 		    continue;
                     }
 
 		PrintFldAssgn( indent, g->info->sname, "args", 
 			       NULL_EDGE, "Out", i->iport, i     );
+                }
+
+            if ( IsLPGraph( g ) && lk && (info != NULL) ) {
+		FPRINTF(output, "CACHESYNC;\n");
                 }
 
 	    if ( IsLPGraph( g ) && lk ) {

@@ -37,6 +37,53 @@ char  *buf;
 
 
 /**************************************************************************/
+/* GLOBAL ***********      GetSisalInfoOnEdge        **********************/
+/**************************************************************************/
+/* PURPOSE: RETURN SISAL SOURCE INFORMATION FOR NODE n IN BUFFER buf. Buf */
+/*          IS TAKEN AS AN ARGUMENT AND RETURNED AS A RESULT.             */
+/**************************************************************************/
+
+char *GetSisalInfoOnEdge( e, buf )
+PEDGE e;
+char  *buf;
+{
+  if ( e->line > 0 ) 
+    {
+      SPRINTF( buf, "\"%s,%s,line=%d\"",
+	      (e->file == NULL)? "unknown.sis" : e->file,
+	      (e->funct == NULL)? "unknown(...)" : e->funct, e->line );
+      return( buf );
+    }
+
+  else if (e->dst->line > 0)
+    {
+      SPRINTF( buf, "\"%s,%s,line=%d\"",
+	      (e->dst->file == NULL)? "unknown.sis" : e->dst->file,
+	      (e->dst->funct == NULL)? "unknown(...)" : e->dst->funct, 
+	      e->dst->line );
+      return( buf );
+    }
+
+  else if (e->src->line > 0)
+    {
+      SPRINTF( buf, "\"%s,%s,line=%d\"",
+	      (e->src->file == NULL)? "unknown.sis" : e->src->file,
+	      (e->src->funct == NULL)? "unknown(...)" : e->src->funct, 
+	      e->src->line );
+      return( buf );
+    }
+  
+  else
+    {
+      SPRINTF( buf, "\"%s,%s,line=lost\"",
+	      (e->file == NULL)? "unknown.sis" : e->file,
+	      (e->funct == NULL)? "unknown(...)" : e->funct );
+      return( buf );
+    }
+}
+
+
+/**************************************************************************/
 /* GLOBAL **************      PrintBoundsCheck     ************************/
 /**************************************************************************/
 /* PURPOSE: PRINT A BOUNDS CHECK FOR ARRAY a AND INDEX i FOR NODE n.      */
@@ -118,7 +165,7 @@ PNODE n;
   PrintTemp( n->imp->isucc );
   FPRINTF( output, ", " );
   PrintTemp( n->imp->isucc->isucc );
-  FPRINTF( output, " );\n", n->imp->iport );
+  FPRINTF( output, " );\n" );
 }
 
 
@@ -225,7 +272,13 @@ char  *nm;
   register PEDGE i;
 
   PrintIndentation( indent );
-  FPRINTF( output, "PSMAlloc%s( %s, %s, ", nm, n->gname, 
+
+  if (n->norm > 0) {
+  	FPRINTF( output, "SkiPSMAlloc%s( %d, %s, %s, ", nm, n->norm, n->gname, 
+	   	n->usucc->exp->info->A_ELEM->A_ELEM->tname );
+	FPRINTF(stderr, "SKI PS NORM %d\n", n->norm);
+  } else
+  	FPRINTF( output, "PSMAlloc%s( %s, %s, ", nm, n->gname, 
 	   n->usucc->exp->info->A_ELEM->A_ELEM->tname );
   PrintTemp( n->exp );
   FPRINTF( output, ", " );
@@ -260,6 +313,11 @@ PNODE n;
 
   PrintIndentation( indent );
 
+  if ( !(n->wmark) && n->norm > 0 ) {
+    FPRINTF ( output, "Ski");
+    FPRINTF (stderr, "Ski normalization by %d\n", n->norm);
+  }
+
   if ( n->wmark )
     FPRINTF( output, "Ragged" );
 
@@ -269,6 +327,9 @@ PNODE n;
     FPRINTF( output, "MAllocDVI( " );
   else
     FPRINTF( output, "MAlloc( " );
+
+  if ( !(n->wmark) && n->norm > 0 )
+  	FPRINTF( output, "%d,", n->norm );
 
   PrintTemp( n->exp );
   FPRINTF( output, ", " );

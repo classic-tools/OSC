@@ -1,7 +1,7 @@
 #include "world.h"
 
 int    tbase		= 0;	/* Label IF1 types from 0 (first file) */
-int    tmax		= 0;	/* Biggest type (not used) */
+/*int    tmax		= 0;	 Biggest type (not used) */
 
 char  *stamps[128] =		/* STAMPS FOR ANY CHARACTER       */
     { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -43,7 +43,8 @@ void BuildItems()
   int		i;
 
   tbase		= 0;
-  tmax		= 0;
+  /* tmax       = 0;*/
+  LargestTypeLabelSoFar		= 0;
   for(i=0;i<128;i++) stamps[i] = NULL;
   sfile		= NULL;
   cfunct	= NULL;
@@ -65,6 +66,9 @@ void BuildItems()
 }
 
 /* $Log: BuildItems.c,v $
+ * Revision 1.3  1994/05/25  23:35:00  solomon
+ * Changed variable tmax to LargestTypeLabelSoFar.
+ *
  * Revision 1.2  1993/06/14  20:43:59  miller
  * BuildItems/ReadItems/world  (reset for new IFx read operation)
  * IFX.h/ReadPragmas (new lazy pragma)

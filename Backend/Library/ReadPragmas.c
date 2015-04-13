@@ -20,7 +20,7 @@
 {					\
   if ( !HaveArgument ) ReadError(err);	\
   name = ReadString(WHITE_CHARS);	\
-  if ( *name == NULL ) ReadError(err);	\
+  if ( *name == '\0' ) ReadError(err);	\
   pragmas.fld = converter(name);	\
   (void)(free(name));			\
 }
@@ -28,7 +28,7 @@
 {					\
   if ( !HaveArgument ) ReadError(err);	\
   name = ReadString(WHITE_CHARS);	\
-  if ( *name == NULL ) ReadError(err);	\
+  if ( *name == '\0' ) ReadError(err);	\
   pragmas.fld = name;			\
 }
 
@@ -104,7 +104,7 @@ void ReadPragmas()
        case 'V':
 	if ( !AllowVMarks ) break;
 	pragmas.vmark = TRUE;	/* fall through */
-       case 's': case 'c': case 'f': case 'i': case 'e':
+       case 's': case 'c': case 'f': case 'd': case 'i': case 'e':
 	pragmas.mark = token;
 	break;
 
@@ -173,6 +173,10 @@ void ReadPragmas()
 	pragmas.smark = TRUE;
 	break;
 
+       case 'Y':
+        pragmas.Fmark = TRUE;
+        break;
+
        default:
 	ReadError( "ILLEGAL mk PRAGMA MARK" );
       }
@@ -222,6 +226,20 @@ void ReadPragmas()
       /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
      case HashP('s','r'):
       DecodePragma(sr,atoi,"ILLEGAL sr PRAGMA");
+      break;
+
+      /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+      /* TEMPORARY NAME                                               */
+      /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+     case HashP('t','n'):
+      pragmas.reason1 = ReadLiteral(FALSE);
+      break;
+
+      /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+      /* EDGE TYPE NAME                                               */
+      /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+     case HashP('e','t'):
+      NamePragma(reason2,"ILLEGAL et PRAGMA");
       break;
 
       /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -282,6 +300,21 @@ void ReadPragmas()
 }
 
 /* $Log: ReadPragmas.c,v $
+ * Revision 1.9  1994/07/15  18:35:20  denton
+ * Make tn a "" pragma
+ *
+ * Revision 1.8  1994/07/15  16:42:43  denton
+ * Added tn and et for IF3.
+ *
+ * Revision 1.7  1994/04/01  00:02:52  denton
+ * NULL -> '\0' where appropriate
+ *
+ * Revision 1.6  1994/03/24  19:39:48  denton
+ * Distributed DSA, non-coherent cache, non-static shared memory.
+ *
+ * Revision 1.5  1994/02/17  17:29:16  denton
+ * Reduction 'd'
+ *
  * Revision 1.4  1993/06/14  20:44:04  miller
  * BuildItems/ReadItems/world  (reset for new IFx read operation)
  * IFX.h/ReadPragmas (new lazy pragma)

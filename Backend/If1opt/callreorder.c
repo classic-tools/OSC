@@ -36,7 +36,6 @@ static int InSortedTree( f,g )
 {
   register PNODE n;
   register PNODE sg;
-  register PNODE ff;
 
   for ( n = g->G_NODES; n != NULL; n = n->nsucc ) {
     if ( IsCompound( n ) ) {
@@ -145,6 +144,9 @@ void CallReorder()
 }
 
 /* $Log: callreorder.c,v $
+ * Revision 1.2  1994/04/15  15:50:29  denton
+ * Added config.h to centralize machine specific header files.
+ *
  * Revision 1.1  1993/11/30  00:26:23  miller
  * Call reordering for recursive call with record bug.
  * */

@@ -15,7 +15,7 @@ int   level      = 1;		/* NESTED LOOP PARALLIZATION THRESHOLD */
 				/* by Active processor paralellism. */
 int atlevel      = -1;       /* ONLY SLICE AT THIS PARALLEL NESTING LEVEL */
 
-int edges;             /* NUMBER OF COUNTED EDGES                  */
+static int totedges;            /* NUMBER OF COUNTED EDGES                  */
 static int total;             /* TOTAL DISTANCE OF COUNTED EDGES          */
 
 
@@ -41,7 +41,7 @@ PNODE g;
     for ( n = g->G_NODES; n != NULL; n = n->nsucc )
         for ( e = n->exp; e != NULL; e = e->esucc )
             if ( !IsGraph( e->dst ) ) {
-                edges++;
+                totedges++;
                 total += e->dst->label - n->label;
                 }
 }
@@ -214,6 +214,13 @@ int   pbusy; /* BUSY PROCESSORS */
       n->smark = TRUE;
 
       /* ------------------------------------------------------------ */
+      /* If this is a last parallelism level, okay to use fast        */
+      /* scheduling mechanism at runtime.                             */
+      /* ------------------------------------------------------------ */
+      if( level == 1 )
+		n->Fmark = TRUE;
+
+      /* ------------------------------------------------------------ */
       /* Select the default parallelism style			      */
       /* ------------------------------------------------------------ */
       n->Style = DefaultStyle;
@@ -331,8 +338,8 @@ void If2Part()
 {
     register PNODE f;
 
-    if ( RequestInfo(I_DeveloperInfo1,info) ) {
-      FPRINTF( stderr, "\n   * LOCALITY MAP\n\n" );
+    if ( RequestInfo(I_Info4,info)) {
+      FPRINTF( infoptr, "\n **** LOCALITY MAP\n\n" );
     }
 
     for ( f = FindLastGraph( glstop ); f != glstop; f = f->gpred ) {
@@ -347,24 +354,22 @@ void If2Part()
             f->pbusy = f->pbusy / f->cnum;
             }
 
-        edges = total = 0;
+        totedges = total = 0;
 
         PartitionGraph( f, f->level, f->pbusy );
 
-	if ( RequestInfo(I_DeveloperInfo1,info) ) {
-            FPRINTF( stderr, "FUNCTION %s: ", f->G_NAME );
+	if ( RequestInfo(I_Info4,info) ) {
+            FPRINTF( infoptr, " FUNCTION %s: ", f->G_NAME );
 
-            if ( edges == 0 )
-                FPRINTF( stderr, "Average Distance = 0.0\n" );
+            if ( totedges == 0 )
+                FPRINTF( infoptr, "Average Distance = 0.0\n" );
             else
-                FPRINTF( stderr, "Average Distance = %e\n",
-                             ((double) total) / ((double) edges) );
+                FPRINTF( infoptr, "Average Distance = %e\n",
+                             ((double) total) / ((double) totedges) );
             }
         }
 
-    if (  dovec 
-	&& RequestInfo(I_MoreInfo,info)
-	) {
+    if (  dovec && RequestInfo(I_Info4,info)) {
       VectorSummary();
     }
 }

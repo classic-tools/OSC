@@ -12,13 +12,20 @@ static int good;                                   /* CURRENT LEGAL COLOR */
 static int bad;                                  /* CURRENT ILLEGAL COLOR */
 
 static int dfcnt = 0;                  /* COUNT OF DEPENDENT FUSIONS      */
+static int Tdfcnt = 0;                  /* COUNT OF DEPENDENT NODES      */
 static int dScNt = 0;                  /* COUNT OF FUSED SELECT EXPORTS   */
+static int TdScNt = 0;                  /* COUNT OF SELECT EXPORTS   */
 static int aerm  = 0;                  /* COUNT OF REMOVED AElement NODES */
+static int Taerm  = 0;                  /* COUNT OF AElement NODES */
 
 static int ifcnt = 0;                       /* COUNT OF DEPENDENT FUSIONS */
+static int Tifcnt = 0;                       /* COUNT OF DEPENDENT NODES */
 static int iscnt = 0;                    /* COUNT OF FUSED SELECT EXPORTS */
+static int Tiscnt = 0;                    /* COUNT OF SELECT EXPORTS */
+DYNDECLARE(fuseinfo, fusebuf, fuselen, fusecount, char, 2000);
 
-int SummarizeForall( f, lvl )
+
+static void SummarizeForall( f, lvl )
 PNODE f;
 int lvl;
 {
@@ -45,12 +52,12 @@ int lvl;
   for ( n = f->F_BODY->G_NODES; n != NULL; n = n->nsucc ) bn++;
   for ( n = f->F_RET->G_NODES; n != NULL; n = n->nsucc ) rn++;
 
-  FPRINTF( stderr, 
+  FPRINTF( infoptr, 
     "DEBUG FORALL[%d] [fi=%d,fe=%d][bi=%d,be=%d][ri=%d,re=%d][bn=%d,rn=%d]\n",
     lvl, fi,fe, bi,be, ri,re, bn,rn );
 }
 
-int DumpThem( g, lvl )
+static void DumpThem( g, lvl )
 PNODE g;
 int lvl;
 {
@@ -117,6 +124,7 @@ PNODE n;
 static int AreForallsEqual( f1, f2, indep )
 PNODE f1;
 PNODE f2;
+int   indep;
 {
     register PNODE n1;
     register PNODE n2;
@@ -433,6 +441,8 @@ PEDGE i;
   for ( e = g->exp; e != NULL; e = se ) {
     se = e->esucc;
 
+    ++Taerm;
+
     if ( e->eport != i->iport )
       continue;
 
@@ -601,14 +611,14 @@ PEDGE idx;
 
 
 /**************************************************************************/
-/* LOCAL  **************        IsReadOnly         ************************/
+/* LOCAL  **************        IsAReadOnly        ************************/
 /**************************************************************************/
 /* PURPOSE: RETURN TRUE IF ARRAY a IS READ ONLY IN GRAPH b AND ONLY       */
 /*          INDEXED BY idx. READ ONLY IMPLIES THAT IT IS ONLY USED BY     */
 /*          AElement NODES.                                               */
 /**************************************************************************/
 
-static int IsReadOnly( b, a, idx )
+static int IsAReadOnly( b, a, idx )
 PNODE b;
 PEDGE a;
 PEDGE idx;
@@ -623,27 +633,17 @@ PEDGE idx;
     if ( e->eport != a->eport )
       continue;
 
-    switch ( e->dst->type ) {
-      case IFAElement:
+    if( e->dst->type==IFAElement ) {
         if ( !IsIndexingOk( e->dst->imp->isucc, idx ) )
 	  return( FALSE );
-
-	break;
-
-      case IFSelect:
-      case IFForall:
-      case IFLoopA:
-      case IFLoopB:
+    } else if ( IsCompound( e->dst ) ) {
 	for ( sg = e->dst->C_SUBS; sg != NULL; sg = sg->gsucc )
-          if ( !IsReadOnly( sg, FindExport( sg, e->iport ), idx ) )
+          if ( !IsAReadOnly( sg, FindExport( sg, e->iport ), idx ) )
 	    return( FALSE );
-
-	break;
-
-      default:
+    } else {
 	return( FALSE );
-      }
     }
+  }
 
   return( TRUE );
 }
@@ -671,8 +671,7 @@ char **ReasonP;
   /* ------------------------------------------------------------ */
   /* SEE IF ISOMORPHIC, 1 GENERATOR NODE (A RANGE GENERATOR) */
   if ( !AreForallsEqual( f1, f2, indep ) ) {
-    *ReasonP = (RequestInfo(I_VectorConcurrent,vinfo)&&
-		RequestInfo(I_MoreInfo,vinfo))?"Cannot prove equivalence":NULL;
+    *ReasonP = (RequestInfo(I_Info1,info))?"Cannot prove equivalence":NULL;
     return( FALSE );
   }
 
@@ -756,7 +755,7 @@ char **ReasonP;
       return( FALSE );
     }
 
-    if ( !IsReadOnly( f2->F_BODY, a, idx2 ) ) {
+    if ( !IsAReadOnly( f2->F_BODY, a, idx2 ) ) {
       *ReasonP = "Dependence var is not read only in second loop";
       return( FALSE );
     }
@@ -846,8 +845,10 @@ PNODE g;
   char		 *Reason;
 
   for ( f1 = g->G_NODES; f1 != NULL; /* DONE IN THE BODY */ ) {
-    switch ( f1->type ) {
+    if ( IsCompound( f1 ) ) {
+      switch ( f1->type ) {
       case IFForall:
+	++Tdfcnt;
 	if ( f1->label < 0 ) {       /* ARE WE ALL DONE PROCESSING f1? */
 	  f1->label = -(f1->label);
 	  break;
@@ -874,6 +875,7 @@ PNODE g;
 	break;
 
       case IFSelect:
+        ++TdScNt;
 	if ( f1->label < 0 ) {       /* ARE WE ALL DONE PROCESSING f1? */
 	  f1->label = -(f1->label);
 	  break;
@@ -892,9 +894,14 @@ PNODE g;
 	DependentFusion( f1->L_BODY );
 	break;
 
-      default:
+      case IFUReduce:		/* TBD: Check this fusion? */
+	DependentFusion( f1->R_BODY );
 	break;
+
+      default:
+	UNEXPECTED("Unknown compound");
       }
+    }
 
     f1 = f1->nsucc;
     continue;
@@ -922,37 +929,21 @@ ContinueTheFusion:
 	    /* ------------------------------------------------------------ */
             if ( TryAndFuseForalls( g, f1, f2, FALSE,&Reason ) ) {
 	      /* FUSION worked! */
-	      if (RequestInfo(I_VectorConcurrent,vinfo)) {
-		FPRINTF(stderr,
-			"Fusing loop %4d at line %d, funct %s, file %s\n",
-			f1->ID,f1->line,f1->funct,f1->file
-			);
-		FPRINTF(stderr,
-			"with   loop %4d at line %d, funct %s, file %s\n",
-			f2->ID,f2->line,f2->funct,f2->file
-			);
-		FPRINTF(stderr,
-			"Succeeds\n\n");
+              if(RequestInfo(I_Info1,info)) {
+              DYNEXPAND(fuseinfo,fusebuf,fuselen,fusecount,char,fuselen+300);
+              fuselen += (SPRINTF(fuseinfo + fuselen,
+			" Fusing loop %d at line %d, funct %s, file %s\n",
+			f1->ID, f1->line, f1->funct, f1->file), 
+                strlen(fuseinfo + fuselen));
+              fuselen += (SPRINTF(fuseinfo + fuselen,
+			" with loop %d at line %d, funct %s, file %s\n\n",
+			f2->ID, f2->line, f2->funct, f2->file),
+                strlen(fuseinfo + fuselen));
 	      }
-
 	      dfcnt++;
 	      fchange = TRUE;
 	      break;
-	    } else {
-	      /* FUSION fails */
-	      if (Reason && RequestInfo(I_VectorConcurrent,vinfo)) {
-		FPRINTF(stderr,
-			"Fusing loop %4d at line %d, funct %s, file %s\n",
-			f1->ID,f1->line,f1->funct,f1->file
-			);
-		FPRINTF(stderr,
-			"with   loop %4d at line %d, funct %s, file %s\n",
-			f2->ID,f2->line,f2->funct,f2->file
-			);
-		FPRINTF(stderr,
-			"fails because %s\n\n",Reason);
-	      }
-	    }
+	    } 
 
 	    f2->label = bad; /* IT WAS GOOD, BUT OBVIOUSLY IT NO LONGER IS */
 	    }
@@ -1079,9 +1070,12 @@ PNODE g;
   char		 *Reason;
 
   for ( f1 = g->G_NODES; f1 != NULL; /* DONE IN THE BODY */ ) {
-    switch ( f1->type ) {
-      case IFForall:
+    if ( IsCompound( f1 ) ) {
+      switch ( f1->type ) {
+      case IFForall:  
+        ++Tifcnt;	/* DROP THROUGH */
       case IFSelect:
+        ++Tiscnt;
 	if ( f1->label < 0 ) {       /* ARE WE ALL DONE PROCESSING f1? */
 	  f1->label = -(f1->label);
 	  break;
@@ -1100,9 +1094,14 @@ PNODE g;
 	IndependentFusion( f1->L_BODY );
 	break;
 
-      default:
+      case IFUReduce:		/* TBD: Check this fusion? */
+	IndependentFusion( f1->R_BODY );
 	break;
+
+      default:
+	UNEXPECTED("Unknown compound");
       }
+    }
 
     f1 = f1->nsucc;
     continue;
@@ -1127,37 +1126,21 @@ ContinueTheFusion:
 	    /* ------------------------------------------------------------ */
             if ( TryAndFuseForalls( g, f1, f2, TRUE,&Reason ) ) {
 	      /* FUSION worked! */
-	      if (RequestInfo(I_VectorConcurrent,vinfo)) {
-		FPRINTF(stderr,
-			"Fusing loop %4d at line %d, funct %s, file %s\n",
-			f1->ID,f1->line,f1->funct,f1->file
-			);
-		FPRINTF(stderr,
-			"with   loop %4d at line %d, funct %s, file %s\n",
-			f2->ID,f2->line,f2->funct,f2->file
-			);
-		FPRINTF(stderr,
-			"Succeeds\n\n");
+              if (RequestInfo(I_Info1,info)) {
+              DYNEXPAND(fuseinfo,fusebuf,fuselen,fusecount,char,fuselen+300);
+              fuselen += (SPRINTF(fuseinfo + fuselen,
+			" Fusing loop %d at line %d, funct %s, file %s\n",
+			 f1->ID, f1->line, f1->funct, f1->file), 
+                strlen(fuseinfo + fuselen));
+              fuselen += (SPRINTF(fuseinfo + fuselen,
+			" with loop %d at line %d, funct %s, file %s\n\n",
+			 f2->ID, f2->line, f2->funct, f2->file),
+                strlen(fuseinfo + fuselen));
 	      }
-
 	      ifcnt++;
 	      fchange = TRUE;
 	      break;
-	    } else {
-	      /* FUSION fails */
-	      if (Reason && RequestInfo(I_VectorConcurrent,vinfo)) {
-		FPRINTF(stderr,
-			"Fusing loop %4d at line %d, funct %s, file %s\n",
-			f1->ID,f1->line,f1->funct,f1->file
-			);
-		FPRINTF(stderr,
-			"with   loop %4d at line %d, funct %s, file %s\n",
-			f2->ID,f2->line,f2->funct,f2->file
-			);
-		FPRINTF(stderr,
-			"fails because %s\n\n",Reason);
-	      }
-	    }
+	    } 
 
       if ( IsSelect( f1 ) )
         /* A Select THAT WAS NOT COMPLETELY PROCESSED AT AN EARLIER TIME? */
@@ -1219,14 +1202,16 @@ ContinueTheFusion:
 
 void WriteFusionInfo()
 {
-  FPRINTF( stderr, "\n   * INDEPENDENT NODE FUSION\n\n" );
-  FPRINTF( stderr, " Fused Independent Foralls:     %d\n", ifcnt );
-  FPRINTF( stderr, " Fused Independent Selects:     %d\n", iscnt );
+  FPRINTF( infoptr, "\n\n **** LOOP FUSION\n\n%s\n" ,fuseinfo);
+  DYNFREE(fuseinfo, fusebuf, fuselen, fusecount, char, NULL);
+  FPRINTF( infoptr, " **** INDEPENDENT NODE FUSION\n\n" );
+  FPRINTF( infoptr, " Fused Independent Foralls:     %d of %d\n", ifcnt,Tifcnt );
+  FPRINTF( infoptr, " Fused Independent Selects:     %d of %d\n", iscnt,Tiscnt );
 
-  FPRINTF( stderr, "\n   * DEPENDENT NODE FUSION\n\n" );
-  FPRINTF( stderr, " Fused Dependent Foralls:     %d\n", dfcnt );
-  FPRINTF( stderr, " Removed AElement Nodes:      %d\n", aerm  );
-  FPRINTF( stderr, " Fused Dependent Selects:     %d\n", dScNt );
+  FPRINTF( infoptr, "\n **** DEPENDENT NODE FUSION\n\n" );
+  FPRINTF( infoptr, " Fused Dependent Foralls:     %d of %d\n", dfcnt,Tdfcnt );
+  FPRINTF( infoptr, " Removed AElement Nodes:      %d of %d\n", aerm,Taerm  );
+  FPRINTF( infoptr, " Fused Dependent Selects:     %d of %d\n", dScNt,TdScNt );
 }
 
 

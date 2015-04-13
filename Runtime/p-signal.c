@@ -3,7 +3,7 @@
 
 #ifdef CRAY
 
-static void SignalHandler( SigCode )
+static void HandleSig( SigCode )
 int SigCode;
 {
   extern void InitSignalSystem();
@@ -29,13 +29,14 @@ int SigCode;
 
 void InitSignalSystem()
 {
-  signal( SIGINT, SignalHandler );
-  signal( SIGFPE, SignalHandler );
+  signal( SIGINT, HandleSig );
+  signal( SIGFPE, HandleSig );
 }
 
 #else
 
-static int SignalHandler( SigCode )
+
+static void HandleSig( SigCode )
 int SigCode;
 {
   extern void InitSignalSystem();
@@ -55,6 +56,11 @@ int SigCode;
 	break;
       }
 
+#if defined(POWER4)
+  if(UnderDBX && (SigCode == SIGINT))
+	return;
+#endif
+
   psignal( SigCode, "\nERROR"  );
   AbortParallel();
 }
@@ -68,19 +74,19 @@ void InitSignalSystem()
      /*             after the shmalloc call (which is the case)             */
      /*             This is not done by libppp.a                            */
 
-  (void)signal( SIGHUP,   SignalHandler );
-  (void)signal( SIGINT,   SignalHandler );
-  (void)signal( SIGQUIT,  SignalHandler );
-  (void)signal( SIGILL,   SignalHandler );
-  (void)signal( SIGFPE,   SignalHandler );
-  (void)signal( SIGBUS,   SignalHandler );
-  (void)signal( SIGPIPE,  SignalHandler );
-#ifndef HPUX
-#ifndef HPUXPA
-  (void)signal( SIGXCPU,  SignalHandler );
-  (void)signal( SIGXFSZ,  SignalHandler );
-  (void)signal( SIGSEGV,  SignalHandler );
-#endif
+  (void)signal( SIGHUP,   HandleSig );
+  (void)signal( SIGINT,   HandleSig );
+  (void)signal( SIGQUIT,  HandleSig );
+  (void)signal( SIGILL,   HandleSig );
+  (void)signal( SIGFPE,   HandleSig );
+  (void)signal( SIGBUS,   HandleSig );
+  (void)signal( SIGPIPE,  HandleSig );
+#if !defined(HPUX) && !defined(HPUXPA) && !defined(CRAYT3D)
+  (void)signal( SIGXCPU,  HandleSig );
+  (void)signal( SIGXFSZ,  HandleSig );
+/*
+  (void)signal( SIGSEGV,  HandleSig );
+*/
 #endif
 }
 #endif

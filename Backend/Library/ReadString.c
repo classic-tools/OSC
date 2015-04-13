@@ -17,8 +17,8 @@ char *ReadString( delim )
 char delim;
 {
   register int  idx   = 0;
-  register char prev1 = NULL;
-  register char prev2 = NULL;
+  register char prev1 = '\0';
+  register char prev2 = '\0';
 
   for (;;) {
     if ( delim == WHITE_CHARS ) {
@@ -41,7 +41,7 @@ char delim;
     NextToken;
   }
 
-  buffer[idx] = NULL;
+  buffer[idx] = '\0';
 
   if ( !IsEoln( token ) )
     NextToken;
@@ -50,6 +50,9 @@ char delim;
 }
 
 /* $Log: ReadString.c,v $
+ * Revision 1.2  1994/04/01  00:02:54  denton
+ * NULL -> '\0' where appropriate
+ *
  * Revision 1.1  1993/01/21  23:30:18  miller
  * Initial version of the IFX library.  It replaces the if[12]build.c
  * read.c timer.c util.c and write.c and if[12].h files from the

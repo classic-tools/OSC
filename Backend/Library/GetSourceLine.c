@@ -1,6 +1,5 @@
 #include "world.h"
 #include <fcntl.h>
-#include <sys/file.h>
 
 
 /**************************************************************************/
@@ -43,7 +42,7 @@ char* GetSourceLine(N)
     if ( i != N->line ) return NULL;
 
     /* Kill the trailing newline */
-    for(p=LineBuf;*p;p++) if ( *p == '\n') { *p = NULL; break; }
+    for(p=LineBuf;*p;p++) if ( *p == '\n') { *p = '\0'; break; }
 
 #else
     /* ------------------------------------------------------------ */
@@ -162,7 +161,7 @@ char* GetSourceLine(N)
     for(i=0; i< (sizeof(LineBuf)-1) && read(QEntry->fildes,LineBuf+i,1); i++) {
       if ( LineBuf[i] == '\n' ) break;
     }
-    LineBuf[i] = NULL;
+    LineBuf[i] = '\0';
 
 #endif
   }
@@ -178,6 +177,16 @@ char* GetSourceLine(N)
 }
 
 /* $Log: GetSourceLine.c,v $
+ * Revision 1.7  1994/06/30  22:40:55  denton
+ * NULL->'\0' in char assignment.
+ *
+ * Revision 1.6  1994/04/15  15:51:43  denton
+ * Added config.h to centralize machine specific header files.
+ * Fixed gcc warings.
+ *
+ * Revision 1.5  1994/04/01  00:02:43  denton
+ * NULL -> '\0' where appropriate
+ *
  * Revision 1.4  1993/03/23  22:53:27  miller
  * date problem
  *

@@ -24,13 +24,13 @@ static int  tri   = 0;
 
 void WriteVectorInfo()
 {
-  FPRINTF( stderr, "\n**** VECTOR OPTIMIZATIONS\n" );
-  FPRINTF( stderr, " First Minimum      conversions:  %d\n", fmin  );
-  FPRINTF( stderr, " First Abs Minimum  conversions:  %d\n", famin );
-  FPRINTF( stderr, " First Maximum      conversions:  %d\n", fmax  );
-  FPRINTF( stderr, " First Abs Maximum  conversions:  %d\n", famax );
-  FPRINTF( stderr, " First Sum          conversions:  %d\n", fsum  );
-  FPRINTF( stderr, " Tri-Diagonal       conversions:  %d\n", tri   );
+  FPRINTF( infoptr, "\n **** VECTOR OPTIMIZATIONS\n\n" );
+  FPRINTF( infoptr, " First Minimum      conversions:  %d\n", fmin  );
+  FPRINTF( infoptr, " First Abs Minimum  conversions:  %d\n", famin );
+  FPRINTF( infoptr, " First Maximum      conversions:  %d\n", fmax  );
+  FPRINTF( infoptr, " First Abs Maximum  conversions:  %d\n", famax );
+  FPRINTF( infoptr, " First Sum          conversions:  %d\n", fsum  );
+  FPRINTF( infoptr, " Tri-Diagonal       conversions:  %d\n", tri   );
 }
 
 
@@ -1137,13 +1137,15 @@ void If2Vectorize( useF )
 int useF;
 {
   register PNODE f;
+  
 
   for ( f = glstop->gsucc; f != NULL; f = f->gsucc )
     if ( vec || useF )
       Vectorize( f );
 
-  if ( vinfo )
-    WriteLoopMap( "AFTER CONCURRENTIZATION AND VECTOR RECOMENDATION" );
+/*  if ( RequestInfo(I_Info4, info) )
+    WriteLoopMap( " **** LOOP MAP AFTER CONCURRENTIZATION AND VECTOR RECOMENDATION" ); */
+
 }
 
 

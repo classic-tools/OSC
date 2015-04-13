@@ -10,10 +10,14 @@
 char *GetStampString( stamp )
      char stamp;
 {
-  return( stamps[ stamp ] );
+  return( stamps[ (int)stamp ] );
 }
 
 /* $Log: GetStampStrin.c,v $
+ * Revision 1.2  1994/04/15  15:51:45  denton
+ * Added config.h to centralize machine specific header files.
+ * Fixed gcc warings.
+ *
  * Revision 1.1  1993/04/16  19:00:20  miller
  * Name shortening to keep the archiver from truncating names in Backend/Library
  * Since some names were changed, other files were affected.  All names in the

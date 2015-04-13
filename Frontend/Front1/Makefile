@@ -1,14 +1,14 @@
-# **** FILE CREATION MASKS
 SHELL=/bin/sh
-DMASK = 700
-XMASK = 755
-MMASK = 744
+XMASK = 555
+MMASK = 444
 
 .SUFFIXES: .c .o
 
 CC           = cc
-BIN_PATH     = ../../bin
-MAN_PATH     = ../../Man
+BIN_PATH     = ../../../bin
+LIB_PATH     = ../../../lib
+INC_PATH     = ../../../include
+MAN_PATH     = ../../../man
 BINSTALL     = cp
 SINSTALL     = cp
 PAR          =
@@ -33,12 +33,15 @@ install:
 	/bin/rm -f ${BIN_PATH}/sisal
 	${BINSTALL} sisal ${BIN_PATH}/sisal
 	chmod $(XMASK) ${BIN_PATH}/sisal
-	/bin/rm -f ${BIN_PATH}/etablebin
-	${SINSTALL} etablebin ${BIN_PATH}/etablebin
-	chmod $(MMASK) ${BIN_PATH}/etablebin
-	/bin/rm -f ${BIN_PATH}/ptablebin
-	${SINSTALL} ptablebin ${BIN_PATH}/ptablebin
-	chmod $(MMASK) ${BIN_PATH}/ptablebin
+	/bin/rm -f ${LIB_PATH}/etabl.bin
+	${SINSTALL} etabl.bin ${LIB_PATH}/etabl.bin
+	chmod $(MMASK) ${LIB_PATH}/etabl.bin
+	/bin/rm -f ${LIB_PATH}/ptabl.bin
+	${SINSTALL} ptabl.bin ${LIB_PATH}/ptabl.bin
+	chmod $(MMASK) ${LIB_PATH}/ptabl.bin
+	/bin/rm -f ${MAN_PATH}/man5/sisal.5
+	${SINSTALL} sisal.5 ${MAN_PATH}/man5/sisal.5
+	chmod $(MMASK) ${MAN_PATH}/man5/sisal.5
 
 clean:
 	rm -f ${OBJLD}

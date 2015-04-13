@@ -72,12 +72,12 @@ static void PrintCopyFunctions()
   register char  *t;
   register PINFO  i;
   register int    c;
-           int    printed[TYPE_STOP+1];
+           int    printed[BASE_CODE_LAST+1];
 
   /* CLEAR touch1 FIELDS and NO REPEAT FIELDS */
   ClearTouchFlags();
 
-  for ( c = 0; c <= TYPE_STOP; c++ )
+  for ( c = 0; c <= BASE_CODE_LAST; c++ )
     printed[c] = FALSE;
 
   for ( i = ihead; i != NULL; i = i->next ) {
@@ -126,7 +126,10 @@ static void PrintCopyFunctions()
       FPRINTF( output, "    *dst = *src++;\n" );
       FPRINTF( output, "    MY_LOCK( &(*dst)->Mutex );\n" );
       FPRINTF( output, "    (*dst)->RefCount++;\n" );
+      FPRINTF( output, "    FLUSHLINE(&((*dst)->RefCount));\n" );
+      FPRINTF( output, "    CACHESYNC;\n");
       FPRINTF( output, "    MY_UNLOCK( &(*dst)->Mutex );\n" );
+      FPRINTF( output, "    FLUSHLINE( &(*dst)->Mutex );\n" );
       FPRINTF( output, "    dst++;\n" );
       FPRINTF( output, "    }\n" );
       FPRINTF( output, "}\n" );
@@ -200,14 +203,16 @@ static void PrintGlobals()
 	PrintConstants( n->imp->isucc, b );
         FPRINTF( output, "  };\n" );
 
-        FPRINTF( output, "\nstatic shared PHYS Phys%d = {\n", gid );
-        FPRINTF( output, "  %d, (POINTER)Storage%d, 0, 1, 1, 0, (POINTER)0\n  };\n",
-                 s, gid                                                );
+        FPRINTF( output, "\nstatic shared PHYS Phys%d = APhysStruct(\n", gid );
+        FPRINTF( output, 
+                 "  %d, (POINTER)Storage%d, 0, 1, 0, (POINTER)0, 1\n  );\n",
+                 s, gid );
 
-        FPRINTF( output, "\nstatic shared ARRAY %sData = {\n", n->G_NAME );
+        FPRINTF( output, "\nstatic shared ARRAY %sData = AStruct(\n", 
+                 n->G_NAME );
         FPRINTF( output, "  (POINTER) (Storage%d - (%s)), %s, %d",
                  gid, n->imp->CoNsT, n->imp->CoNsT, s           );
-        FPRINTF( output, ", &Phys%d, 0, %d, 0\n  };\n", gid, n->exp->sr + 9 );
+        FPRINTF( output, ", &Phys%d, 0, 0, %d\n  );\n", gid, n->exp->sr + 9 );
 
 	FPRINTF( output, "\nstatic shared POINTER %s = (POINTER) &%sData;\n",
 		 n->G_NAME, n->G_NAME                                      );
@@ -310,6 +315,8 @@ static void GenAssignNames()
       i->sname = MakeName( "struct BRec", "",   nmid );
       i->tname = MakeName( "struct BRec", "",   nmid );
       i->cname = MakeName( "BRec",        "",   nmid );
+      i->rname  = MakeName( "ReadRec",    "",   nmid );
+      i->wname  = MakeName( "WriteRec",   "",   nmid );
       break;
 
     case IF_FUNCTION:
@@ -415,18 +422,32 @@ static void PrintStructs()
 
         cc = c;
 
+#if defined(NON_COHERENT_CACHE)
+          FPRINTF(output,"char padIn[CACHE_LINE]; ",c);
+          cc++;
+#endif
+
         for ( c = 0, ii = i->F_OUT; ii != NULL; ii = ii->L_NEXT ) {
           if ( ii->L_SUB->type == IF_BUFFER )
             Error2( "PrintStructs", "FUNCTION RETURNING BUFFER" );
 
           SPRINTF( buf, "%-7s Out%d; ", ii->L_SUB->tname, ++c );
           FPRINTF( output, "%-16s", buf ); 
+#if defined(NON_COHERENT_CACHE)
+          FPRINTF(output,"char pad%d[CACHE_LINE]; ",c);
+          cc++;
+#endif
 
 	  cc++;
 
           if ( (cc % 4) == 0 )
             FPRINTF( output, "\n  " );
           }
+
+#if defined(NON_COHERENT_CACHE)
+        FPRINTF(output,"char pad[CACHE_LINE];");
+        cc++;
+#endif
 
         if ( (cc % 4) != 0 )
           FPRINTF( output, "\n  " );
@@ -449,7 +470,7 @@ static void PrintStructs()
 /*          IS NULL.                                                      */
 /**************************************************************************/
 
-static PrintExternFunction( t, f, ff )
+static void PrintExternFunction( t, f, ff )
 char  *t;
 char  *f;
 PNODE  ff;
@@ -525,15 +546,23 @@ static void PrintForwards()
       if ( !i->LibNames ) {
 	PrintExternFunction( i->tname, i->rname,   NULL_NODE );
 	PrintExternFunction( "void",   i->wname,   NULL_NODE );
-
-	/* INTERFACE ROUTINES */
-	SPRINTF( buf, "I%s", i->rname );
-	PrintExternFunction( i->tname, buf, NULL_NODE );
-	SPRINTF( buf, "I%s", i->wname );
-	PrintExternFunction( "void", buf, NULL_NODE );
       }
+
+      /* INTERFACE ROUTINES */
+      SPRINTF( buf, "I%s", i->rname );
+      PrintExternFunction( i->tname, buf, NULL_NODE );
+      SPRINTF( buf, "I%s", i->wname );
+      PrintExternFunction( "void", buf, NULL_NODE );
+
       PrintExternFunction( "void",   i->fname1,  NULL_NODE );
       PrintExternFunction( "void",   i->fname2,  NULL_NODE );
+      break;
+
+    case IF_BRECORD:
+      if ( !i->LibNames ) {
+	PrintExternFunction( i->tname, i->rname,   NULL_NODE );
+	PrintExternFunction( "void",   i->wname,   NULL_NODE );
+      }
       break;
 
     default:
@@ -797,6 +826,8 @@ PNODE f;
       /* ------------------------------------------------------------ */
      case 'G':/* Guided Self Scheduling */
      case 'B':/* Block */
+     case 'C':/* Cached */
+      if ( f->Style == 'C' ) FPRINTF( output, "/* CACHED STYLE */\n");
       if ( f->Style == 'G' ) FPRINTF( output, "/* GSS STYLE */\n");
       if ( f->Style == 'B' ) FPRINTF( output, "/* BLOCK STYLE */\n");
       FPRINTF( output, "\nstatic void %s( args, lo, hi )\n", f->G_NAME );
@@ -835,8 +866,8 @@ PNODE f;
 	FPRINTF( stderr,
 		"%s: W - ARGUMENT %d OF %s ON LINE %d IN %s IS NEVER USED\n",
 		program, eport, 
-		(f->funct == NULL)? "???()" : f->funct, f->line, 
-		(f->file == NULL)? "???.sis" : f->file 
+		(f->funct == NULL)? "FUNCT?()" : f->funct, f->line, 
+		(f->file == NULL)? "FILE?.sis" : f->file 
 		);
       }
     }
@@ -863,8 +894,8 @@ PNODE f;
     SaveSdbxState( f );
 
   if ( sequential ) {
-    FPRINTF( output, "#undef  MY_LOCK(x)\n"   );
-    FPRINTF( output, "#undef  MY_UNLOCK(x)\n" );
+    FPRINTF( output, "#undef  MY_LOCK\n"   );
+    FPRINTF( output, "#undef  MY_UNLOCK\n" );
     FPRINTF( output, "#define MY_LOCK(x)\n"   );
     FPRINTF( output, "#define MY_UNLOCK(x)\n\n" );
   }
@@ -922,12 +953,14 @@ PNODE f;
     }
 
   if ( sequential ) {
-    FPRINTF( output, "\n#undef  MY_LOCK(x)\n" );
-    FPRINTF( output, "#undef  MY_UNLOCK(x)\n" );
+    FPRINTF( output, "\n#undef  MY_LOCK\n" );
+    FPRINTF( output, "#undef  MY_UNLOCK\n" );
     FPRINTF( output, "#define MY_LOCK(x)    MY_LOCK_BACKUP(x)\n"   );
     FPRINTF( output, "#define MY_UNLOCK(x)  MY_UNLOCK_BACKUP(x)\n" );
     }
 
+  if(LCMSize(f) != 0)
+        FPRINTF(output, "FLUSHALL;\n");
   FPRINTF( output, "}\n" );
 }
 
@@ -1047,7 +1080,7 @@ void PrintFileEpilogue()
     if ( IsIGraph( f ) )
       continue;
     /* if ( !f->emark ) */
-    if ( f->mark == NULL || f->mark == 's' )
+    if ( f->mark == '\0' || f->mark == 's' || f->mark == 'd' )
       continue;
 
     if ( standalone ) {

@@ -8,6 +8,7 @@
 
 #include "world.h"
 
+static void PrintVecNode();
 
 /* scc UNDER Unicos APPEARS TO HAVE TROUBLE CORRECTLY VECTORIZING LOOPS */
 /* NOT ALREADY SUBJECTED TO cse AND gcse OPTIMIZATIONS                  */
@@ -431,7 +432,23 @@ PEDGE e;
                 FPRINTF( output, "OptPlus( " );
 
             break;
-        }
+
+        case REDUCE_USER:
+            PrintFldRef( e->dst->info->sname, "args", NULL_EDGE, "Out",
+                e->iport );
+            FPRINTF( output, " = " );
+            PrintTemp( e );
+            FPRINTF( output, "; /* REDUCE_USER Mult.\n" );
+            FPRINTF( output, "FLUSHLINE(&(");
+            PrintFldRef( e->dst->info->sname, "args", NULL_EDGE, "Out", 
+                e->iport );
+            FPRINTF(output ,"));\n");
+            return;
+
+        default:
+/*            Error2( "PrintSumOfTerms", "ILLEGAL REDUCTION\n" ); */
+            break;
+        };
 
     PrintFldRef( e->dst->info->sname, "args", NULL_EDGE, "Out", e->iport );
     FPRINTF( output, ", " );
@@ -439,6 +456,9 @@ PEDGE e;
     FPRINTF( output, ", " );
     PrintTemp( e );
     FPRINTF( output, " );\n" );
+    FPRINTF( output, "FLUSHLINE(&(");
+    PrintFldRef( e->dst->info->sname, "args", NULL_EDGE, "Out", e->iport );
+    FPRINTF(output ,"));\n");
 }
 
 
@@ -471,6 +491,63 @@ char  *macro;
 	}
 
     FPRINTF( output, " );\n" );
+}
+
+
+/**************************************************************************/
+/* LOCAL  **************       PrintUserRed        ************************/
+/**************************************************************************/
+/* PURPOSE: PRINT USER REDUCTION UPDATE MACRO macro TO OUTPUT.            */
+/**************************************************************************/
+
+static void PrintUserRed( indent , i )          /* TBD */
+int    indent;
+PEDGE  i;
+{
+    PNODE       graph;
+    PEDGE       edge;
+
+    edge = FindImport( i->src, 1 );             /* reduction call name */
+    graph = FindFunction( UpperCase( edge->CoNsT, TRUE, FALSE ) );
+
+    /*** TBD: Set in the arguments. ***/
+
+    PrintIndentation( indent );
+    FPRINTF( output, "((%s*)%s)->In%d = ", graph->info->sname,
+        i->src->temp->name, 1 );
+    FPRINTF( output, "%s;\n", i->temp->name );
+    PrintIndentation( indent );
+    if ( i->src->imp->CoNsT[3]=='b' ) {
+        FPRINTF( output, "((%s*)%s)->In%d = ", graph->info->sname,
+            i->src->temp->name, 2 );
+        FPRINTF( output, "%s;\n", i->src->imp->isucc->isucc->temp->name );
+    }
+
+    /*** Print the call. ***/
+
+    PrintIndentation( indent );
+    FPRINTF( output, "LockParent;\n" );
+    PrintIndentation( indent );
+    FPRINTF( output, "Call( %s, ", UpperCase( edge->CoNsT, TRUE, FALSE ) );
+    FPRINTF( output, "%s );", i->src->temp->name );
+    FPRINTF( output, " /* REDUCE_USER Update */\n" );
+    PrintIndentation( indent );
+    FPRINTF( output, "UnlockParent;\n" );
+
+    /*** Extract the results. ***/
+
+    PrintIndentation( indent );
+    if ( i->src->imp->CoNsT[3]=='b' ) {
+        if ( !IsBRecord(i->src->imp->isucc->isucc->info) ) {
+            FPRINTF( output, "DeAlloc(%s);\n", 
+                i->src->imp->isucc->isucc->temp->name );
+        }
+    }
+    PrintIndentation( indent );
+    FPRINTF( output, "%s = ", i->temp->name );
+    FPRINTF( output, "((%s*)%s)->Out%d;\n", graph->info->sname,
+        i->src->temp->name, 1 );                /* TBD: multiple outputs */
+
 }
 
 
@@ -661,7 +738,20 @@ PEDGE e;
 
 	    break;
 
+        case REDUCE_USER:
+            if ( !IsBoolean( e->info ) ) {
+                PrintTemp( f->isucc );
+                FPRINTF( output, ";" );
+                }
+            else
+                FPRINTF( output, "False;" );
+
+            FPRINTF( output, " /* REDUCE_USER Return */\n" );
+
+            break;
+
 	default:
+/*            Error2( "PrintReduceInit", "ILLEGAL REDUCTION\n" ); */
 	    break;
 	}
 }
@@ -776,6 +866,28 @@ PNODE n;
 	    case IFRedLeft:
 	    case IFRedRight:
 	    case IFRedTree:
+                if ( i->src->imp->CoNsT[0] == REDUCE_USER ) {
+                    PEDGE e =  FindExport( n, i->iport);
+                    PEDGE edge;
+
+                    PrintIndentation( indent );
+                    PrintTemp( e );
+                    FPRINTF( output, " = " );
+                    for ( edge = e->src->imp; edge->isucc!=NULL;
+                        edge = edge->isucc);    /* TBD: it is always last */
+                    PrintTemp( edge );
+                    FPRINTF( output, ";\n" );
+
+                    PrintIndentation( indent );
+                    FPRINTF( output, "((%s*)%s)->In%d", e->temp->info->sname,
+                         e->temp->name, i->src->imp->isucc->temp->fld );
+                    FPRINTF( output, " = " );
+                    PrintTemp( edge );
+                    FPRINTF( output, "; /* REDUCE_USER Init. */\n" );
+
+                    break;
+                    }
+
 		PrintReduceInit( indent, i->src->imp, FindExport( n, i->iport));
 		break;
 
@@ -801,6 +913,12 @@ PNODE n;
 			    GetSliceParam( FindImport( i->src, 4 ), n ),
 			    i->src );
 		break;
+
+            case IFUReduce:
+                break;
+
+            default:
+                UNEXPECTED("Missing return type");
 	    }
 	}
 }
@@ -809,15 +927,16 @@ PNODE n;
 /**************************************************************************/
 /* LOCAL  **************     PrintReturnRapUp      ************************/
 /**************************************************************************/
-/* PURPOSE: PRINT RETRUN SUBGRAPH r'S RAP-UP MACROS TO output.  THIS IS   */
-/*          DONE AFTER THE LOOP HAS COMPLETED TO FINIALIZE THE RESULTS.   */
+/* PURPOSE: PRINT RETURN SUBGRAPH r'S RAP-UP MACROS TO output.  THIS IS   */
+/*          DONE AFTER THE LOOP HAS COMPLETED TO FINALIZE THE RESULTS.    */
 /**************************************************************************/
 
-static void PrintReturnRapUp( indent, r )
+void PrintReturnRapUp( indent, r )
 int   indent;
 PNODE r;
 {
     register PEDGE i;
+    PNODE n;
 
     if ( r->G_DAD->smark )                               /* SLICED LOOP? */
 	return;
@@ -873,10 +992,20 @@ PNODE r;
 	    case IFRedTree:
 		break;
 
+            case IFUReduce:
+                break;
+
 	    default:
-		break;
+		UNEXPECTED("Missing return type");
 	    }
 	}
+
+        /* PRINT USER-REDUCTION WRAP UP PER NODE.                         */
+
+        for ( n = r->nsucc; n != NULL; n = n->nsucc ) {
+            if ( n->type == IFUReduce )
+                PrintUReduceRapUp( indent, n );
+        }
 }
 
 
@@ -892,6 +1021,7 @@ PNODE r;
 {
     register PEDGE i;
     register PEDGE b;
+    PNODE n;
 
     for ( i = r->imp; i != NULL; i = i->isucc ) {
 	if ( i->iport == 0 )
@@ -973,6 +1103,15 @@ PNODE r;
                             PrintBasicRed( indent, i, "Plus" );
 
 			break;
+
+                    case REDUCE_USER:
+                        PrintUserRed( indent, i );
+
+                        break;
+
+                    default:
+/*                      Error2( "PrintReturnUpd", "ILLEGAL REDUCTION\n" ); */
+                        break;
 		    }
 
 		break;
@@ -1045,8 +1184,21 @@ PNODE r;
 
 		FPRINTF( output, " );\n" );
 		break;
+
+            case IFUReduce:
+                break;
+
+            default:
+                UNEXPECTED("Missing return type");
 	    }
 	}
+
+        /* PRINT USER-REDUCTION UPDATES PER NODE.                         */
+
+        for ( n = r->nsucc; n != NULL; n = n->nsucc ) {
+            if ( n->type == IFUReduce )
+                PrintUReduceUpd( indent, n );
+        }
 }
 
 
@@ -1062,6 +1214,7 @@ PNODE r;
 {
     register PEDGE  i;
     register char  *s;
+    PNODE n;
 
     for ( i = r->imp; i != NULL; i = i->isucc ) {
 	if ( i->iport == 0 )
@@ -1164,8 +1317,21 @@ PNODE r;
 		PrintTemp( FindImport( i->src, 4 ) );
 		FPRINTF( output, " );\n" );
 		break;
+
+            case IFUReduce:
+                break;
+
+            default:
+                UNEXPECTED("Missing return type");
 	    }
 	}
+
+        /* PRINT USER-REDUCTION RETURN INITIALIZATIONS PER NODE.          */
+
+        for ( n = r->nsucc; n != NULL; n = n->nsucc ) {
+            if ( n->type == IFUReduce )
+                PrintUReduceInit( indent, n );
+        }
 }
 
 
@@ -1460,6 +1626,7 @@ PNODE f;
 	      /* GSS or BLOCKED */
 	     case 'G':
 	     case 'B':
+	     case 'C':
 	      PrintTemp( n->imp );
 	      FPRINTF( output, " <= " );
 	      PrintTemp( n->imp->isucc );
@@ -1507,7 +1674,6 @@ static void PrintVecNodeImport( indent, i )
 int   indent;
 PEDGE i;
 {
-  static void PrintVecNode();
 
   if ( IsConst( i ) ) {
     FPRINTF( output, "%s", i->CoNsT );
@@ -2344,6 +2510,13 @@ int   outer;
 	if ( strcmp( n->imp->CoNsT, "sqrt" ) == 0 )
 	  goto DoIntrinsic;
 
+        if ( strcmp( n->imp->CoNsT, "atan2" ) == 0 )
+          if (  (IsReal( n->imp->isucc->info ) ||
+               IsDouble( n->imp->isucc->info )) &&
+                (IsReal( n->imp->isucc->isucc->info ) ||
+               IsDouble( n->imp->isucc->isucc->info )) )
+            break;
+          
         return( FALSE );
 DoIntrinsic:
         if ( !(IsReal( n->imp->isucc->info ) || 
@@ -2724,7 +2897,7 @@ PINFO i;
       Error2( "GetTypePrefix", "ILLEGAL TYPE" );
     }
 
-  return NULL;
+  return '\0';
 }
 
 
@@ -2917,3 +3090,69 @@ char  *root;
     PrintReturnRapUp( indent, l->L_RET );
     PrintConsumerModifiers( indent, l );
 }
+
+int
+BasicTypeSize(i)
+PINFO i;
+{
+        switch(i->type)
+        {
+                case IF_DOUBLE:
+                        return(sizeof(double));
+                case IF_CHAR:
+                        return(sizeof(char));
+                case IF_REAL:
+                        return(sizeof(float));
+                case IF_ARRAY:
+/*
+                        return(BasicTypeSize(i->A_ELEM));
+*/
+                default:
+                        return(sizeof(int *));
+        }
+}
+
+#define BIGINT 0xFFFFFFFF
+
+int
+LCMSize(g)
+PNODE g;
+{
+#if !defined(CACHE_LINE)
+	return(0);
+#else
+        PEDGE e;
+        unsigned int sizes[255];
+        int i;
+        int last;
+        unsigned int min = BIGINT;
+
+	for(i=0; i < 255; i++)
+		sizes[i] = BIGINT;
+        i = 0;
+        for(e = g->imp; e != NULL; e = e->isucc)
+        {
+                if(e->info->type == IF_ARRAY)
+                {
+                        sizes[i] = BasicTypeSize(e->info->A_ELEM);
+                	if(min > sizes[i])
+                       		min = sizes[i];
+                	i++;
+                }
+        }
+
+        last = i;
+
+        for(i=0; i < last; i++)
+        {
+                if((CACHE_LINE % sizes[i]) != 0)
+                        return(-1);
+        }
+
+	if(min != BIGINT)
+		return(min);
+	else
+        	return(0);
+#endif
+}
+

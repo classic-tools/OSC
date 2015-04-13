@@ -1,56 +1,68 @@
-# **** FILE CREATION MASKS
 SHELL=/bin/sh
-DMASK = 700
-XMASK = 755
-MMASK = 744
+XMASK = 555
+MMASK = 444
 
 CC           = cc -g -DMAX_PROCS=1
-BIN_PATH     = ../bin
-MAN_PATH     = ../Man
+BIN_PATH     = ../../bin
+LIB_PATH     = ../../lib
+INC_PATH     = ../../include
+MAN_PATH     = ../../man
 BINSTALL     = cp
 SINSTALL     = cp
+
 BP           = \"${BIN_PATH}\"
+LP           = \"${LIB_PATH}\"
+IP           = \"${INC_PATH}\"
 
+SRCC = osc.c spp2.c
+SRCS = $(SRCC) speedups.sh spprun.sh xspeedups.sh
 
-SRC  = osc.c
-PSRC = spp2.c
-
-OOBJ = osc.o
-SOBJ = spp2.o
+OBJC = osc.o spp2.o
+OUTS = osc spp2 speedups spprun xspeedups
 
 MINIMAL=0
 
-local: osc spp2
+local: $(OUTS)
 optional:
 all: local optional
 
 clean:
-	rm -f ${OOBJ} $(SOBJ)
-	rm -f osc spp2
-	rm -f man.update osc.m.bu osc.m.new
+	rm -f $(OBJC)
+	rm -f $(OUTS)
+	rm -f man.update osc.1.bu osc.1.new
 	rm -f lint.log
 
 newoptions:
-	../_PARSEOPTS/parseopts < options -usage "man.update" usage.h options.h
-	awk -e '{print} /.\\" Start options/{exit}' < osc.m > osc.m.new
-	cat man.update >> osc.m.new
-	awk -e '/.\\" End options/{flag=1} {if (flag) print}' < osc.m >> osc.m.new
-	mv osc.m osc.m.bu
-	mv osc.m.new osc.m
+	$(BIN_PATH)/parseopts < options -usage "man.update" usage.h options.h
+	awk -e '{print} /.\\" Start options/{exit}' < osc.1 > osc.1.new
+	cat man.update >> osc.1.new
+	awk -e '/.\\" End options/{flag=1} {if (flag) print}' < osc.1 >> osc.1.new
+	mv osc.1 osc.1.bu
+	mv osc.1.new osc.1
 
-osc: $(OOBJ)
-	${CC} -o osc $(OOBJ)
+osc: osc.o
+	$(CC) -o osc osc.o
 
-osc.o:  osc.c usage.h options.h ../Makefile
-	$(CC) -c osc.c -DBIN_PATH=${BP} 
+osc.o:  osc.c usage.h options.h ../Makefile ../config.h
+	$(CC) -c osc.c -DBIN_PATH=${BP} -DLIB_PATH=${LP} -DINC_PATH=${IP}
 	-@if [ $(MINIMAL) = 1 ]; then /bin/rm -f $*.c; else cat /dev/null; fi
 
-spp2: $(SOBJ)
-	${CC} -o spp2 $(SOBJ)
+spp2: spp2.o ../config.h
+	$(CC) -o spp2 spp2.o
 
 spp2.o: spp2.c ../Makefile
 	$(CC) -c spp2.c
 	-@if [ $(MINIMAL) = 1 ]; then /bin/rm -f $*.c; else cat /dev/null; fi
+
+speedups: speedups.sh
+	cp speedups.sh speedups
+	chmod +x speedups
+spprun: spprun.sh
+	cp spprun.sh spprun
+	chmod +x spprun
+xspeedups: xspeedups.sh
+	cp xspeedups.sh xspeedups
+	chmod +x xspeedups
 
 install:
 	/bin/rm -f ${BIN_PATH}/osc
@@ -68,17 +80,19 @@ install:
 	/bin/rm -f ${BIN_PATH}/spprun
 	${BINSTALL} spprun ${BIN_PATH}/spprun
 	chmod $(XMASK) ${BIN_PATH}/spprun
-	/bin/rm -f ${MAN_PATH}/osc.l
-	${SINSTALL} osc.m ${MAN_PATH}/osc.l
-	chmod $(XMASK) ${MAN_PATH}/osc.l
-	${SINSTALL} speedups.m ${MAN_PATH}/speedups.l
-	chmod $(XMASK) ${MAN_PATH}/speedups.l
-	${SINSTALL} xspeedups.m ${MAN_PATH}/xspeedups.l
-	chmod $(XMASK) ${MAN_PATH}/xspeedups.l
+	/bin/rm -f ${MAN_PATH}/man1/osc.1
+	${SINSTALL} osc.1 ${MAN_PATH}/man1/osc.1
+	chmod $(MMASK) ${MAN_PATH}/man1/osc.1
+	/bin/rm -f ${MAN_PATH}/man1/speedups.1
+	${SINSTALL} speedups.1 ${MAN_PATH}/man1/speedups.1
+	chmod $(MMASK) ${MAN_PATH}/man1/speedups.1
+	/bin/rm -f ${MAN_PATH}/man1/xspeedups.1
+	${SINSTALL} xspeedups.1 ${MAN_PATH}/man1/xspeedups.1
+	chmod $(MMASK) ${MAN_PATH}/man1/xspeedups.1
 
 # 127 == main() returns random value to invocation environment
 # 183 == Previous declaration had prototype
-lint: $(SRC) $(PSRC)
+lint: $(SRCC)
 	@lint -u -v -woff 91,302,307,127,183 \
 		`echo -DLINT $(CFLAGS) -DBIN_PATH=${BP} $(CC) | tr ' ' '\012' | egrep ^-D | egrep -v "^-DUSE(CC|FF)="`\
 		$(SRC) -lm \

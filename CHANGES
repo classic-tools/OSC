@@ -10,17 +10,75 @@ You can make a difference.
 				  Thanks,
 
 				  Pat Miller
+				  Scott Denton
 
-				  CRG/OSC Development
+				  CRG/OSC Development Crew
 				  Lawrence Livermore National Laboratory
 				  L-306
 				  Livermore, CA 94550
 
 				  patmiller@llnl.gov
+				  smd@llnl.gov
 
 				  (510) 423-0309
+
+As of July 1994, OSC 13.0, in order to distinguish stable versions,
+the following scheme has been implemented: Versions 1.x.y, where x is 
+an even number, are stable versions with only bug fixes applied as y is 
+incremented.  So from version 1.0.2 to 1.0.3, there are only bug fixes, 
+and no new features.  Versions 1.x.y, where x is an odd number, are 
+beta-quality releases for developers only; they are unstable and may 
+crash, since new features added to them all the time. 
+
 ------------------------------------------------------------
-OSC 12.9.2 -- 13.0 prerelease
+OSC 13.0
+
+*** User's Overview:
+
+Installation directory
+  More conventional location for installation of files is used:
+  bin, include, lib, man
+
+LINUX Version
+  Dave Raymond's (raymond@kestrel.nmt.edu) LINUX fixes merged with
+  mainline release. 
+
+Apple MachTen, Sun Solaris, and Cray T3D Single Processor Version
+  These additional ports were added.
+
+CPP choice error
+  The default for CPP was n, but hitting return turned it on anyway.
+
+*** Developer's Note:
+
+exp(6,2) bug
+  This was implemented using pow from the math lib with results
+  being truncated rather than rounded.
+
+spprun
+  This is now a Bourne shell script rather than a C-shell script.
+  Note that the expected arguments are now a little different.
+
+config.h
+  Many system specfic header differences are collected into one file.
+
+sinstall
+  Working our way to pulling in more of the machine specific user
+  selectable options (compile options, etc.) out of C source into
+  this installation.  Beginnings of cross compile for Cray T3D.
+
+Array of Basic Records Temporary Assignment Error
+  An optimization eliminating a structure build for access of array of
+  single use simple records was incorrectly implemented.  Generated code 
+  is now reorded to reuse a register temporary only after it was available.
+
+Parser command line length
+  The current parser is temporarily patched to accept longer command
+  lines from the "osc" controller.  This parser will be replaced with
+  the Sisal 90 parser as soon as available.
+
+------------------------------------------------------------
+OSC 12.9.2
 
 *** User's Overview:
 

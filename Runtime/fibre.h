@@ -25,13 +25,13 @@ extern char *iformat,*fformat,*dformat,*nformat,*cformat,*cformat2,*bformat;
 {                                              \
   PrintIndent;                                 \
   if ( ((x) < ' ') || ((x) > '~') )            \
-    fprintf( FibreOutFd, cformat2, (x) & 0xff);   \
+    fprintf( FibreOutFd, cformat2, (x) & 0xff);\
   else if ( (x) == '\\' )                      \
     fprintf( FibreOutFd, "'\\\\'\n" );         \
   else if ( (x) == '\'' )                      \
-    fprintf( FibreOutFd, "'\\''\n", (x) & 0xff );     \
+    fprintf( FibreOutFd, "'\\''\n" );          \
   else                                         \
-    fprintf( FibreOutFd, cformat, (x) & 0xff );      \
+    fprintf( FibreOutFd, cformat, (x) & 0xff );\
 }
 
 #define WriteBool(x) \

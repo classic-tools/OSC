@@ -8,6 +8,7 @@
 
 #include "world.h"
 
+static int color = WHITE;            /* CURRENT COLOR IN CYCLE DETECTION    */
 
 /**************************************************************************/
 /* LOCAL  **************        UpFindCallee       ************************/

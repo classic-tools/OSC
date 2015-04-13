@@ -1,4 +1,4 @@
-#ifdef HPUX
+#if defined(HPUX)
 
 #define SOMECODE
 
@@ -32,7 +32,7 @@ int count;
   /* copy forward */
   if (source > dest)
   {
-    while (count-- > 0) *((char *)dest)++ = *((char*)source)++;
+    while (count-- > 0) *(dest++) = *(source++);
     return;
   }
   /* copy backward */
@@ -42,12 +42,45 @@ int count;
     dest = dest + count;
     source = source + count;
 
-    while (count-- >= 0) *((char *)dest)-- = *((char*)source)--;
+    while (count-- >= 0) *(dest--) = *(source--);
     return;
   }
 }
 
 #endif
+
+
+#if defined(SOLARIS)
+
+#define SOMECODE
+
+#include <string.h>
+
+void bcopy (source, dest, count)
+const char *source;
+char *dest;
+int count;
+{
+  /* No overlapping */
+
+  if (source == dest)
+    return;
+
+  if ( (source < dest && source+count <= dest) ||
+       (dest < source && dest+count <= source) )
+  {
+     memcpy(dest, source, count);
+     return;
+  }
+
+  /* Overlap */
+
+  memmove(dest, source, count);
+  return;
+}
+
+#endif
+
 
 #ifndef SOMECODE
 int UNUSED_bcopy;		/* Make sure there's something... */

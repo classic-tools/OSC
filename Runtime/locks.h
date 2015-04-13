@@ -1,3 +1,16 @@
+extern void MyInitLock();
+extern void MyLock();
+extern void MyUnlock();
+extern void MyBarrier();
+
+#if !defined(NON_COHERENT_CACHE) || !defined(POWER4)
+#define FLUSHALL
+#define FLUSH(start,end)
+#define FLUSHLINE(addr)
+#define CACHESYNC
+#define FFL
+#endif
+
 #ifdef ENCORE
 #include <parallel.h>
 typedef LOCK          LOCK_TYPE;
@@ -64,7 +77,8 @@ extern LOCK_TYPE TheFirstLock;
 #define MY_LOCK_BACKUP(lp)    _semts(31)
 #define MY_UNLOCK_BACKUP(lp)  { _cmr(); _semclr(31); }
 #define MY_LOCKASGN           { LOCKASGN(&TheFirstLock); _semclr(31); }
-#else
+#endif
+
 #ifdef CRAY2
 #define MY_LOCK(lp)           _getsem()
 #define MY_UNLOCK(lp)         _csm()
@@ -72,14 +86,15 @@ extern LOCK_TYPE TheFirstLock;
 #define MY_LOCK_BACKUP(lp)    _getsem()
 #define MY_UNLOCK_BACKUP(lp)  _csm()
 #define MY_LOCKASGN           { LOCKASGN(&TheFirstLock); _csm(); }
-#else
-/* #define MY_LOCK(lp)           while ( LOCKTEST(&TheFirstLock) != 0 ) */
-/* #define MY_UNLOCK(lp)         LOCKOFF(&TheFirstLock) */
-/* #define MY_INIT_LOCK(lp) */
-/* #define MY_LOCK_BACKUP(lp)    while ( LOCKTEST(&TheFirstLock) != 0 ) */
-/* #define MY_UNLOCK_BACKUP(lp)  LOCKOFF(&TheFirstLock) */
-/* #define MY_LOCKASGN           { LOCKASGN(&TheFirstLock); } */
 #endif
+
+#ifdef CRAYT3D
+#define MY_LOCK(lp)           while ( LOCKTEST(&TheFirstLock) != 0 )
+#define MY_UNLOCK(lp)         LOCKOFF(&TheFirstLock)
+#define MY_INIT_LOCK(lp)
+#define MY_LOCK_BACKUP(lp)    while ( LOCKTEST(&TheFirstLock) != 0 )
+#define MY_UNLOCK_BACKUP(lp)  LOCKOFF(&TheFirstLock)
+#define MY_LOCKASGN           { LOCKASGN(&TheFirstLock); }
 #endif
 
 #define INIT_BARRIER(b,limit)  BARASGN(b,&limit)
@@ -88,7 +103,7 @@ extern LOCK_TYPE TheFirstLock;
 
 
 
-#if SUNIX || SUN || RS6000
+#if defined(SUNIX) || defined(SUN) || (defined(RS6000) && !defined(POWER4))
 typedef unsigned char LOCK_TYPE;
 typedef int           BARRIER_TYPE;
 
@@ -151,4 +166,30 @@ BARRIER_TYPE *MyInitBarrier();
 
 #define INIT_BARRIER(bp,limit) bp = MyInitBarrier()
 #define WAIT_BARRIER(bp)       MyBarrier(bp,NumWorkers)
+#endif
+
+#if defined(POWER4)
+typedef int LOCK_TYPE;
+typedef int BARRIER_TYPE;
+
+#define MY_SLOCK(lp)          p6k_pllock((lp))
+#define MY_SUNLOCK(lp)        p6k_plfree((lp))
+#define MY_SINIT_LOCK(lp)     p6k_lockasgn((lp))
+#define MY_INIT_LOCK(lp)      p6k_lockasgn((lp))
+
+#define MY_LOCK(lp)          p6k_pllock((lp))
+#define MY_UNLOCK(lp)        p6k_plfree((lp))
+
+#define MY_LOCK_BACKUP(lp)    p6k_pllock((lp))
+#define MY_UNLOCK_BACKUP(lp)  p6k_plfree((lp))
+
+#define INIT_BARRIER(bp,limit) p6k_barasgn(bp,&(limit))
+#define WAIT_BARRIER(bp)       p6k_barrier(bp)
+
+#define FLUSHALL p6k_flush_all()
+#define FLUSHLINE(addr) p6k_flush_line((addr))
+#define CACHESYNC dcs()
+#define FLUSH(start,end) p6k_flush_region((start),(end))
+
+#define FFL(addr) p6k_flush_line((addr))
 #endif

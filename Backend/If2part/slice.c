@@ -1,4 +1,7 @@
 /* $Log: slice.c,v $
+ * Revision 1.2  1994/03/10  17:15:21  denton
+ * Accept non-scalar exports from user-defined reductions in parallel for returns.
+ *
  * Revision 1.1  1993/01/14  22:29:09  miller
  * Carry along work to propagate the new pragmas.  Also fixed up to report
  * reasons why loops don't vectorize / parallelize.  Split off some of the
@@ -89,6 +92,8 @@ int IsSliceCandidate( f,reasonp )
        case IFRedTree:
        case IFRedLeft:
        case IFRedRight:
+        if ( n->imp->CoNsT[0] == REDUCE_USER )
+          break;
 	if ( (n->imp->CoNsT[0] == REDUCE_SUM ||
 	      n->imp->CoNsT[0] == REDUCE_PRODUCT) && nopred &&
 	    (n->exp->info->type == IF_DOUBLE || 

@@ -24,4 +24,6 @@ char *Message2;
     SdbxMonitor( SDBX_ERR );
 
   AbortParallel();
+
+  return 0;
 }

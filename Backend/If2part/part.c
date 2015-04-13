@@ -11,6 +11,8 @@
 
 FILE *input  = stdin;		/* IF2 INPUT  FILE POINTER */
 FILE *output = stdout;		/* IF2 OUTPUT FILE POINTER */
+FILE *infoptr; 			/* IF2 INFO OUTPUT FILE POINTER */
+char infofile[200];
 
 char *program    = "if2part";	/* PROGRAM NAME */
 
@@ -18,7 +20,6 @@ char DefaultStyle = 'R';	/* Defer loop parallelism decision */
 
 int   sgnok      = TRUE;	/* ARE SIGNED ARITHMETIC CONSTANTS ALLOWED? */
 int   info	 = FALSE;	/* GENERATE INFORMATION ABOUT OPTIMIZATIONS? */
-int   vinfo      = FALSE;	/* GENERATE VECTOR-CONCURRENT INFO */
 
 int   streams    = FALSE;
 int   cycle      = FALSE;
@@ -230,12 +231,8 @@ char **argv;
       if ( isdigit((int)(c[1])) ) info=atoi(c+1);
       break;
 
-      /* ------------------------------------------------------------ */
-      /* Set vectorization information level			      */
-      /* ------------------------------------------------------------ */
-    case 'V':
-      vinfo = TRUE;
-      if ( isdigit((int)(c[1])) ) vinfo=atoi(c+1);
+    case 'F' :
+      strcpy (infofile, c+1);
       break;
 
       /* ------------------------------------------------------------ */
@@ -329,8 +326,18 @@ int    argc;
 char **argv;
 {
     register FILE *fd;
+    int i4 = I_Info4;
 
     ParseCommandLine( argc, argv );
+
+    if (RequestInfo(I_Info4, info)) 
+	if ((infoptr = fopen (infofile, "a")) == NULL)
+		infoptr = stderr;
+    
+
+    if (info > i4 && (RequestInfo(I_Info3, info) || RequestInfo(I_Info2, info) ||
+		RequestInfo(I_Info1, info)) && RequestInfo(I_Info4, info))
+	FPRINTF (infoptr, "\n\f\n\n");
 
     StartProfiler();
     If2Read();
@@ -363,8 +370,8 @@ char **argv;
     /* if ( !IsStamp( MONOLITH ) ) */ /* NEW CANN */
 	/* Error1( "MONOLITHIC INPUT REQUIRED" ); */
 
-    if ( RequestInfo(I_DeveloperInfo1,info) ) {
-      FPRINTF( stderr, "\n**** GRAPH PARTITIONING\n" );
+    if ( RequestInfo(I_Info4,info) ) {
+      FPRINTF( infoptr, "**** CONCURRENTIZATION\n\n" );
     }
 
     StartProfiler();
@@ -375,9 +382,7 @@ char **argv;
     If2Part();
     StopProfiler( "If2Part" );
 
-    if ( RequestInfo(I_GeneralInfo,info) ||
-	 RequestInfo(I_GeneralInfo,vinfo)
-	) {
+    if ( RequestInfo(I_Info4,info)) {
       PartIf2Count();
     }
 
@@ -389,6 +394,9 @@ char **argv;
     AddModuleStamp();
     WriteModuleDataBase();
 
+    if (RequestInfo(I_Info4, info) && infoptr!=stderr)
+        fclose (infoptr);
+
     /* OPEN THE OUTPUT FILE AND WRITE THE OPTIMIZED PROGRAM               */
 
     if ( ofile != NULL ) {
@@ -397,6 +405,7 @@ char **argv;
 
             output = fd;
 	    }
+
 
     StartProfiler();
     If2Write();

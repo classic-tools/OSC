@@ -94,6 +94,18 @@ in SISAL source (see \fIcc\fR(1)).
 }
 
 #------------------------------------------------------------
+front=<frontend>
+"Select SISAL1.2 or SISAL90 language definition"
+-front=<frontend>
+Select SISAL1.2 or SISAL90 language definition
+Default: SISAL1.2.
+{
+  if (strcmp(&argv[idx][strlen("-front=")], "SISAL90")==0) {
+    front_vers = 90;
+  }
+}
+
+#------------------------------------------------------------
 I<path>
 "Search <path> for C include files"
 -Ipath
@@ -107,12 +119,30 @@ in SISAL source (see \fIcc\fR(1)).
 }
 
 #------------------------------------------------------------
+IF0
+"Compile to IF0 and stop"
+-IF0
+Compile the named SISAL files to IF0 and stop. No optimizations are done.
+{
+  stopIF0 = TRUE;
+}
+
+#------------------------------------------------------------
 IF1
 "Compile to IF1 and stop"
 -IF1
 Compile the named SISAL files to IF1 and stop. No optimizations are done.
 {
   stopIF1 = TRUE;
+}
+
+#------------------------------------------------------------
+IF3
+"Add IF3 output"
+-IF3
+Compile the named SISAL files and produce an extra IF file with temporaries.
+{
+  stopIF3 = TRUE;
 }
 
 #------------------------------------------------------------
@@ -204,33 +234,42 @@ the first file on the command line.
 }
 
 #------------------------------------------------------------
-o <absolute>
-"Name the executable <absolute> instead of s.out"
--o absolute
-Name the final executable program \fIabsolute\fR.  The absolute
-name cannot end in a sisal extension (.sis, .if1, .mono, .opt, 
-.mem, .up, .part, .costs, .a, .c, .s, .o, .f, .i).
+c
+"Compile to .o file (requires -e <funct> or -main <funct>)"
+{
+  smodule = TRUE;
+  stopc = TRUE;
+  TMPDIR="";
+}
+
+#------------------------------------------------------------
+o <target>
+"Name the output <target> not s.out or <source_prefix>.o"
+-o target
+Name the final output \fItarget\fR.  The target name cannot 
+end in a sisal extension 
+(.sis, .if1, .mono, .opt, .mem, .up, .part, .costs).
 To use these extensions, use the \-oo option instead.
-Default: s.out.
+Default for absolute executables: s.out.
+Default for relocatable .o: <source_prefix>.o.
 {
   aabs = argv[idx];
 }
 
 #------------------------------------------------------------
-oo <absolute>
+oo <target>
 "Just like -o, but sisal extensions are legal."
--oo absolute
+-oo target
 Just like \-o, but sisal extensions are legal.
-Default: s.out.
 {
   NameSafety = FALSE;
   aabs = argv[idx];
 }
 
 #------------------------------------------------------------
-e <funct>
+main <funct>
 "Use <funct> as main entry point"
--e funct
+-main funct
 Take function
 .B funct
 as a 
@@ -238,12 +277,7 @@ as a
 or 
 .I module
 entry point (the default entry point is `main').
-Entry points can also be specified
-within SISAL text using the ``%$entry=funct_list'' pragma,
-where ``funct_list'' is a comma separated list of function names;
-blanks and tabs are allowed in the list.
-Unlike modules,
-only one
+Unlike modules, only one 
 .I program
 entry point is allowed.
 See IMPORTANT NOTES at the bottom of this man page.
@@ -252,9 +286,27 @@ See IMPORTANT NOTES at the bottom of this man page.
 }
 
 #------------------------------------------------------------
-c <funct>
+e <funct>
+"Use <funct> as an entry point"
+-e funct
+Take function
+.B funct
+as a 
+.I program 
+or 
+.I module
+entry point. Entry points can also be specified
+within SISAL text using the ``%$entry=funct_list'' pragma,
+where ``funct_list'' is a comma separated list of function names;
+blanks and tabs are allowed in the list.
+{
+  eoptions[++eoptioncnt] = argv[idx];
+}
+
+#------------------------------------------------------------
+externC <funct>
 "Consider <funct> available as a C external"
--c funct
+-externC funct
 Take function
 .B funct
 as a C external language function.
@@ -271,9 +323,9 @@ See IMPORTANT NOTES at the bottom of this man page.
 }
 
 #------------------------------------------------------------
-f <funct>
+externFORTRAN <funct>
 "Consider <funct> available as a FORTRAN external"
--f funct
+-externFORTRAN funct
 Take function
 .B funct
 as a FORTRAN external language function.
@@ -1008,7 +1060,7 @@ double.  On the Cray, all double_real data is treated as real (see
 info
 "Produce an information listing"
 -info
-Print diagnostic information gathered during compilation to stderr.
+Print diagnostic information gathered during compilation to info.out.
 Default: run silently. 
 {
   info |= ParseMap("1");
@@ -1021,47 +1073,19 @@ The number list contains information numbers and ranges to be produced.
 The more numbers specified, the more compilation information is produced.
 \-info=0 produces no information, \-info=1 is the same as \-info.
 Multiple instances collect.
-\-info=1,2,3,5 is the same as \-info=1-3,5 and is the same as \-info -info=2,3
-\-info=5.
+\-info=1,2,4 is the same as \-info=1-2,4 and is the same as \-info -info=2,4.
 .br
-\ \ \ \ 1 : General interest
+\ \ \ \ 1 : Simple Optimizations Info
 .br
-\ \ \ \ 2 : More information of general interest
+\ \ \ \ 2 : Memory Optimizations Info
 .br
-\ \ \ \ 3 : Detailed, source line information where appropriate
+\ \ \ \ 3 : Copy Optimizations Info
 .br
-\ \ \ \ 4 : Information about vectorization and parallelization
+\ \ \ \ 4 : Concurrentization Info
 .br
-The numbers 13-16 are reserved for developer's information which is
-unlikely to be interesting.
 {
   info |= ParseMap(argv[idx]+6);
-}
-
-
-#------------------------------------------------------------
-cvinfo
-"Get vectorization and concurentization information"
--cvinfo
-Print concurrentization and vectorization information gathered
-during compilation to stderr.  This option provides a subset of the
-information generated by the \-info option. Default: run silently.  
-{
-  cinfo |= ParseMap("1");
-  vinfo |= ParseMap("1");
-}
-
-#------------------------------------------------------------
-cvinfo=<rangelist>
-"Get more vectorization and concurentization information"
--cvinfo=<range list>
-Print more levels of concurrentization and vectorization information.
-\-cvinfo=0 produces no information, \-cvinfo=1 is the same as
-\-cvinfo.
-See \-info= for more information on range lists.
-{
-  cinfo |= ParseMap(argv[idx]+8);
-  vinfo |= ParseMap(argv[idx]+8);
+  infos = argv[idx]+6;
 }
 
 #------------------------------------------------------------
@@ -1072,7 +1096,7 @@ During the load phase of compilation, search library `libx.a', where x
 is a string, to resolve undefined externals.  Refer to \fIld\fR(1) for
 the default search paths.
 {
-  ld[++ldcnt] = argv[idx];
+  file_ld[++ldcnt] = argv[idx];
 }
 
 
@@ -1497,20 +1521,6 @@ vector
 }
 
 #------------------------------------------------------------
-vinfo
-"Produce vectorization information"
-{
-  vinfo = TRUE;
-}
-
-#------------------------------------------------------------
-vinfo<num>
-"Produce more vectorization information"
-{
-  vinfo = atoi(argv[idx]+6);
-}
-
-#------------------------------------------------------------
 DI
 "Compile to DI stye IF1"
 {
@@ -1580,13 +1590,6 @@ cvector
 }
 
 #------------------------------------------------------------
-cinfo
-"Get concurentization information"
-{
-  cinfo |= ParseMap("1");
-}
-
-#------------------------------------------------------------
 concur
 "Generate concurrent code"
 {
@@ -1617,6 +1620,23 @@ P<num>
 }
 
 #------------------------------------------------------------
+r <funct>
+"Consider <funct> available as a reduction"
+-r funct
+Take function
+.B funct
+as an array reduction function.
+The reduction must be called from a \fIforall\fR loop. Use the 
+\fIfor initial while\fR construct in the function to reduce from 
+the entire read only array argument.  The loop counter must use the 
+entire array and access only the current loop iteration array values.
+{
+  roptions[++roptioncnt] = argv[idx];         /* reduction function */
+  /* calloptions[++calloptioncnt] = argv[idx];*//* inline off */
+}
+
+#------------------------------------------------------------
+
 Loopstyle=<stylechar>
 "Set the default loop parallelism style to <stylechar>"
 -Loopstyle=C

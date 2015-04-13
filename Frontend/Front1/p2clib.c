@@ -14,10 +14,6 @@
 /* #define LACK_MEMMOVE  */
 
 
-#ifndef NO_TIME
-# include <time.h>
-#endif
-
 void mymemcpy(s1,s2,n)
 char *s1;
 char *s2;

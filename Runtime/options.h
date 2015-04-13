@@ -73,281 +73,305 @@ if (argv[idx][0] == '-' ) {                                              /* M */
     goto OptionError;                                                    /* G */
                                                                          /* e */
    case 'c':                                                             /* n */
-    if ( strcmp(argv[idx]+1,"cformat") == 0 ) {                          /* e */
+    if ( strcmp(argv[idx]+1,"cached") == 0 ) {                           /* e */
                                                                          /* r */
   /* ------------------------------------------------------------ */     /* a */
-  /*                   -cformat <formatstring>                    */     /* t */
-  /* Change the default integer output format for printable characters */
-  /* ------------------------------------------------------------ */     /* e */
-    CorrectUsage = "Usage: -cformat <formatstring>";                     /* d */
-    if ( (++idx) >= argc ) goto OptionError;                             /*   */
-                                                                         /* D */
-      cformat = ParseCEscapes(argv[idx]);                                /* o */
-                                                                         /*   */
-      break;                                                             /* N */
-    } else if ( strcmp(argv[idx]+1,"cformat2") == 0 ) {                  /* o */
-                                                                         /* t */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                   -cformat2 <formatstring>                   */     /* C */
-  /*    Change the default uprintable character output format     */     /* h */
-  /* ------------------------------------------------------------ */     /* a */
-    CorrectUsage = "Usage: -cformat2 <formatstring>";                    /* n */
-    if ( (++idx) >= argc ) goto OptionError;                             /* g */
-                                                                         /* e */
-      cformat2 = ParseCEscapes(argv[idx]);                               /*   */
-                                                                         /* M */
-      break;                                                             /* a */
-    }                                                                    /* c */
-    goto OptionError;                                                    /* h */
-                                                                         /* i */
-   case 'd':                                                             /* n */
-    if ( strcmp(argv[idx]+1,"dformat") == 0 ) {                          /* e */
-                                                                         /*   */
-  /* ------------------------------------------------------------ */     /* G */
-  /*                   -dformat <formatstring>                    */     /* e */
-  /*         Change the default double real output format         */     /* n */
-  /* ------------------------------------------------------------ */     /* e */
-    CorrectUsage = "Usage: -dformat <formatstring>";                     /* r */
-    if ( (++idx) >= argc ) goto OptionError;                             /* a */
-                                                                         /* t */
-      dformat = ParseCEscapes(argv[idx]);                                /* e */
-                                                                         /* d */
-      break;                                                             /*   */
-    } else if ( argv[idx][2] == 's' && isdigit(argv[idx][3]) ) {         /* D */
-                                                                         /* o */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                           -ds<num>                           */     /* N */
-  /*  Initialize the shared data management pool to <num> bytes.  */     /* o */
-  /* ------------------------------------------------------------ */     /* t */
-                                                                         /*   */
-      if ( GET_Tmp( 3 ) <= 0 ) goto OptionError;                         /* C */
-      DsaSize = Tmp;                                                     /* h */
-                                                                         /* a */
-      break;                                                             /* n */
-    } else if ( argv[idx][2] == 'x' && isdigit(argv[idx][3]) ) {         /* g */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                           -dx<num>                           */     /* M */
-  /* Set the exact fit storage allocation threshold to <num> bytes. */   /* a */
-  /* ------------------------------------------------------------ */     /* c */
-                                                                         /* h */
-      if ( GET_Tmp( 3 ) < 0 ) goto OptionError;                          /* i */
-                                                                         /* n */
-      XftThreshold = Tmp;                                                /* e */
-                                                                         /*   */
-      break;                                                             /* G */
-    }                                                                    /* e */
-    goto OptionError;                                                    /* n */
-                                                                         /* e */
-   case 'f':                                                             /* r */
-    if ( strcmp(argv[idx]+1,"fformat") == 0 ) {                          /* a */
-                                                                         /* t */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                   -fformat <formatstring>                    */     /* d */
-  /*            Change the default real  output format            */     /*   */
-  /* ------------------------------------------------------------ */     /* D */
-    CorrectUsage = "Usage: -fformat <formatstring>";                     /* o */
-    if ( (++idx) >= argc ) goto OptionError;                             /*   */
-                                                                         /* N */
-      fformat = ParseCEscapes(argv[idx]);                                /* o */
-                                                                         /* t */
-      break;                                                             /*   */
-    }                                                                    /* C */
-    goto OptionError;                                                    /* h */
-                                                                         /* a */
-   case 'g':                                                             /* n */
-    if ( strcmp(argv[idx]+1,"gss") == 0 ) {                              /* g */
-                                                                         /* e */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                             -gss                             */     /* M */
-  /* Use guided self scheduling algorithm instead of block slicing */    /* a */
-  /* ------------------------------------------------------------ */     /* c */
-                                                                         /* h */
-      DefaultLoopStyle = 'G';                                            /* i */
-                                                                         /* n */
-      break;                                                             /* e */
-    }                                                                    /*   */
-    goto OptionError;                                                    /* G */
-                                                                         /* e */
-   case 'h':                                                             /* n */
-    if ( strcmp(argv[idx]+1,"help") == 0 ) {                             /* e */
-                                                                         /* r */
-  /* ------------------------------------------------------------ */     /* a */
-  /*                            -help                             */     /* t */
-  /*                        Same as -usage                        */     /* e */
+  /*                           -cached                            */     /* t */
+  /*   Use cached scheduling algorithm instead of block slicing   */     /* e */
   /* ------------------------------------------------------------ */     /* d */
                                                                          /*   */
-      PrintUsageTable(argv,idx);                                         /* D */
+      DefaultLoopStyle = 'C';                                            /* D */
                                                                          /* o */
       break;                                                             /*   */
-    }                                                                    /* N */
-    goto OptionError;                                                    /* o */
-                                                                         /* t */
-   case 'i':                                                             /*   */
-    if ( strcmp(argv[idx]+1,"iformat") == 0 ) {                          /* C */
-                                                                         /* h */
-  /* ------------------------------------------------------------ */     /* a */
-  /*                   -iformat <formatstring>                    */     /* n */
-  /*           Change the default integer output format           */     /* g */
-  /* ------------------------------------------------------------ */     /* e */
-    CorrectUsage = "Usage: -iformat <formatstring>";                     /*   */
-    if ( (++idx) >= argc ) goto OptionError;                             /* M */
-                                                                         /* a */
-      iformat = ParseCEscapes(argv[idx]);                                /* c */
-                                                                         /* h */
-      break;                                                             /* i */
-    }                                                                    /* n */
-    goto OptionError;                                                    /* e */
-                                                                         /*   */
-   case 'l':                                                             /* G */
-    if ( argv[idx][2] == 's' && isdigit(argv[idx][3]) ) {                /* e */
-                                                                         /* n */
-  /* ------------------------------------------------------------ */     /* e */
-  /*                           -ls<num>                           */     /* r */
-  /*             Set the default slice count to <num>             */     /* a */
+    } else if ( strcmp(argv[idx]+1,"cformat") == 0 ) {                   /* N */
+                                                                         /* o */
   /* ------------------------------------------------------------ */     /* t */
+  /*                   -cformat <formatstring>                    */     /*   */
+  /* Change the default integer output format for printable characters */
+  /* ------------------------------------------------------------ */     /* C */
+    CorrectUsage = "Usage: -cformat <formatstring>";                     /* h */
+    if ( (++idx) >= argc ) goto OptionError;                             /* a */
+                                                                         /* n */
+      cformat = ParseCEscapes(argv[idx]);                                /* g */
                                                                          /* e */
-      if ( GET_Tmp( 3 ) <= 0 ) goto OptionError;                         /* d */
-                                                                         /*   */
-      LoopSlices = Tmp;                                                  /* D */
-                                                                         /* o */
       break;                                                             /*   */
-    }                                                                    /* N */
-    goto OptionError;                                                    /* o */
-                                                                         /* t */
-   case 'n':                                                             /*   */
-    if ( strcmp(argv[idx]+1,"nb") == 0 ) {                               /* C */
-                                                                         /* h */
-  /* ------------------------------------------------------------ */     /* a */
-  /*                             -nb                              */     /* n */
-  /*                  Do not bind parallel work                   */     /* g */
-  /* ------------------------------------------------------------ */     /* e */
-                                                                         /*   */
-      BindParallelWork = FALSE;                                          /* M */
+    } else if ( strcmp(argv[idx]+1,"cformat2") == 0 ) {                  /* M */
                                                                          /* a */
-      break;                                                             /* c */
-    } else if ( strcmp(argv[idx]+1,"nformat") == 0 ) {                   /* h */
-                                                                         /* i */
+  /* ------------------------------------------------------------ */     /* c */
+  /*                   -cformat2 <formatstring>                   */     /* h */
+  /*    Change the default uprintable character output format     */     /* i */
   /* ------------------------------------------------------------ */     /* n */
-  /*                   -nformat <formatstring>                    */     /* e */
-  /*          Change the default null type output format          */     /*   */
-  /* ------------------------------------------------------------ */     /* G */
-    CorrectUsage = "Usage: -nformat <formatstring>";                     /* e */
-    if ( (++idx) >= argc ) goto OptionError;                             /* n */
-                                                                         /* e */
-      nformat = ParseCEscapes(argv[idx]);                                /* r */
-                                                                         /* a */
-      break;                                                             /* t */
-    } else if ( strcmp(argv[idx]+1,"nostrings") == 0 ) {                 /* e */
-                                                                         /* d */
-  /* ------------------------------------------------------------ */     /*   */
-  /*                          -nostrings                          */     /* D */
-  /*   Do not print array[character] in string (quoted) format    */     /* o */
-  /* ------------------------------------------------------------ */     /*   */
-                                                                         /* N */
-      FibreStrings = FALSE;                                              /* o */
+    CorrectUsage = "Usage: -cformat2 <formatstring>";                    /* e */
+    if ( (++idx) >= argc ) goto OptionError;                             /*   */
+                                                                         /* G */
+      cformat2 = ParseCEscapes(argv[idx]);                               /* e */
+                                                                         /* n */
+      break;                                                             /* e */
+    }                                                                    /* r */
+    goto OptionError;                                                    /* a */
                                                                          /* t */
-      break;                                                             /*   */
-    } else if ( strcmp(argv[idx]+1,"nqs") == 0 ) {                       /* C */
-                                                                         /* h */
-  /* ------------------------------------------------------------ */     /* a */
-  /*                             -nqs                             */     /* n */
-  /*       ...options  Submit as NQS batch job (Cray only)        */     /* g */
-  /* ------------------------------------------------------------ */     /* e */
+   case 'd':                                                             /* e */
+    if ( strcmp(argv[idx]+1,"dformat") == 0 ) {                          /* d */
                                                                          /*   */
-      SubmitNQS(argc,argv,idx);                                          /* M */
+  /* ------------------------------------------------------------ */     /* D */
+  /*                   -dformat <formatstring>                    */     /* o */
+  /*         Change the default double real output format         */     /*   */
+  /* ------------------------------------------------------------ */     /* N */
+    CorrectUsage = "Usage: -dformat <formatstring>";                     /* o */
+    if ( (++idx) >= argc ) goto OptionError;                             /* t */
+                                                                         /*   */
+      dformat = ParseCEscapes(argv[idx]);                                /* C */
+                                                                         /* h */
+      break;                                                             /* a */
+    } else if ( argv[idx][2] == 's' && isdigit(argv[idx][3]) ) {         /* n */
+                                                                         /* g */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                           -ds<num>                           */     /*   */
+  /*  Initialize the shared data management pool to <num> bytes.  */     /* M */
+  /* ------------------------------------------------------------ */     /* a */
+                                                                         /* c */
+      if ( GET_Tmp( 3 ) <= 0 ) goto OptionError;                         /* h */
+      DsaSize = Tmp;                                                     /* i */
+                                                                         /* n */
+      break;                                                             /* e */
+    } else if ( argv[idx][2] == 'x' && isdigit(argv[idx][3]) ) {         /*   */
+                                                                         /* G */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                           -dx<num>                           */     /* n */
+  /* Set the exact fit storage allocation threshold to <num> bytes. */   /* e */
+  /* ------------------------------------------------------------ */     /* r */
+                                                                         /* a */
+      if ( GET_Tmp( 3 ) < 0 ) goto OptionError;                          /* t */
+                                                                         /* e */
+      XftThreshold = Tmp;                                                /* d */
+                                                                         /*   */
+      break;                                                             /* D */
+    }                                                                    /* o */
+    goto OptionError;                                                    /*   */
+                                                                         /* N */
+   case 'f':                                                             /* o */
+    if ( strcmp(argv[idx]+1,"fformat") == 0 ) {                          /* t */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* C */
+  /*                   -fformat <formatstring>                    */     /* h */
+  /*            Change the default real  output format            */     /* a */
+  /* ------------------------------------------------------------ */     /* n */
+    CorrectUsage = "Usage: -fformat <formatstring>";                     /* g */
+    if ( (++idx) >= argc ) goto OptionError;                             /* e */
+                                                                         /*   */
+      fformat = ParseCEscapes(argv[idx]);                                /* M */
                                                                          /* a */
       break;                                                             /* c */
     }                                                                    /* h */
     goto OptionError;                                                    /* i */
                                                                          /* n */
-   case 'r':                                                             /* e */
-    if ( strcmp(argv[idx]+1,"r") == 0 ) {                                /*   */
+   case 'g':                                                             /* e */
+    if ( strcmp(argv[idx]+1,"gss") == 0 ) {                              /*   */
                                                                          /* G */
   /* ------------------------------------------------------------ */     /* e */
-  /*                              -r                              */     /* n */
-  /*  Append resource utilization information to the file s.info  */     /* e */
+  /*                             -gss                             */     /* n */
+  /* Use guided self scheduling algorithm instead of block slicing */    /* e */
   /* ------------------------------------------------------------ */     /* r */
                                                                          /* a */
-      GatherPerfInfo = TRUE;                                             /* t */
+      DefaultLoopStyle = 'G';                                            /* t */
                                                                          /* e */
       break;                                                             /* d */
     }                                                                    /*   */
     goto OptionError;                                                    /* D */
                                                                          /* o */
-   case 's':                                                             /*   */
-    if ( strcmp(argv[idx]+1,"strided") == 0 ) {                          /* N */
+   case 'h':                                                             /*   */
+    if ( strcmp(argv[idx]+1,"help") == 0 ) {                             /* N */
                                                                          /* o */
   /* ------------------------------------------------------------ */     /* t */
-  /*                           -strided                           */     /*   */
-  /* Use strided loop scheduling algorithm instead of block slicing */   /* C */
+  /*                            -help                             */     /*   */
+  /*                        Same as -usage                        */     /* C */
   /* ------------------------------------------------------------ */     /* h */
                                                                          /* a */
-      DefaultLoopStyle = 'S';                                            /* n */
+      PrintUsageTable(argv,idx);                                         /* n */
                                                                          /* g */
       break;                                                             /* e */
     }                                                                    /*   */
     goto OptionError;                                                    /* M */
                                                                          /* a */
-   case 't':                                                             /* c */
-    if ( strncmp(argv[idx]+1,"tr=",3) == 0 ) {                           /* h */
+   case 'i':                                                             /* c */
+    if ( strcmp(argv[idx]+1,"iformat") == 0 ) {                          /* h */
                                                                          /* i */
   /* ------------------------------------------------------------ */     /* n */
-  /*                       -tr=<attribute>                        */     /* e */
-  /*                 Interface to tracer function                 */     /*   */
+  /*                   -iformat <formatstring>                    */     /* e */
+  /*           Change the default integer output format           */     /*   */
   /* ------------------------------------------------------------ */     /* G */
-    CorrectUsage = "Usage: -tr=<attribute>";                             /* e */
-    if ( argv[idx][3] == NULL ) goto OptionError;                        /* n */
+    CorrectUsage = "Usage: -iformat <formatstring>";                     /* e */
+    if ( (++idx) >= argc ) goto OptionError;                             /* n */
                                                                          /* e */
-       ParseTracerCommand(argv[idx]+4);                                  /* r */
+      iformat = ParseCEscapes(argv[idx]);                                /* r */
                                                                          /* a */
       break;                                                             /* t */
     }                                                                    /* e */
     goto OptionError;                                                    /* d */
                                                                          /*   */
-   case 'u':                                                             /* D */
-    if ( strcmp(argv[idx]+1,"usage") == 0 ) {                            /* o */
+   case 'l':                                                             /* D */
+    if ( argv[idx][2] == 's' && isdigit(argv[idx][3]) ) {                /* o */
                                                                          /*   */
   /* ------------------------------------------------------------ */     /* N */
-  /*                            -usage                            */     /* o */
-  /*                      Produce this list                       */     /* t */
+  /*                           -ls<num>                           */     /* o */
+  /*             Set the default slice count to <num>             */     /* t */
   /* ------------------------------------------------------------ */     /*   */
-    PrintUsageTable(argv,idx);                                           /* C */
-      break;                                                             /* h */
-    }                                                                    /* a */
-    goto OptionError;                                                    /* n */
+                                                                         /* C */
+      if ( GET_Tmp( 3 ) <= 0 ) goto OptionError;                         /* h */
+                                                                         /* a */
+      LoopSlices = Tmp;                                                  /* n */
                                                                          /* g */
-   case 'w':                                                             /* e */
-    if ( isdigit(argv[idx][2]) ) {                                       /*   */
-                                                                         /* M */
-  /* ------------------------------------------------------------ */     /* a */
-  /*                           -w<num>                            */     /* c */
-  /*           Set number of worker processes to <num>            */     /* h */
-  /* ------------------------------------------------------------ */     /* i */
-                                                                         /* n */
-      if ( GET_Tmp( 2 ) <= 0 ) goto OptionError;                         /* e */
-                                                                         /*   */
-      if ( Tmp > MAX_PROCS ) goto OptionError;                           /* G */
+      break;                                                             /* e */
+    }                                                                    /*   */
+    goto OptionError;                                                    /* M */
+                                                                         /* a */
+   case 'm':                                                             /* c */
+    if ( strcmp(argv[idx]+1,"m") == 0 ) {                                /* h */
+                                                                         /* i */
+  /* ------------------------------------------------------------ */     /* n */
+  /*                              -m                              */     /* e */
+  /*    Indicate the master process on distributed processors.    */     /*   */
+  /* ------------------------------------------------------------ */     /* G */
                                                                          /* e */
-      NumWorkers = Tmp;                                                  /* n */
+      return;                                                            /* n */
                                                                          /* e */
       break;                                                             /* r */
     }                                                                    /* a */
     goto OptionError;                                                    /* t */
                                                                          /* e */
-   case 'z':                                                             /* d */
-    if ( strcmp(argv[idx]+1,"z") == 0 ) {                                /*   */
+   case 'n':                                                             /* d */
+    if ( strcmp(argv[idx]+1,"nb") == 0 ) {                               /*   */
                                                                          /* D */
   /* ------------------------------------------------------------ */     /* o */
-  /*                              -z                              */     /*   */
-  /*              Do not print the program's output.              */     /* N */
+  /*                             -nb                              */     /*   */
+  /*                  Do not bind parallel work                   */     /* N */
   /* ------------------------------------------------------------ */     /* o */
                                                                          /* t */
-          NoFibreOutput = TRUE;                                          /*   */
+      BindParallelWork = FALSE;                                          /*   */
+                                                                         /* C */
+      break;                                                             /* h */
+    } else if ( strcmp(argv[idx]+1,"nformat") == 0 ) {                   /* a */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* g */
+  /*                   -nformat <formatstring>                    */     /* e */
+  /*          Change the default null type output format          */     /*   */
+  /* ------------------------------------------------------------ */     /* M */
+    CorrectUsage = "Usage: -nformat <formatstring>";                     /* a */
+    if ( (++idx) >= argc ) goto OptionError;                             /* c */
+                                                                         /* h */
+      nformat = ParseCEscapes(argv[idx]);                                /* i */
+                                                                         /* n */
+      break;                                                             /* e */
+    } else if ( strcmp(argv[idx]+1,"nostrings") == 0 ) {                 /*   */
+                                                                         /* G */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                          -nostrings                          */     /* n */
+  /*   Do not print array[character] in string (quoted) format    */     /* e */
+  /* ------------------------------------------------------------ */     /* r */
+                                                                         /* a */
+      FibreStrings = FALSE;                                              /* t */
+                                                                         /* e */
+      break;                                                             /* d */
+    } else if ( strcmp(argv[idx]+1,"nqs") == 0 ) {                       /*   */
+                                                                         /* D */
+  /* ------------------------------------------------------------ */     /* o */
+  /*                             -nqs                             */     /*   */
+  /*       ...options  Submit as NQS batch job (Cray only)        */     /* N */
+  /* ------------------------------------------------------------ */     /* o */
+                                                                         /* t */
+      SubmitNQS(argc,argv,idx);                                          /*   */
                                                                          /* C */
       break;                                                             /* h */
     }                                                                    /* a */
     goto OptionError;                                                    /* n */
-   default: goto OptionError;                                            /* g */
-  }                                                                      /* e */
-}                                                                        /*   */
+                                                                         /* g */
+   case 'r':                                                             /* e */
+    if ( strcmp(argv[idx]+1,"r") == 0 ) {                                /*   */
+                                                                         /* M */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                              -r                              */     /* c */
+  /*  Append resource utilization information to the file s.info  */     /* h */
+  /* ------------------------------------------------------------ */     /* i */
+                                                                         /* n */
+      GatherPerfInfo = TRUE;                                             /* e */
+                                                                         /*   */
+      break;                                                             /* G */
+    }                                                                    /* e */
+    goto OptionError;                                                    /* n */
+                                                                         /* e */
+   case 's':                                                             /* r */
+    if ( strcmp(argv[idx]+1,"strided") == 0 ) {                          /* a */
+                                                                         /* t */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                           -strided                           */     /* d */
+  /* Use strided loop scheduling algorithm instead of block slicing */   /*   */
+  /* ------------------------------------------------------------ */     /* D */
+                                                                         /* o */
+      DefaultLoopStyle = 'S';                                            /*   */
+                                                                         /* N */
+      break;                                                             /* o */
+    }                                                                    /* t */
+    goto OptionError;                                                    /*   */
+                                                                         /* C */
+   case 't':                                                             /* h */
+    if ( strncmp(argv[idx]+1,"tr=",3) == 0 ) {                           /* a */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* g */
+  /*                       -tr=<attribute>                        */     /* e */
+  /*                 Interface to tracer function                 */     /*   */
+  /* ------------------------------------------------------------ */     /* M */
+    CorrectUsage = "Usage: -tr=<attribute>";                             /* a */
+    if ( argv[idx][3] == '\0' ) goto OptionError;                        /* c */
+                                                                         /* h */
+       ParseTracerCommand(argv[idx]+4);                                  /* i */
+                                                                         /* n */
+      break;                                                             /* e */
+    }                                                                    /*   */
+    goto OptionError;                                                    /* G */
+                                                                         /* e */
+   case 'u':                                                             /* n */
+    if ( strcmp(argv[idx]+1,"usage") == 0 ) {                            /* e */
+                                                                         /* r */
+  /* ------------------------------------------------------------ */     /* a */
+  /*                            -usage                            */     /* t */
+  /*                      Produce this list                       */     /* e */
+  /* ------------------------------------------------------------ */     /* d */
+    PrintUsageTable(argv,idx);                                           /*   */
+      break;                                                             /* D */
+    }                                                                    /* o */
+    goto OptionError;                                                    /*   */
+                                                                         /* N */
+   case 'w':                                                             /* o */
+    if ( isdigit(argv[idx][2]) ) {                                       /* t */
+                                                                         /*   */
+  /* ------------------------------------------------------------ */     /* C */
+  /*                           -w<num>                            */     /* h */
+  /*           Set number of worker processes to <num>            */     /* a */
+  /* ------------------------------------------------------------ */     /* n */
+                                                                         /* g */
+      if ( GET_Tmp( 2 ) <= 0 ) goto OptionError;                         /* e */
+                                                                         /*   */
+      if ( Tmp > MAX_PROCS ) goto OptionError;                           /* M */
+                                                                         /* a */
+      NumWorkers = Tmp;                                                  /* c */
+                                                                         /* h */
+      break;                                                             /* i */
+    }                                                                    /* n */
+    goto OptionError;                                                    /* e */
+                                                                         /*   */
+   case 'z':                                                             /* G */
+    if ( strcmp(argv[idx]+1,"z") == 0 ) {                                /* e */
+                                                                         /* n */
+  /* ------------------------------------------------------------ */     /* e */
+  /*                              -z                              */     /* r */
+  /*              Do not print the program's output.              */     /* a */
+  /* ------------------------------------------------------------ */     /* t */
+                                                                         /* e */
+          NoFibreOutput = TRUE;                                          /* d */
+                                                                         /*   */
+      break;                                                             /* D */
+    }                                                                    /* o */
+    goto OptionError;                                                    /*   */
+   default: goto OptionError;                                            /* N */
+  }                                                                      /* o */
+}                                                                        /* t */

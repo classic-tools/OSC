@@ -891,7 +891,7 @@ int *pos, base;
   }
   while (*pos < s->len && s->str[*pos - 1] == ' ')
     (*pos)++;
-  while ((res >= 0) & (charval(s->str[*pos - 1]) < base)) {
+  while ((res >= 0) && (charval(s->str[*pos - 1]) < base)) {
     newval = charval(s->str[*pos - 1]);
     if (res < maxdivbase || res == maxdivbase && newval <= maxmodbase) {
       res = res * base + newval;
@@ -9764,13 +9764,13 @@ errorrecord *errorrec;
 
   case arityonfa:
     fprintf(filename, "Forall header must be one array/stream expression");
-    fprintf(filename, "or two integer expressions.");
+    fprintf(filename, " or two integer expressions.");
     fprintf(filename, " Line %4d\n", errorrec->linenumber);
     break;
 
   case typeonfa:
     fprintf(filename, "Type of expression in forall header must be");
-    fprintf(filename, "integer, array, or stream");
+    fprintf(filename, " integer, array, or stream");
     fprintf(filename, " Line %4d\n", errorrec->linenumber);
     break;
 
@@ -9811,7 +9811,7 @@ errorrecord *errorrec;
 
   case icnotas:
     fprintf(filename, "Index names may only be used on stream or array");
-    fprintf(filename, "types not ");
+    fprintf(filename, " types not ");
     printtypesort(filename, errorrec->UU.typeptr);
     fprintf(filename, " in a for.");
     fprintf(filename, " Line %4d\n", errorrec->linenumber);

@@ -1,11 +1,18 @@
 #include "world.h"
 
 
-volatile int      *SisalShutDown;
-struct WorkerInfo *AllWorkerInfo;
 
 BARRIER_TYPE      *FinishBarrier;
 BARRIER_TYPE      *StartBarrier;
+
+#if defined(NO_STATIC_SHARED)
+BARRIER_TYPE Sb;
+BARRIER_TYPE Fb;
+#else
+volatile int      *SisalShutDown;
+struct WorkerInfo *AllWorkerInfo;
+
+#endif
 
 
 void InitWorkers()
@@ -18,10 +25,18 @@ void InitWorkers()
   *SisalShutDown = FALSE;
 
   if ( NumWorkers > 1 ) {
+#if defined(NO_STATIC_SHARED)
+    FinishBarrier = &(SRp->Fb);
+#else
     FinishBarrier = (BARRIER_TYPE*) SharedMalloc( SIZEOF(BARRIER_TYPE) );
+#endif
     INIT_BARRIER(FinishBarrier,NumWorkers);
 
+#if defined(NO_STATIC_SHARED)
+    StartBarrier  = &(SRp->Sb);
+#else
     StartBarrier  = (BARRIER_TYPE*) SharedMalloc( SIZEOF(BARRIER_TYPE) );
+#endif
     INIT_BARRIER(StartBarrier,NumWorkers);
     }
 
@@ -61,6 +76,8 @@ void InitWorkers()
     InfoPtr->DsaHelp        = 0;
     InfoPtr->StorageUsed    = 0;
     InfoPtr->StorageWanted  = 0;
+
+    InfoPtr->ClkTck         = CLK_TCK;
     }
 }
 

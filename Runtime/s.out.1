@@ -1,4 +1,4 @@
-.TH S.OUT local
+.TH S.OUT 1
 .SH NAME
 s.out \- SISAL executable
 .SH SYNOPSIS
@@ -94,6 +94,14 @@ scheduling.  Here the thickness of a slice is dynamically computed as
 the number of iterations not yet scheduled divided by the
 number of workers.
 Note that the \-ls and \-gss options conflict.
+
+.\" Machine generated entry.  Do not change
+.TP 13
+.B \-cached
+If compiled for concurrent execution,
+slice each concurrentized 
+.I for
+loop using cached scheduling.  
 
 .\" Machine generated entry.  Do not change
 .TP 13
@@ -310,6 +318,11 @@ t.out exection.
 This will pick up execution in TWINE where OSC left off and continue
 to the end of the function.
 (Default \-tr=~twine).
+
+.\" Machine generated entry.  Do not change
+.TP 13
+.B \-m
+If set, terminate parsing since a slave has been started.
 
 .\" Machine generated entry.  Do not change
 .TP 13

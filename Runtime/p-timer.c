@@ -41,20 +41,12 @@ void StopTimer()
 
 #else
 
-#ifdef USE_TIMES
-#include <sys/types.h>
-#include <sys/times.h>
-#ifdef SGI
-#include <sys/param.h>
-#endif
-#else
-#include <sys/resource.h>
+#if !defined(USE_TIMES)
 static struct rusage StartUsage;
 static struct rusage StopUsage;
 #endif
 
 #ifdef HPUXPA
-#include <time.h>
 clock_t clock();
 #endif
 
@@ -107,21 +99,13 @@ void StopTimer()
 #ifdef USE_TIMES
 #ifdef HPUXPA
   InfoPtr->CpuTime = (double)clock ();
+  InfoPtr->CpuTime /=  ((double)CLOCKS_PER_SEC);
 #else
   (void)times(&StopTime);
   InfoPtr->CpuTime  = ((double) (StopTime.tms_utime + StopTime.tms_stime)) -
                       InfoPtr->CpuTime;
+  InfoPtr->CpuTime /= InfoPtr->ClkTck;
 #endif
-#ifdef SGI
-  InfoPtr->CpuTime  /= ((double) HZ);
-#else
-#ifdef HPUXPA
-  InfoPtr->CpuTime /=  ((double)CLOCKS_PER_SEC);
-#else
-  InfoPtr->CpuTime /= 60.0; /* SYSTEM DEPENDENT!!! */
-#endif
-#endif
-
 #else
   getrusage( RUSAGE_SELF, &StopUsage );
   InfoPtr->CpuTime = ElapsedTime( &StartUsage.ru_utime, &StopUsage.ru_utime ) +
@@ -136,6 +120,7 @@ void StopTimer()
 double TSECND()
 {
   register double CurrentCpuTime;
+  struct WorkerInfo *InfoPtr;
 
 #ifdef USE_TIMES
   struct tms         StopTime;
@@ -144,15 +129,16 @@ double TSECND()
   struct rusage StopTimerInfo;
 #endif
 
+#ifdef ALLIANT
+  InfoPtr = &(AllWorkerInfo[0]);
+#else
+  InfoPtr = MyInfo;
+#endif
+
 #ifdef USE_TIMES
   (void)times(&StopTime);
   CurrentCpuTime  = ((double) (StopTime.tms_utime + StopTime.tms_stime));
-#ifdef SGI
-  CurrentCpuTime /= ((double) HZ);
-#else
-  CurrentCpuTime /= 60.0; /* SYSTEM DEPENDENT!!! */
-#endif
-
+  CurrentCpuTime /= InfoPtr->ClkTck;
 #else
   getrusage( RUSAGE_SELF, &StopTimerInfo );
 

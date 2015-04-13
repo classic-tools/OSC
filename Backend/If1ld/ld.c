@@ -18,6 +18,9 @@ int   ftop = -1;
 char *ct[MAX_TABLE_ENTRIES];		/* C function list */
 int   ctop = -1;
 
+char *reduct[400];			/* REDUCTION NAME TABLE */
+int   rtop = -1;
+
 char *furl = NULL;			/* Q Stamp string to use */
 
 char *libraries[MAX_TABLE_ENTRIES];	/* List of libraries to link in */
@@ -133,6 +136,37 @@ char *nm;
 
 
 /**************************************************************************/
+/* LOCAL  **************    PlaceInReductionTable  ************************/
+/**************************************************************************/
+/* PURPOSE: PLACE nm IN THE REDUCTION NAME TABLE.                         */
+/**************************************************************************/
+
+void PlaceInReductionTable( nm )
+char *nm;
+{
+  register int idx;
+
+  /* CHECK IF ALREADY IN THE OTHER TABLES */
+  for ( idx = 0; idx <= ftop; idx++ )
+    if ( strcmp( nm, fortt[idx] ) == 0 )
+      Error2( "OPTIONS -r AND -f CONFLICT FOR:", nm );
+
+  for ( idx = 0; idx <= ctop; idx++ )
+    if ( strcmp( nm, ct[idx] ) == 0 )
+      Error2( "OPTIONS -r AND -c CONFLICT FOR:", nm );
+
+  for ( idx = 0; idx <= rtop; idx++ )
+    if ( strcmp( nm, reduct[idx] ) == 0 )
+      return;
+
+  if ( ++rtop > MAX_TABLE_ENTRIES )
+    Error2( "PlaceInReductionTable", "reduct OVERFLOW" );
+
+  reduct[rtop] = nm;
+}
+
+
+/**************************************************************************/
 /* LOCAL  **************      ParseCommandLine     ************************/
 /**************************************************************************/
 /* PURPOSE: PARSE THE COMMAND LINE argv CONTAINING argc ENTRIES. THE 1ST  */
@@ -150,6 +184,7 @@ char *nm;
 /*		-e funct	-> PROGRAM ENTRY POINT			  */
 /*		-f funct	-> FORTRAN INTERFACE FUNCTION		  */
 /*		-o outfile	-> WRITE MONOLITH TO outfile		  */
+/*		-r funct	-> REDUCTION INTERFACE FUNCTION		  */
 /*		-p<num>		-> Apply dynamic patch <num>		  */
 /*		-v		-> Verbose				  */
 /*		-w		-> Supress warnings messages		  */
@@ -224,6 +259,16 @@ char **argv;
 
 	  ofile = argv[ idx ];
 	  break;
+
+	  /* ------------------------------------------------------------ */
+	  /* Reduction function 					  */
+	  /* ------------------------------------------------------------ */
+
+        case 'r':               /* SEE ReadTheIf1Files!!! */
+          if ( ++idx >= argc )
+            Error1( "USAGE: -r function" );
+          PlaceInReductionTable( LowerCase( argv[ idx ], FALSE, FALSE ) );
+          break;
 
 	  /* ------------------------------------------------------------ */
 	  /* Verbose (list internal commands)				  */
@@ -377,7 +422,7 @@ static int ReadLibrary(lib,Need)
       /* If we need what the component provides, load it	      */
       /* ------------------------------------------------------------ */
       if ( InNameList(havename,Need) ) {
-	for(p=line; *p; p++) if (*p=='\n') *p = NULL;
+	for(p=line; *p; p++) if (*p=='\n') *p = '\0';
 
 	sprintf(command,"%s %d x %s %s\n",archiver,PID,lib,line);
 	if (verbose) fputs(command,stderr);
@@ -413,9 +458,8 @@ static void ReadTheIf1Files( argc, argv )
 int    argc;
 char **argv;
 {
-  register FILE *fd;
   register int   idx;
-  char	   *dotp,*rindex();
+  char	   *dotp;
 
   for ( idx = 1; idx < argc; idx++ ) {
     /* ------------------------------------------------------------ */
@@ -423,7 +467,7 @@ char **argv;
     /* ------------------------------------------------------------ */
     if ( *(argv[ idx ]) == '-' ) {
       switch ( argv[idx][1] ) {
-      case 'o': case 'e': case 'f': case 'c':
+      case 'o': case 'e': case 'f': case 'c': case 'r':
 	idx++;			/* SKIP OUTPUT FILE NAME OR ENTRY POINT NAME */
 	break;
 
@@ -438,7 +482,7 @@ char **argv;
     /* Skip librarys during this pass.  They will be resolved after */
     /* all the .if1 files have been loaded.			    */
     /* ------------------------------------------------------------ */
-    dotp = rindex(argv[idx],'.');
+    dotp = strrchr(argv[idx],'.');
     if ( dotp && strcmp(dotp,".A") == 0 ) {
       libraries[librarycount++] = argv[idx];
       continue;
@@ -555,6 +599,21 @@ char **argv;
 }
 
 /* $Log: ld.c,v $
+ * Revision 1.13  1994/04/18  19:23:19  denton
+ * Removed remaining gcc warnings.
+ *
+ * Revision 1.12  1994/04/15  15:50:20  denton
+ * Added config.h to centralize machine specific header files.
+ *
+ * Revision 1.11  1994/03/31  01:46:17  denton
+ * Replace anachronistic BSD functions, index->strchr, rindex->strrchr
+ *
+ * Revision 1.10  1994/03/24  22:28:55  denton
+ * Distributed DSA, non-coherent cache, non-static shared memory.
+ *
+ * Revision 1.9  1994/02/17  17:55:54  denton
+ * Reduction flags
+ *
  * Revision 1.8  1993/11/30  00:22:59  miller
  * Added support for (not completed) archiver.
  * */

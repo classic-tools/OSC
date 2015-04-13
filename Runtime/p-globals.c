@@ -1,5 +1,38 @@
 #include "world.h"
 
+#if defined(NO_STATIC_SHARED)
+
+extern struct shared_s LSR;
+
+void
+InitSharedGlobals()
+{
+	NumWorkers       = DEFAULT_NUM_WORKERS;
+	DsaSize          = DEFAULT_DSA_SIZE;
+
+	BindParallelWork = TRUE;
+
+	XftThreshold     = DEFAULT_XFT_THRESHOLD;
+	LoopSlices       = -1;
+	GatherPerfInfo   = FALSE;
+	ArrayExpansion   = DEFAULT_ARRAY_EXPANSION;
+	NoFibreOutput    = FALSE;
+
+	UsingSdbx        = FALSE;
+
+	Sequential       = FALSE;
+
+#if defined(NON_COHERENT_CACHE)
+	DefaultLoopStyle = 'C';	/* Cached loops is the default */
+#else
+	DefaultLoopStyle = 'B';	/* Blocked loops is the default */
+#endif
+
+	OneLevelParallel = FALSE;
+}
+
+#else
+
 int     NumWorkers       = DEFAULT_NUM_WORKERS;
 int     DsaSize          = DEFAULT_DSA_SIZE;
 
@@ -15,13 +48,21 @@ int     UsingSdbx        = FALSE;
 
 int     Sequential       = FALSE;
 
+#if defined(NON_COHERENT_CACHE)
+char	DefaultLoopStyle = 'C';	/* Cached loops is the default */
+#else
+char	DefaultLoopStyle = 'B';	/* Blocked loops is the default */
+#endif
+
+int     OneLevelParallel = FALSE;
+#endif
+
 POINTER SisalMainArgs;
 
 FILE   *FibreInFd  = stdin;
 FILE   *FibreOutFd = stdout;
 FILE   *PerfFd     = stderr;
 
-char	DefaultLoopStyle = 'B';	/* Blocked loops is the default */
 
 
 char	ArgumentString[1024] = "";

@@ -159,6 +159,8 @@ PNODE n;
     else
       LinkExport( ii->src, i );
 
+    tdicnt++;
+
     if ( !Used( c, ii->iport ) )
       /* DO NOT REMOVE A REFERENCE COUNTED EDGE */
       if ( ii->cm == 0 && ii->pm == 0 && ii->sr == 0 && ii->pl == 0 &&
@@ -422,6 +424,7 @@ int   inloop;
             }
 
           sspcnt++;
+          tleicnt++;
 
           if ( !IsExport( f->imp->src->F_GEN, i->iport ) && 
                !IsExport( f->imp->src->F_RET, i->iport )  )
@@ -987,7 +990,8 @@ PNODE g;
             case IFRedLeft:
             case IFRedRight:
             case IFRedTree:
-              if ( r->imp->CoNsT[0] == REDUCE_CATENATE )
+              if ( r->imp->CoNsT[0] == REDUCE_CATENATE ||
+                   r->imp->CoNsT[0] == REDUCE_USER )
                 break;
 
               v = r->imp->isucc->isucc;
@@ -1035,6 +1039,9 @@ PNODE g;
                   break;
 
                 default:
+		  fprintf(stderr,"Bad reduction constant \"%s\" on line %d\n",
+			  r->imp->CoNsT,r->imp->if1line);
+		  exit(1);
                   break;
                 }
 
@@ -1100,15 +1107,15 @@ void If2Yank0()
 
 void WriteYankInfo()
 {
-  FPRINTF( stderr, "\n**** NODE YANK OPTIMIZATIONS\n" );
-  FPRINTF( stderr, " Pushed Yanked Return Nodes:   %d\n", pycnt   );
-  FPRINTF( stderr, " Converted Tag Test Nodes:     %d\n", tagtcnt );
+/*  FPRINTF( infoptr4, "\n **** NODE YANK OPTIMIZATIONS\n\n" );
+  FPRINTF( infoptr4, " Pushed Yanked Return Nodes:   %d\n", pycnt   );
+  FPRINTF( infoptr4, " Converted Tag Test Nodes:     %d\n", tagtcnt ); */
 
-  FPRINTF( stderr, "\n**** INVOCATION OPTIMIZATIONS\n" );
-  FPRINTF( stderr, " Inserted Saved Slice Params:  %d\n", sspcnt    );
-  FPRINTF( stderr, " Invariant Saved Slice Params: %d\n", sspinvcnt );
-  FPRINTF( stderr, " Inserted Saved Call Params:   %d\n", scpcnt    );
-  FPRINTF( stderr, " Invariant Saved Call Params:  %d\n", scpinvcnt );
-  FPRINTF( stderr, " Removed Compound Imports:     %d\n", dicnt     );
-  FPRINTF( stderr, " Removed Loop Enque Imports:   %d\n", leicnt    );
+  FPRINTF( infoptr4, "\n **** INVOCATION OPTIMIZATIONS\n\n" );
+  FPRINTF( infoptr4, " Inserted Saved Slice Params:  %d\n", sspcnt    );
+  FPRINTF( infoptr4, " Invariant Saved Slice Params: %d\n", sspinvcnt );
+  FPRINTF( infoptr4, " Inserted Saved Call Params:   %d\n", scpcnt    );
+  FPRINTF( infoptr4, " Invariant Saved Call Params:  %d\n", scpinvcnt );
+  FPRINTF( infoptr4, " Removed Compound Imports:     %d of %d\n", dicnt, tdicnt     );
+  FPRINTF( infoptr4, " Removed Loop Enque Imports:   %d of %d\n", leicnt, tleicnt   );
 }

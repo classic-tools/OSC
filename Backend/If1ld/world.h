@@ -1,4 +1,7 @@
 /* $Log: world.h,v $
+ * Revision 1.9  1994/04/15  15:50:21  denton
+ * Added config.h to centralize machine specific header files.
+ *
  * Revision 1.8  1993/03/23  22:09:58  miller
  * no change
  *
@@ -13,6 +16,7 @@
  * Make changes for LINT.
  * */
 
+#include "../../config.h"
 #include "../Library/IFX.h"
 
 /* ------------------------------------------------------------ */

@@ -20,9 +20,9 @@ static int acnt  = 0;          /* COUNT OF INTERFACE AGGREGATES           */
 
 void WriteInterfaceInfo()
 {
-  FPRINTF( stderr, "\n**** INTERFACE OPTIMIZATIONS\n" );
-  FPRINTF( stderr, " Array Input Arguments:           %d\n", acnt  );
-  FPRINTF( stderr, " Array Read-Only Input Arguments: %d\n", rocnt );
+  FPRINTF( infoptr, "\n **** INTERFACE OPTIMIZATIONS\n\n" );
+  FPRINTF( infoptr, " Array Input Arguments:           %d\n", acnt  );
+  FPRINTF( infoptr, " Array Read-Only Input Arguments: %d\n", rocnt );
 }
 
 
@@ -822,9 +822,9 @@ int   eport;
 	break;
 
       case IFForall:
-	if ( IsExport( e->dst->F_GEN, e->iport ) != NULL )
+	if ( IsExport( e->dst->F_GEN, e->iport ) != 0 )
 	  return( FALSE );
-	if ( IsExport( e->dst->F_RET, e->iport ) != NULL )
+	if ( IsExport( e->dst->F_RET, e->iport ) != 0 )
 	  return( FALSE );
 
 	if ( !GenIsReadOnly( e->dst->F_BODY, e->iport ) )
@@ -833,14 +833,14 @@ int   eport;
 	break;
 
       case IFSelect:
-        if ( IsExport( e->dst->S_TEST, e->iport ) != NULL )
+        if ( IsExport( e->dst->S_TEST, e->iport ) != 0 )
           return( FALSE );
 
-        if ( IsExport( e->dst->S_CONS, e->iport ) != NULL )
+        if ( IsExport( e->dst->S_CONS, e->iport ) != 0 )
 	  if ( !GenIsReadOnly( e->dst->S_CONS, e->iport ) )
 	    return( FALSE );
 
-        if ( IsExport( e->dst->S_ALT, e->iport ) != NULL )
+        if ( IsExport( e->dst->S_ALT, e->iport ) != 0 )
 	  if ( !GenIsReadOnly( e->dst->S_ALT, e->iport ) )
 	    return( FALSE );
 
@@ -848,11 +848,11 @@ int   eport;
 
       case IFLoopA:
       case IFLoopB:
-	if ( IsExport( e->dst->L_INIT, e->iport ) != NULL )
+	if ( IsExport( e->dst->L_INIT, e->iport ) != 0 )
 	  return( FALSE );
-	if ( IsExport( e->dst->L_TEST, e->iport ) != NULL )
+	if ( IsExport( e->dst->L_TEST, e->iport ) != 0 )
 	  return( FALSE );
-	if ( IsExport( e->dst->L_RET,  e->iport ) != NULL )
+	if ( IsExport( e->dst->L_RET,  e->iport ) != 0 )
 	  return( FALSE );
 
 	if ( !GenIsReadOnly( e->dst->L_BODY, e->iport ) )

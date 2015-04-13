@@ -323,6 +323,8 @@ PNODE n;      /* IFBRElement NODE */
   register PEDGE ee;
   register PNODE ae;
 
+  PEDGE laste = NULL;
+
   ae = n->imp->src;
 
   for ( e = n->exp; e != NULL; e = e->esucc ) {
@@ -331,21 +333,72 @@ PNODE n;      /* IFBRElement NODE */
       continue;
       }
 
+    /* BUG FIX TO USE ARRAY INDEX TEMPORARY BEFORE REASSIGNING */
+    if (!strcmp(e->temp->name, ae->imp->isucc->temp->name)) {
+	laste = e;
+        continue;
+    }
+
     PrintIndentation( indent );
 
-    /* PRINT THE ARRAY DEREFERENCE HERE */
-    FPRINTF( output, "ARElm( %s, ", ae->exp->info->tname );
-    PrintTemp( e );
-    FPRINTF( output, ", " );
-    PrintTemp( ae->imp );
-    FPRINTF( output, ", " );
-    PrintTemp( ae->imp->isucc );
-    FPRINTF( output, ", Fld%d );\n", e->eport );
+    /* PRINT THE ARRAY RECORD DEREFERENCE USING GABASE */
+    if (aimp) {
+      PrintTemp( e );
+      FPRINTF( output, " = " );
+      FPRINTF( output, "((%s*)", ae->exp->info->tname );
+      PrintTemp( ae->imp );
+      FPRINTF( output, ")[" );
+      PrintTemp( ae->imp->isucc );
+      FPRINTF( output, "]" );
+      FPRINTF( output, ".Fld%d;\n", e->eport );
+
+    /* PRINT THE ARRAY RECORD DEREFERENCE WITHOUT USING GABASE */
+    } else {
+      FPRINTF( output, "ARElm( %s, ", ae->exp->info->tname );
+      PrintTemp( e );
+      FPRINTF( output, ", " );
+      PrintTemp( ae->imp );
+      FPRINTF( output, ", " );
+      PrintTemp( ae->imp->isucc );
+      FPRINTF( output, ", Fld%d );\n", e->eport );
+    }
 
     for ( ee = e->esucc; ee != NULL; ee = ee->esucc )
       if ( ee->eport == e->eport )
         ee->eport = -(ee->eport);
-    }
+  }
+
+  /* USE TEMPORARY EDGE ALSO SEEN AS AN IMPORT */
+  if ( laste!=NULL ) {
+
+      PrintIndentation( indent );
+
+      /* PRINT THE ARRAY RECORD DEREFERENCE USING GABASE */
+      if (aimp) {
+        PrintTemp( laste );
+        FPRINTF( output, " = " );
+        FPRINTF( output, "((%s*)", ae->exp->info->tname );
+        PrintTemp( ae->imp );
+        FPRINTF( output, ")[" );
+        PrintTemp( ae->imp->isucc );
+        FPRINTF( output, "]" );
+        FPRINTF( output, ".Fld%d;\n", laste->eport );
+
+      /* PRINT THE ARRAY RECORD DEREFERENCE WITHOUT USING GABASE */
+      } else {
+        FPRINTF( output, "ARElm( %s, ", ae->exp->info->tname );
+        PrintTemp( laste );
+        FPRINTF( output, ", " );
+        PrintTemp( ae->imp );
+        FPRINTF( output, ", " );
+        PrintTemp( ae->imp->isucc );
+        FPRINTF( output, ", Fld%d );\n", laste->eport );
+      }
+
+      for ( ee = laste->esucc; ee != NULL; ee = ee->esucc )
+        if ( ee->eport == laste->eport )
+          ee->eport = -(ee->eport);
+  }
 
   PrintProducerModifiers( indent, ae );
   PrintConsumerModifiers( indent, ae );

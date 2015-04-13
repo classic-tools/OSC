@@ -11,16 +11,25 @@
 
 FILE *input  = stdin;                  /* IF2 INPUT  FILE POINTER         */
 FILE *output = stdout;                 /* IF2 OUTPUT FILE POINTER         */
+FILE *infoptr;                 /* IF2 Info OUTPUT FILE POINTER         */
+FILE *infoptr1;                 /* IF2 Info OUTPUT FILE POINTER         */
+FILE *infoptr2;                 /* IF2 Info OUTPUT FILE POINTER         */
+FILE *infoptr3;                 /* IF2 Info OUTPUT FILE POINTER         */
+FILE *infoptr4;                 /* IF2 Info OUTPUT FILE POINTER         */
+char infofile1[200];
+char infofile2[200];
+char infofile3[200];
+char infofile4[200];
 
 char *program    = "if2gen";           /* PROGRAM NAME                    */
 
 int   info	 = FALSE;    /* GENERATE INFORMATION ABOUT OPTIMIZATIONS? */
-int   vinfo      = FALSE;    /* DUMP CONCURRENT-VECTOR INFORMATION?       */
 int   regok      = TRUE;     /* ASSIGN register PREFIXES?                 */
 int   dbl        = FALSE;    /* TREAT real DATA AS double_real?           */
 int   flt        = FALSE;    /* TREAT double_real DATA AS real?           */
 int   aimp       = TRUE;     /* OPTIMIZE ARRAY DEREFERENCE OPERATIONS?    */
 int   if2opt     = TRUE;     /* OPTIMIZE GatherAT NODES?                  */
+int   if3show    = FALSE;    /* Show IF3 variable temporaries?            */
 int   timeall	 = FALSE;	/* Time all functions */
 int   traceall	 = FALSE;	/* Trace all functions */
 
@@ -81,7 +90,7 @@ static int   tracecnt = -1;                    /* TRACE FUNCTION LIST INDEX */
 static char *trace[200];                       /* TRACE FUNCTION LIST       */
 
 static int   timecnt = -1;                    /* TIME FUNCTION LIST INDEX */
-static char *time[200];                       /* TIME FUNCTION LIST       */
+static char *timelist[200];                   /* TIME FUNCTION LIST       */
 
 static int   flopcnt = -1;                    /* FLOP FUNCTION LIST INDEX */
 static char *flop[200];                       /* FLOP FUNCTION LIST       */
@@ -112,6 +121,7 @@ static char *flop[200];                       /* FLOP FUNCTION LIST       */
 /*		-p<num>	-> Apply dynamic patch <num>			  */
 /*		-m	-> Turn off minslice throttle			  */
 /*		-r	-> DON"T ASSIGN register PREFIXES		  */
+/*		-t	-> Produce IF3 variable temporary file		  */
 /*		-u	-> DON'T OPTIMIZE GatherAT NODES		  */
 /*		-w	-> Suppress warning messages			  */
 /*		-x	-> CALL THE FORTRAN VECTOR ROUTINES		  */
@@ -247,7 +257,7 @@ char **argv;
 	  if ( c[1] == '&' ) {
 	    timeall = TRUE;
 	  } else {
-	    time[++timecnt] = LowerCase( argv[++idx], FALSE, FALSE );
+	    timelist[++timecnt] = LowerCase( argv[++idx], FALSE, FALSE );
 	  }
 	  break;
 
@@ -359,6 +369,10 @@ char **argv;
 	  dbl = TRUE;
 	  break;
 
+	case 't':
+	  if3show = TRUE;
+	  break;
+
 	case 'u':
 	  if2opt = FALSE;
 	  break;
@@ -379,15 +393,14 @@ char **argv;
 	  aimp = FALSE;
 	  break;
 
-	case 'V':
-	  vinfo = TRUE;
-	  if ( isdigit((int)(c[1])) ) vinfo=atoi(c+1);
-	  break;
-
 	case 'i':
 	  info = TRUE;
 	  if ( isdigit((int)(c[1])) ) info=atoi(c+1);
 	  break;
+
+       case 'F' :
+          strcpy (infofile1, c+1);
+          break;
 
 	default:
 	  Error2( "ILLEGAL ARGUMENT", --c );
@@ -513,7 +526,7 @@ PNODE g;
       g->time = TRUE;
     } else {
       for ( i = 0; i <= timecnt; i++ )
-	if ( strcmp( s, time[i] ) == 0 )
+	if ( strcmp( s, timelist[i] ) == 0 )
 	  break;
 
       if ( i <= timecnt )
@@ -574,8 +587,34 @@ char **argv;
   register FILE  *fd;
   register PNODE  f;
   register char  *s;
+  int i5 = I_Info5;
 
   ParseCommandLine( argc, argv );
+
+  if (RequestInfo(I_Info1, info))  
+	if((infoptr1 = fopen(infofile1, "a")) == NULL)
+		infoptr1 = stderr;
+
+  if (RequestInfo(I_Info2, info)) { 
+        strncpy (infofile2,infofile1, strlen(infofile1) - 1);
+	strcat (infofile2, "2");
+	if((infoptr2 = fopen(infofile2, "a")) == NULL)
+		infoptr2 = stderr;
+  }
+
+  if (RequestInfo(I_Info3, info)) { 
+        strncpy (infofile3,infofile1, strlen(infofile1) - 1);
+	strcat (infofile3, "3");
+	if((infoptr3 = fopen(infofile3, "a")) == NULL)
+		infoptr3 = stderr;
+  }
+
+  if (RequestInfo(I_Info4, info)) { 
+        strncpy (infofile4,infofile1, strlen(infofile1) - 1);
+	strcat (infofile4, "4");
+	if((infoptr4 = fopen(infofile4, "a")) == NULL)
+		infoptr4 = stderr;
+  }
 
   StartProfiler();
   If2Read();
@@ -728,19 +767,41 @@ char **argv;
 
   StopProfiler( "Temp Assignment and C Code Generation" );
 
-  if ( RequestInfo(I_GeneralInfo,info) ) {
-    WriteVectorInfo();
-  }
+  if ( RequestInfo(I_Info1, info)) 
+    WriteIf2AImpInfo2();
 
-  if ( RequestInfo(I_MoreInfo,info) ) {
+  if ( RequestInfo(I_Info2, info)) 
+    WritePrebuildInfo();
+
+  if ( RequestInfo(I_Info3, info)) 
+    WriteIf2OptInfo();
+
+  if ( RequestInfo(I_Info4, info)) {
+    WriteIf2OptInfo2();
+    WriteYankInfo();
+     }
+
+/*  if ( RequestInfo(I_Info5, info)) {
+    WriteVectorInfo();
     WriteIf2OptInfo();
     WritePrebuildInfo();
-  }
-
-  if ( RequestInfo(I_DeveloperInfo1,info) ) {
     WriteIf2AImpInfo();
     WriteInterfaceInfo();
     WriteYankInfo();
+  } */
+
+  if (RequestInfo(I_Info1, info) && infoptr1!=stderr)
+      fclose (infoptr1);
+  if (RequestInfo(I_Info2, info) && infoptr2!=stderr)
+      fclose (infoptr2);
+  if (RequestInfo(I_Info3, info) && infoptr3!=stderr)
+      fclose (infoptr3);
+  if (RequestInfo(I_Info4, info) && infoptr4!=stderr)
+      fclose (infoptr4);
+
+  if ( if3show ) {
+      output = stdout;
+      If2Write();
   }
 
   Stop( OK );

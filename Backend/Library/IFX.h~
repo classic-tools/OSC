@@ -222,7 +222,7 @@
 #define IFCross                 405
 #define IFAssert                406
 #define IFRequire               407
-#define IF_SIMPLE_LAST          407
+#define IF_SIMPLE_LAST          405
 
 #define IF_GRAPH_FIRST          1000
 #define IFSGraph		1000	/* IF1 GRAPH NODE TYPES (NONSTAND) */

@@ -145,7 +145,7 @@ char   buf1     [NAMESIZE];	/* cost file directory */
 /* ------------------------------------------------------------------------- */
 /* Compilation Phase Control */
 /* ------------------------------------------------------------------------- */
-int    start_phase = -1;	/* WHICH PHASE TO START COMPILATION */
+int    start = -1;		/* WHICH PHASE TO START COMPILATION */
 int    stopIF0    = FALSE;	/* CONTROL END PHASE */
 int    stopIF1    = FALSE;
 int    stopCPP    = FALSE;
@@ -774,7 +774,7 @@ char *nm;
 {
   if ( Keep ) return;
 
-  if ( GetFileType( nm ) == start_phase ) return;
+  if ( GetFileType( nm ) == start ) return;
 
   if ( debug || verbose ) fprintf( stderr, "unlink %s\n", nm );
 
@@ -1211,43 +1211,43 @@ static int SubmitCommands()
     }
 
     file  = SetFileSuffix((stopMONO)?(""):(TMPPATH),root, ".mono" );
-    start_phase = FTYPE_SIS;
+    start = FTYPE_SIS;
 
   } else if ( if0cnt >= 0 ) {
     if ( optcnt >= 0 ) Error2( "USAGE:", "conflicting file types" );
     
     root  = GetFileRoot( file_if0[0] );
     file  = SetFileSuffix((stopMONO)?(""):(TMPPATH),root, ".mono" );
-    start_phase = FTYPE_IF0;
+    start = FTYPE_IF0;
 
   } else if ( if1cnt >= 0 ) {
     if ( optcnt >= 0 ) Error2( "USAGE:", "conflicting file types" );
     
     root  = GetFileRoot( file_if1[0] );
     file  = SetFileSuffix((stopMONO)?(""):(TMPPATH),root, ".mono" );
-    start_phase = FTYPE_IF1;
+    start = FTYPE_IF1;
 
   } else if ( optcnt >= 0 ) {
     if ( (optcnt > 0) ) Error2( "USAGE:", "conflicting file types" );
 
     root  = GetFileRoot( file_opt[0] );
     file  = file_opt[0];
-    start_phase = GetFileType( file );
+    start = GetFileType( file );
 
   } else if ( ccnt >= 0 ) {
     root  = NULL;
     file  = NULL;
-    start_phase = FTYPE_C;
+    start = FTYPE_C;
 
   } else if ( ldcnt >= 0 ) {
     root  = NULL;
     file  = NULL;
-    start_phase = FTYPE_LD;
+    start = FTYPE_LD;
 
   } else if ( fcnt >= 0 ) {
     root  = NULL;
     file  = NULL;
-    start_phase = FTYPE_F;
+    start = FTYPE_F;
 
   } else {
     return( OK );
@@ -1261,7 +1261,7 @@ static int SubmitCommands()
     tmp4 = SetFileSuffix((stopC)?(""):(TMPPATH),root,	 ".c"    );
   }
 
-  switch ( start_phase ) {
+  switch ( start ) {
     /*******************************************************************/
   case FTYPE_SIS:
     for ( idx = 0; idx <= siscnt; idx++ ) {

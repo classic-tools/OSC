@@ -33,30 +33,34 @@ TestCascade(G)
 	TestPort = TestEdge->eport;
 
 	/* ------------------------------------------------------------ */
-	/* If the test edge is used internally, set to true or false    */
+	/* If the test edge is used internally, set to true or false	*/
 	/* ------------------------------------------------------------ */
-	for(E=FalseSide->exp; E; E = ENext ) {
-	  ENext = E->esucc;
-	  if ( E->eport == TestPort ) {
-	    UnlinkExport(E);
-	    E->src = (PNODE)NULL;
-	    E->eport = CONST_PORT;
-	    E->CoNsT = "FALSE";
+	FalseGraphTestEdge = FindExport(FalseSide,TestPort);
+	if ( FalseGraphTestEdge ) {
+	  for(E=FalseSide->exp; E; E = ENext ) {
+	    ENext = E->esucc;
+	    if ( E->eport == TestPort ) {
+	      UnlinkExport(E);
+	      E->src = (PNODE)NULL;
+	      E->eport = CONST_PORT;
+	      E->CoNsT = "0";
+	    }
 	  }
 	}
- 
-	for(E=TrueSide->exp; E; E = ENext ) {
-	  ENext = E->esucc;
-	  if ( E->eport == TestPort ) {
-	    UnlinkExport(E);
-	    E->src = (PNODE)NULL;
-	    E->eport = CONST_PORT;
-	    E->CoNsT = "TRUE";
-	  }
-	}
-        break;
- 
 
+	TrueGraphTestEdge = FindExport(TrueSide,1);
+	if ( TrueGraphTestEdge ) {
+	  for(E=TrueSide->exp; E; E = ENext ) {
+	    ENext = E->esucc;
+	    if ( E->eport == TestPort ) {
+	      UnlinkExport(E);
+	      E->src = (PNODE)NULL;
+	      E->eport = CONST_PORT;
+	      E->CoNsT = "1";
+	    }
+	  }
+	}
+	break;
 
       default:
 	UNEXPECTED("Unknown branch");

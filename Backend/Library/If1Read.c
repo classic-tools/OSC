@@ -141,7 +141,15 @@ void If1Read()
   ExitScope();
 }
 
-/* $Log: If1Read.c,v $
+/* $Log: If1Read.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:10  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.3  1994/03/09  23:14:46  miller
  * Changes for the new frontend -- Added a new typecode (IF_SET)
  *

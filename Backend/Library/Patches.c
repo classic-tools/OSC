@@ -33,7 +33,15 @@ void AddPatch(P)
   Patches[PatchCount++] = P;
 }
 
-/* $Log: Patches.c,v $
+/* $Log: Patches.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:17  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.1  1993/02/24  18:35:27  miller
  * This maintains a list of ``dynamic patches'' which allow me to add
  * temporary fixes that only a few people need.

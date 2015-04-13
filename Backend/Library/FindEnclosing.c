@@ -26,7 +26,15 @@ FindEnclosing(node)
   return graph;
 }
 
-/* $Log: FindEnclosing.c,v $
+/* $Log: FindEnclosing.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:02  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.4  1994/06/07  14:40:27  solomon
  * Function was returning NULL when node was a graph.  This is now fixed.
  *

@@ -14,7 +14,15 @@ void AddStamp( stamp, s )
   stamps[ (int)stamp ] = s;
 }
 
-/* $Log: AddStamp.c,v $
+/* $Log: AddStamp.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:47:56  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/04/15  15:51:38  denton
  * Added config.h to centralize machine specific header files.
  * Fixed gcc warings.

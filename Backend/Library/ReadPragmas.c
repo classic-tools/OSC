@@ -299,7 +299,15 @@ void ReadPragmas()
   }
 }
 
-/* $Log: ReadPragmas.c,v $
+/* $Log: ReadPragmas.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:20  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.9  1994/07/15  18:35:20  denton
  * Make tn a "" pragma
  *

@@ -56,7 +56,15 @@ int   type;
   return( i );
 }
 
-/* $Log: InfoAlloc.c,v $
+/* $Log: InfoAlloc.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:10  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.4  1994/06/24  16:01:32  denton
  * Added -IF3.
  *

@@ -29,7 +29,15 @@ PNODE l;
   return( p );
 }
 
-/* $Log: AssignNewLoop.c,v $
+/* $Log: AssignNewLoop.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:47:57  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/03/03  17:13:58  solomon
  * Added some tests to help prevent failing when dealing with invalid
  * if1 code.

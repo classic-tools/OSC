@@ -65,7 +65,15 @@ void BuildItems()
 
 }
 
-/* $Log: BuildItems.c,v $
+/* $Log: BuildItems.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:47:59  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.3  1994/05/25  23:35:00  solomon
  * Changed variable tmax to LargestTypeLabelSoFar.
  *

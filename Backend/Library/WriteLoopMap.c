@@ -20,7 +20,15 @@ void WriteLoopMap( msg )
   }
 }
 
-/* $Log: WriteLoopMap.c,v $
+/* $Log: WriteLoopMap.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:23  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.4  1994/06/16  21:32:05  mivory
  * info format and option changes M. Y. I.
  *

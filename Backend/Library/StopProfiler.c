@@ -15,7 +15,15 @@ char *msg;
 	    program, msg, TSECND() - StartTime );
 }
 
-/* $Log: StopProfiler.c,v $
+/* $Log: StopProfiler.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:21  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/04/15  15:51:55  denton
  * Added config.h to centralize machine specific header files.
  * Fixed gcc warings.

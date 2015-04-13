@@ -48,7 +48,15 @@ PNODE g;
   }
 }
 
-/* $Log: WriteTheLMap.c,v $
+/* $Log: WriteTheLMap.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:23  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.4  1993/06/02  23:45:30  miller
  * Discovered dead var with lint.
  *

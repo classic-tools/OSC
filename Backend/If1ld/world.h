@@ -1,4 +1,12 @@
-/* $Log: world.h,v $
+/* $Log: world.h,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:45:59  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.9  1994/04/15  15:50:21  denton
  * Added config.h to centralize machine specific header files.
  *

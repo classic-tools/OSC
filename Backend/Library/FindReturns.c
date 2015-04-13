@@ -81,7 +81,15 @@ char* FindReturnsString( returns_code )
       return NULL;
 }
 
-/* $Log: FindReturns.c,v $
+/* $Log: FindReturns.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:03  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.3  1994/07/21  14:25:26  solomon
  * Added "*sysVALUE" to the sys_returns array and added the appropriate
  * case for "*sysVALUE."

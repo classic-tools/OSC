@@ -59,10 +59,14 @@ int     OneLevelParallel = FALSE;
 
 POINTER SisalMainArgs;
 
+/*
 FILE   *FibreInFd  = stdin;
 FILE   *FibreOutFd = stdout;
 FILE   *PerfFd     = stderr;
-
+*/
+FILE   *FibreInFd  = NULL;
+FILE   *FibreOutFd = NULL;
+FILE   *PerfFd     = NULL;
 
 
 char	ArgumentString[1024] = "";

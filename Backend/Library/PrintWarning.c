@@ -34,7 +34,15 @@ int   copy;
 	    );
 }
 
-/* $Log: PrintWarning.c,v $
+/* $Log: PrintWarning.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:18  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.5  1994/06/17  20:51:46  mivory
  * make check bug fix and if2mem bug fix MYI
  *

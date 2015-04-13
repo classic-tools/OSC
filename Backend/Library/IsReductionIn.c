@@ -27,7 +27,15 @@ char *nm;
   return( ans );
 }
 
-/* $Log: IsReductionIn.c,v $
+/* $Log: IsReductionIn.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:12  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.1  1994/02/17  17:24:14  denton
  * Added for reductions
  *

@@ -13,7 +13,15 @@ char *GetStampString( stamp )
   return( stamps[ (int)stamp ] );
 }
 
-/* $Log: GetStampStrin.c,v $
+/* $Log: GetStampStrin.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:05  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/04/15  15:51:45  denton
  * Added config.h to centralize machine specific header files.
  * Fixed gcc warings.

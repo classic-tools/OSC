@@ -90,7 +90,15 @@ PINFO  i;
   return( FALSE );
 }
 
-/* $Log: IsIntrinsic.c,v $
+/* $Log: IsIntrinsic.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:12  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/07/21  16:28:35  denton
  * Added atan2
  *

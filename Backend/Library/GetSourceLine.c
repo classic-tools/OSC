@@ -176,7 +176,15 @@ char* GetSourceLine(N)
   return LineBuf;
 }
 
-/* $Log: GetSourceLine.c,v $
+/* $Log: GetSourceLine.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:05  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.7  1994/06/30  22:40:55  denton
  * NULL->'\0' in char assignment.
  *

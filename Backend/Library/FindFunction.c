@@ -25,7 +25,15 @@ char *nm;
   return NULL;
 }
 
-/* $Log: FindFunction.c,v $
+/* $Log: FindFunction.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:02  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1993/11/12  19:55:54  miller
  * Cosmetic change
  *

@@ -1,4 +1,12 @@
-/* $Log: if2count.c,v $
+/* $Log: if2count.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:47:37  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.9  1994/06/16  21:31:09  mivory
  * info format and option changes M. Y. I.
  *

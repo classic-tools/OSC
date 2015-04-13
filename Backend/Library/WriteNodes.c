@@ -72,7 +72,15 @@ PNODE g;
   WriteImports( g ); 
 }
 
-/* $Log: WriteNodes.c,v $
+/* $Log: WriteNodes.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:23  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.4  1994/03/09  23:17:48  miller
  * Now, ANY compound node (opcode < 100) will be output, not just
  * the predefined kinds.  The previous restriction was crimping

@@ -43,7 +43,15 @@
 
 extern FILE *infoptr;	/* info output file */
 
-/* $Log: world.h,v $
+/* $Log: world.h,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:24  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.8  1994/06/16  21:32:08  mivory
  * info format and option changes M. Y. I.
  *
@@ -87,6 +95,13 @@ extern FILE *infoptr;	/* info output file */
  *
  * Revision 1.2  1993/01/07  00:12:19  miller
  * Added $Log: world.h,v $
+ * Added Revision 1.1.1.1  2000/12/31 10:48:24  patmiller
+ * Added LLNL distribution with Dave Raymond pthread hacks
+ * Added (otherwise looks remarkably like it did 4 years
+ * Added ago)
+ * Added
+ * Added Pat
+ * Added
  * Revision 1.8  1994/06/16  21:32:08  mivory
  * info format and option changes M. Y. I.
  *

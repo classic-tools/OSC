@@ -2619,7 +2619,15 @@ char **argv;
     exit( OK );
 }
 
-/* $Log: osc.c,v $
+/* $Log: osc.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:54:16  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.40  1994/08/12  19:27:32  denton
  * Removed ANSI violation.
  *

@@ -69,7 +69,15 @@ void MonoWriteInfo()
   }
 }
 
-/* $Log: MonoWriteInfo.c,v $
+/* $Log: MonoWriteInfo.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:16  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.4  1994/05/04  18:11:01  denton
  * R_BODY->R_MAP; FindEnclosingCompound->FindEnclosing
  *

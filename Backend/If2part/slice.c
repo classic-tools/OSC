@@ -1,4 +1,12 @@
-/* $Log: slice.c,v $
+/* $Log: slice.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:47:42  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/03/10  17:15:21  denton
  * Accept non-scalar exports from user-defined reductions in parallel for returns.
  *

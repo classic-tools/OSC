@@ -284,7 +284,15 @@ main()
   exit(0);
 }
 
-/* $Log: makenames.c,v $
+/* $Log: makenames.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:24  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.7  1994/06/06  23:31:19  denton
  * Added low and high markers for node categories: COMPOUND, SIMPLE, GRAPH, OTHER.
  *

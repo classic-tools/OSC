@@ -27,7 +27,15 @@ PNODE n;
   return( c );
 }
 
-/* $Log: CallAlloc.c,v $
+/* $Log: CallAlloc.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:47:59  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1993/04/01  23:28:53  miller
  * GCC Support to eliminate warnings.
  *

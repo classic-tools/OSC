@@ -4,7 +4,7 @@
 
 #include "world.h"
 
-static char RCSVERSION[] = "$State: V13_0_3 $";
+static char RCSVERSION[] = "$State: Exp $";
 static char VERSION[SIZEOF(RCSVERSION)] = "?.?";
 
 /************************************************************************\
@@ -18,6 +18,10 @@ int main( argc, argv )
      char **argv;
 {
   int		i;
+
+  FibreInFd = stdin;
+  FibreOutFd = stdout;
+  PerfFd = stderr;
 
   ParseCommandLine( argc, argv );
   InitSisalRunTime();

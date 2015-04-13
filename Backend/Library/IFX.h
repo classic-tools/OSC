@@ -1569,7 +1569,15 @@ extern PINFO    GetAggregate();
 extern void     CheckEdge();
 extern int      UsingPatch();
 
-/* $Log: IFX.h,v $
+/* $Log: IFX.h,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:10  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.47  1994/07/21  22:34:42  denton
  * Added DYNMACROS for buffers on stack and heap.
  *

@@ -98,7 +98,15 @@ PNODE g;
 }
 
 
-/* $Log: Count.c,v $
+/* $Log: Count.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:00  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/03/09  01:12:33  denton
  * Fix -info1-32 for reductions
  *

@@ -1,4 +1,12 @@
-/* $Log: stream.c,v $
+/* $Log: stream.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:47:42  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.1  1993/01/14  22:29:10  miller
  * Carry along work to propagate the new pragmas.  Also fixed up to report
  * reasons why loops don't vectorize / parallelize.  Split off some of the

@@ -25,7 +25,15 @@ PEDGE i;
   }
 }
 
-/* $Log: UnlinkImport.c,v $
+/* $Log: UnlinkImport.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:22  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.3  1994/07/21  16:33:12  denton
  * Removed NULL assignment just put in to detect bad memory access.  Will fix later
  *

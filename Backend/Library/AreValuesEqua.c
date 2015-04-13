@@ -17,7 +17,15 @@ PEDGE v2;
   return( AreEdgesEqual( FindSource(v1), FindSource(v2) ) );
 }
 
-/* $Log: AreValuesEqua.c,v $
+/* $Log: AreValuesEqua.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:47:57  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.1  1993/04/16  18:59:42  miller
  * Name shortening to keep the archiver from truncating names in Backend/Library
  * Since some names were changed, other files were affected.  All names in the

@@ -14,7 +14,15 @@ void ReadItems()
   maxint = 1;
 }
 
-/* $Log: ReadItems.c,v $
+/* $Log: ReadItems.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:19  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1993/06/14  20:44:02  miller
  * BuildItems/ReadItems/world  (reset for new IFx read operation)
  * IFX.h/ReadPragmas (new lazy pragma)

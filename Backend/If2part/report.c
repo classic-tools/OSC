@@ -1,4 +1,12 @@
-/* $Log: report.c,v $
+/* $Log: report.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:47:41  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.8  1994/04/18  19:23:47  denton
  * Removed remaining gcc warnings.
  *

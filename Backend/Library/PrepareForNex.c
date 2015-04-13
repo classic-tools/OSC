@@ -15,7 +15,15 @@ void PrepareForNextFile()
   tbase  = LargestTypeLabelSoFar;
 }
 
-/* $Log: PrepareForNex.c,v $
+/* $Log: PrepareForNex.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:18  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/05/25  23:35:02  solomon
  * Changed variable tmax to LargestTypeLabelSoFar.
  *

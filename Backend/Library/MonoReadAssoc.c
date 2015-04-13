@@ -30,7 +30,15 @@ char *MonoReadAssocList()
   return( CopyString( buffer ) );
 }
 
-/* $Log: MonoReadAssoc.c,v $
+/* $Log: MonoReadAssoc.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:16  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.1  1993/04/16  19:00:45  miller
  * Name shortening to keep the archiver from truncating names in Backend/Library
  * Since some names were changed, other files were affected.  All names in the

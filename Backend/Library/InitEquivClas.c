@@ -35,7 +35,15 @@ void InitEquivClasses()
   lclass = BASE_CODE_LAST;		/* LAST LEGAL IF2 TYPE */
 }
 
-/* $Log: InitEquivClas.c,v $
+/* $Log: InitEquivClas.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:11  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/02/15  23:20:32  miller
  * Allow new IF1 types (Typeset, complex, etc...)
  *

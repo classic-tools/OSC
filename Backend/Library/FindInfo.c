@@ -30,7 +30,15 @@ int type;
   return( LookupInfo( label, type ) );
 }
 
-/* $Log: FindInfo.c,v $
+/* $Log: FindInfo.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:02  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/04/14  21:43:22  solomon
  * Changed variable tmax to variable LargestTypeLabelSoFar.  Variable tmax
  * was used for a couple different things.  LargestTypeSoFar is used only

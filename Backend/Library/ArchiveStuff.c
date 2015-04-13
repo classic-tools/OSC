@@ -66,7 +66,15 @@ int InNameList(name,list)
   return 0;
 }
 
-/* $Log: ArchiveStuff.c,v $
+/* $Log: ArchiveStuff.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:47:56  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.1  1993/06/15  20:47:00  miller
  * Library support.
  * */

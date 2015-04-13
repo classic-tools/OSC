@@ -23,7 +23,15 @@ void WriteGlobals()
   }
 }
 
-/* $Log: WriteGlobals.c,v $
+/* $Log: WriteGlobals.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:22  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/04/01  00:02:56  denton
  * NULL -> '\0' where appropriate
  *

@@ -31,6 +31,18 @@ beta-quality releases for developers only; they are unstable and may
 crash, since new features added to them all the time. 
 
 ------------------------------------------------------------
+Post-OSC 13.0
+13.0.4 -- bugfix
+
+FILE declarations -- 25 Nov 2000
+	In Backend and in Runtime, declarations of the form
+	FILE *input = stdin; were found to be illegal by the
+	latest gcc on linux.  In all cases, replaced with
+	FILE *input = NULL; and with input = stdin; in the
+	appropriate routine.  (I hope!) -- D. J. Raymond
+
+
+------------------------------------------------------------
 OSC 13.0
 
 *** User's Overview:

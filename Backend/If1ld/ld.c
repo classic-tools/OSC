@@ -3,8 +3,8 @@
 
 #define MAX_TABLE_ENTRIES (400)
 
-FILE *input	= NULL;			/* IF1 INPUT  FILE POINTER */
-FILE *output	= stdout;		/* IF1 OUTPUT FILE POINTER */
+FILE *input;			/* IF1 INPUT  FILE POINTER */
+FILE *output;	        	/* IF1 OUTPUT FILE POINTER */
 
 char *program	= "if1ld";		/* PROGRAM NAME */
 
@@ -531,6 +531,9 @@ char **argv;
     int		  i;
     int		  MadeLoad;
 
+    /* fix by dj raymond 25 nov 2000 */
+    output = stdout;
+
     PID = getpid();
 
     ParseCommandLine( argc, argv );
@@ -598,7 +601,15 @@ char **argv;
     Stop( OK );
 }
 
-/* $Log: ld.c,v $
+/* $Log: ld.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:45:59  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.13  1994/04/18  19:23:19  denton
  * Removed remaining gcc warnings.
  *

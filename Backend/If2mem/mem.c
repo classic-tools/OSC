@@ -9,8 +9,8 @@
 #include "world.h"
 
 
-FILE *input  = stdin;                  /* IF1 INPUT  FILE POINTER         */
-FILE *output = stdout;                 /* IF1 OUTPUT FILE POINTER         */
+FILE *input;                  /* IF1 INPUT  FILE POINTER         */
+FILE *output;                 /* IF1 OUTPUT FILE POINTER         */
 FILE *infoptr;                 		/* IF1 INFO OUTPUT FILE POINTER    */
 char infofile[200];
 
@@ -216,6 +216,10 @@ char **argv;
 {
     register FILE *fd;
     int i2 = I_Info2;
+
+    /* fix by dj raymond 25 nov 2000 */
+    input = stdin;
+    output = stdout;
 
     ParseCommandLine( argc, argv );
 

@@ -49,7 +49,15 @@ char delim;
   return( CopyString( buffer ) );
 }
 
-/* $Log: ReadString.c,v $
+/* $Log: ReadString.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:20  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/04/01  00:02:54  denton
  * NULL -> '\0' where appropriate
  *

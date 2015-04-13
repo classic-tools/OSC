@@ -26,7 +26,15 @@ register char *s1, *s2;
     return 0;
 }
 
-/* $Log: CaseCmp.c,v $
+/* $Log: CaseCmp.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:47:59  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.1  1993/11/12  20:06:07  miller
  * Added case insensitive comparison routine
  * */

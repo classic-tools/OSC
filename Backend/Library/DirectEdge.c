@@ -56,7 +56,15 @@ DirectEdge(src, eport, dst, iport, info)
   return edge;
 }
 
-/* $Log: DirectEdge.c,v $
+/* $Log: DirectEdge.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:01  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.3  1994/05/04  18:10:57  denton
  * R_BODY->R_MAP; FindEnclosingCompound->FindEnclosing
  *

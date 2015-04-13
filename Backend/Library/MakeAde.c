@@ -31,7 +31,15 @@ int dnode;
   }
 }
 
-/* $Log: MakeAde.c,v $
+/* $Log: MakeAde.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:13  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/07/13  18:08:37  denton
  * Removed BAD from IFX.h and fix MakeAde to use LOW_PRI (it incorrectly used LOW)
  *

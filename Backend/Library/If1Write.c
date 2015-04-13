@@ -28,7 +28,15 @@ void If1Write()
     WriteNodes( cfunct = f );
 }
 
-/* $Log: If1Write.c,v $
+/* $Log: If1Write.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:10  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.3  1993/03/23  22:48:59  miller
  * date problem
  *

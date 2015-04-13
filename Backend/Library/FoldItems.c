@@ -46,7 +46,15 @@ int leicnt    = 0;          /* COUNT OF REMOVED LOOP ENQUE IMPORTS */
 int tleicnt    = 0;          /* COUNT OF REMOVED LOOP ENQUE IMPORTS */
 int tagtcnt   = 0;          /* COUNT OF TAG TEST CONVERSIONS       */
 
-/* $Log: FoldItems.c,v $
+/* $Log: FoldItems.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:04  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/06/16  21:31:53  mivory
  * info format and option changes M. Y. I.
  *

@@ -119,7 +119,15 @@ void PrintLInfo( lvl, plvl, c, loop )
   }  
 }
 
-/* $Log: PrintLInfo.c,v $
+/* $Log: PrintLInfo.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:48:18  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.10  1994/06/16  21:31:59  mivory
  * info format and option changes M. Y. I.
  *

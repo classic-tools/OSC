@@ -18,7 +18,15 @@ register PNODE n;
   n->gsucc = NULL;
 }
 
-/* $Log: AddToGraphLis.c,v $
+/* $Log: AddToGraphLis.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:47:56  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.1  1994/02/17  17:24:13  denton
  * Added for reductions
  *

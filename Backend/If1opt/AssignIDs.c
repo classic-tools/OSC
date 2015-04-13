@@ -1,4 +1,12 @@
-/* $Log: AssignIDs.c,v $
+/* $Log: AssignIDs.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:45:59  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.2  1994/04/15  15:50:28  denton
  * Added config.h to centralize machine specific header files.
  *

@@ -1846,7 +1846,15 @@ void If1Fold()
 
   signal( SIGFPE, SIG_DFL );
 }
-/* $Log: if1fold.c,v $
+/* $Log: if1fold.c,v $co: warning: `/* $Log' is obsolescent; use ` * $Log'.
+
+ * Revision 1.1.1.1  2000/12/31 10:46:13  patmiller
+ * LLNL distribution with Dave Raymond pthread hacks
+ * (otherwise looks remarkably like it did 4 years
+ * ago)
+ *
+ * Pat
+ *
  * Revision 1.14  1994/07/01  23:30:10  denton
  * int -> long argument as referenced.
  *

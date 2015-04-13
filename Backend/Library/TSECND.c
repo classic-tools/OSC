@@ -1,0 +1,52 @@
+#include "world.h"
+
+
+#ifndef CRAY
+/**************************************************************************/
+/* GLOBAL **************          TSECND           ************************/
+/**************************************************************************/
+/* PURPOSE: RETURN THE ELAPSED CPU TIME SINCE THE START OF THE PROGRAM.   */
+/*          NOTE THAT TSECND IS A CRAY INTRINSIC!                         */
+/**************************************************************************/
+
+double TSECND()
+{
+  register double CurrentCpuTime;
+
+#ifdef USE_TIMES
+  struct tms         StopTimeNow;
+
+  (void)times(&StopTimeNow);
+  CurrentCpuTime  = ((double) (StopTimeNow.tms_utime + StopTimeNow.tms_stime));
+#ifdef SGI
+  CurrentCpuTime /= ((double) HZ);
+#else
+  CurrentCpuTime /= 60.0;	/* SYSTEM DEPENDENT!!! */
+#endif
+
+#else
+  struct rusage StartTimerInfo;
+  struct rusage StopTimerInfo;
+
+  (void) getrusage( RUSAGE_SELF, &StopTimerInfo );
+
+  StartTimerInfo.ru_utime.tv_sec  = 0;
+  StartTimerInfo.ru_utime.tv_usec = 0;
+  StartTimerInfo.ru_stime.tv_sec  = 0;
+  StartTimerInfo.ru_stime.tv_usec = 0;
+
+  CurrentCpuTime = 
+    ElapsedTime( &StartTimerInfo.ru_utime, &StopTimerInfo.ru_utime ) +
+      ElapsedTime( &StartTimerInfo.ru_stime, &StopTimerInfo.ru_stime );
+#endif
+
+  return( CurrentCpuTime );
+}
+#endif
+
+/* $Log: TSECND.c,v $
+ * Revision 1.1  1993/01/21  23:30:28  miller
+ * Initial version of the IFX library.  It replaces the if[12]build.c
+ * read.c timer.c util.c and write.c and if[12].h files from the
+ * backend phases.
+ * */
